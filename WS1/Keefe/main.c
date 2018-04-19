@@ -1,6 +1,8 @@
 #include "helper.h"
 #include "visual.h"
 #include "init.h"
+#include "sor.h"
+#include "boundary_val.h"
 #include <stdio.h>
 
 
@@ -38,32 +40,65 @@
  * - calculate_uv() Calculate the velocity at the next time step.
  */
 int main(int argn, char** args){
-	char *szFileName = "cavity100.dat";
-	double *Re;                /* reynolds number   */
-    double *UI;                /* velocity x-direction */
-    double *VI;                /* velocity y-direction */
-    double *PI;                /* pressure */
-    double *GX;                /* gravitation x-direction */
-    double *GY;                /* gravitation y-direction */
-    double *t_end;             /* end time */
-    double *xlength;           /* length of the domain x-dir.*/
-    double *ylength;           /* length of the domain y-dir.*/
-    double *dt;                /* time step */
-    double *dx;                /* length of a cell x-dir. */
-    double *dy;                /* length of a cell y-dir. */
-    int  *imax;                /* number of cells x-direction*/
-    int  *jmax;                /* number of cells y-direction*/
-    double *alpha;             /* uppwind differencing factor*/
-    double *omg;               /* relaxation factor */
-    double *tau;               /* safety factor for time step*/
-	int  *itermax;				/* max. number of iterations  */
-    double *eps;               /* accuracy bound for pressure*/
-    double *dt_value;           /* time for output */
 
-    read_parameters( szFileName, Re, UI, VI, PI, GX, GY, t_end, xlength, ylength, dt, dx, dy, imax,
-    				 jmax, alpha, omg, tau,itermax, eps, dt_value); 
+	char szFileName = "cavity100.dat";
+	double Re;                /* reynolds number   */
+    double UI;                /* velocity x-direction */
+    double VI;                /* velocity y-direction */
+    double PI;                /* pressure */
+    double GX;                /* gravitation x-direction */
+    double GY;                /* gravitation y-direction */
+    double t_end;             /* end time */
+    double xlength;           /* length of the domain x-dir.*/
+    double ylength;           /* length of the domain y-dir.*/
+    double dt;                /* time step */
+    double dx;                /* length of a cell x-dir. */
+    double dy;                /* length of a cell y-dir. */
+    int  imax;                /* number of cells x-direction*/
+    int  jmax;                /* number of cells y-direction*/
+    double alpha;             /* uppwind differencing factor*/
+    double omg;               /* relaxation factor */
+    double tau;               /* safety factor for time step*/
+	int  itermax;				/* max. number of iterations  */
+    double eps;               /* accuracy bound for pressure*/
+    double dt_value;           /* time for output */
+	double d = 0, n = 0;
+	int it = 0;
+	double res;					/*residual */
 
-	if(*tau > 0){
-		calculate_dt(Re, tau, dt, dx, dy, imax, jmax, U, V);
+    read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax,
+    				 &jmax, &alpha, &omg, &tau,itermax, &eps, &dt_value); 
+
+    double** U = matrix(0, imax+1, 0, jmax+1);
+    double** V = matrix(0, imax+1, 0, jmax+1);
+    double** F = matrix(0, imax+1, 0, jmax+1);
+    double** G = matrix(0, imax+1, 0, jmax+1);
+    double** RS = matrix(0, imax+1, 0, jmax+1);
+    double** P = matrix(0, imax+1, 0, jmax+1);
+
+	while(t < t_end){
+		if(tau > 0){
+			calculate_dt(Re, tau, &dt, dx, dy, imax, jmax, U, V);
+		}	
+		boundaryvalues(imax, jmax, U, V);
+		calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax, jmax, U, V, F, G);
+		calculate_rs(dt, dx, dy, imax, jmax, F, G, RS);
+		it = 0;
+		res = 10;
+		while(it < itermax && res > eps){
+			sor(omg, dx, dy, imax, jmax, P, RS, &res);
+			it++;
+		}
+		calculate_uv(dt, dx, dy, imax, jmax, U, V, F, G, P);
+		t += dt;
+		n++;
 	}
+
+	free_matrix( U, 0, imax+1, 0, jmax+1);
+	free_matrix( V, 0, imax+1, 0, jmax+1);
+	free_matrix( F, 0, imax+1, 0, jmax+1);
+	free_matrix( G, 0, imax+1, 0, jmax+1);
+	free_matrix( RS, 0, imax+1, 0, jmax+1);
+	free_matrix( P, 0, imax+1, 0, jmax+1);
+
 }
