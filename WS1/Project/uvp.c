@@ -40,7 +40,6 @@
 //   double **G
 // )
 
-
 /**
  * This operation computes the right hand side of the pressure poisson equation.
  * The right hand side is computed according to the formula
@@ -65,7 +64,6 @@ void calculate_rs(
   }
 }
 
-
 /**
  * Determines the maximal time step size. The time step size is restricted
  * accordin to the CFL theorem. So the final time step size formula is given
@@ -74,7 +72,6 @@ void calculate_rs(
  * @f$ {\delta t} := \tau \, \min\left( \frac{Re}{2}\left(\frac{1}{{\delta x}^2} + \frac{1}{{\delta y}^2}\right)^{-1},  \frac{{\delta x}}{|u_{max}|},\frac{{\delta y}}{|v_{max}|} \right) @f$
  *
  */
-
 
 void calculate_dt(
   double Re,
@@ -101,7 +98,6 @@ void calculate_dt(
 	}
 }
 
-
 /**
  * Calculates the new velocity values according to the formula
  *
@@ -116,15 +112,26 @@ void calculate_dt(
  * @image html calculate_uv.jpg
  */
 
-// void calculate_uv(
-//   double dt,
-//   double dx,
-//   double dy,
-//   int imax,
-//   int jmax,
-//   double **U,
-//   double **V,
-//   double **F,
-//   double **G,
-//   double **P
-// )
+void calculate_uv(
+  double dt,
+  double dx,
+  double dy,
+  int imax,
+  int jmax,
+  double **U,
+  double **V,
+  double **F,
+  double **G,
+  double **P
+)
+{
+  // TODO: [Tom] Check if here we must start from 0 or not (same for i/j-max) - boundary should not be updated...
+  for (int i=1; i<imax; ++i)
+  {
+    for (int j=1; j<jmax; ++j)
+    {
+      U[i][j] = F[i][j] - dt*(P[i+1][j] - P[i][j])/dx;
+      V[i][j] = G[i][j] - dt*(P[i][j+1] - P[i][j])/dy;
+    }
+  }
+}
