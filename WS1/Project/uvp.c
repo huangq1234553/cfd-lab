@@ -3,7 +3,7 @@
 
 
 /**
- * Determines the value of U and G according to the formula
+ * Determines the value of F and G according to the formula
  *
  * @f$ F_{i,j} := u_{i,j} + \delta t \left( \frac{1}{Re} \left( \left[
     \frac{\partial^2 u}{\partial x^2} \right]_{i,j} + \left[
@@ -24,21 +24,54 @@
  *
  */
 
-// void calculate_fg(
-//   double Re,
-//   double GX,
-//   double GY,
-//   double alpha,
-//   double dt,
-//   double dx,
-//   double dy,
-//   int imax,
-//   int jmax,
-//   double **U,
-//   double **V,
-//   double **F,
-//   double **G
-// )
+void calculate_fg(double Re, double GX, double GY, double alpha, double dt, double dx, double dy, int imax, int jmax, double **U, double **V, double **F, double **G) {
+
+	// set boundary conditions for F - see discrete momentum equations - apply Neumann BC - first derivative of pressure must be "zero" - dp/dx = 0
+	for (int j = 1; j <= jmax; j++) {
+		F[0][j] = U[0][j];
+		F[imax][j] = U[imax][j];
+	}
+
+	// set boundary conditions for G - see discrete momentum equations - apply Neumann BC - first derivative of pressure must be "zero" - dp/dy = 0
+	for (int i = 1; i <= imax; i++) {
+		G[i][0] = V[i][0];
+		G[i][jmax] = V[i][jmax];
+	}
+
+	// calculate F in the domain
+	for (int i = 1; i < imax; i++) {
+		for (int j = 1; j <= jmax; j++) {
+			F[i][j] = ...
+				// velocity u
+				U[i][j] ...
+				// diffusive term
+				+ dt * ((1 / Re * ((U[i + 1][j] - 2 * U[i]][j] + U[i - 1][j]) / dx*dx + (U[i][j + 1] - 2 * U[i]][j] + U[i][j - 1]) / dy*dy)) ...
+				// convective term
+				- ( 1/dx * (((U[i][j] + U[i+1][j]) / 2)^2 - ((U[i-1][j] + U[i][j])/2)^2) + alpha/dx * ((abs(U[i][j] + U[i+1][j])/2 * (U[i][j] - U[i + 1][j])/2) - (abs(U[i-1][j] + U[i][j]) / 2 * (U[i - 1][j] - U[i][j]) / 2))) ...
+				// convective term cont.
+				- (1 / dy * ((V[i][j]+V[i+1][j])/2 * (U[i][j]+U[i][j+1])/2 - (V[i][j-1]+V[i+1][j-1]) / 2 * (U[i][j-1]+U[i][j]) / 2) + alpha / dy * (abs(V[i][j]+V[i+1][j])/2*(U[i][j] - U[i][j+1])/2 - abs(V[i][j-1]+V[i+1][j-1])/2 * (U[i][j-1] - U[i][j])/2)) ...
+				// volume force
+				+ GX[i][j]);
+		}
+	}
+
+	// calculate G in the domain
+	for (int i = 1; i <= imax; i++) {
+		for (int j = 1; j < jmax; j++) {
+			G[i][j] = ...
+				// velocity v
+				V[i][j] ...
+				// diffusive term
+				+ dt * ((1 / Re * ((V[i + 1][j] - 2 * V[i]][j] + V[i - 1][j]) / dx*dx + (V[i][j + 1] - 2 * V[i]][j] + V[i][j - 1]) / dy*dy)) ...
+				// convective term
+				- (1 / dy * (((V[i][j] + V[i][j + 1]) / 2) ^ 2 - ((V[i][j - 1] + V[i][j]) / 2) ^ 2) + alpha / dy * ((abs(V[i][j] + V[i][j + 1]) / 2 * (V[i][j] - V[i][j + 1]) / 2) - (abs(V[i][j - 1] + V[i][j]) / 2 * (V[i][j - 1] - V[i][j]) / 2))) ...
+				// convective term cont.
+				- (1 / dx * ((U[i][j] + U[i][j + 1]) / 2 * (V[i][j] + V[i + 1][j]) / 2 - (U[i - 1][j] + U[i - 1][j + 1]) / 2 * (V[i - 1][j] + V[i][j]) / 2) + alpha / dy * (abs(U[i][j] + U[i][j + 1]) / 2 * (V[i][j] - V[i + 1][j]) / 2 - abs(U[i - 1][j] + U[i - 1][j + 1]) / 2 * (V[i - 1][j] - V[i][j]) / 2)) ...
+				// volume force
+				+ GY[i][j]);
+		}
+	}
+ }
 
 /**
  * This operation computes the right hand side of the pressure poisson equation.
