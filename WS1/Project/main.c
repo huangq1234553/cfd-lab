@@ -77,8 +77,9 @@ int main(int argn, char** args){
     double** G = matrix(0, imax+1, 0, jmax+1);
     double** RS = matrix(0, imax+1, 0, jmax+1);
     double** P = matrix(0, imax+1, 0, jmax+1);
-
-    int t=0;
+    char* szProblem = "Fluid";
+    
+    double t = 0;
 	while(t < t_end){
 		if(tau > 0){
 			calculate_dt(Re, tau, &dt, dx, dy, imax, jmax, U, V);
@@ -95,6 +96,8 @@ int main(int argn, char** args){
 		calculate_uv(dt, dx, dy, imax, jmax, U, V, F, G, P);
 		t += dt;
 		n++;
+		write_vtkFile(szProblem, n, xlength, ylength, imax, jmax,
+			dx, dy, U, V, P);
 	}
 
 	free_matrix( U, 0, imax+1, 0, jmax+1);

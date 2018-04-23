@@ -144,7 +144,7 @@ void calculate_dt(
   double **U,
   double **V
 ){
-	double u_max, v_max;
+	double u_max = 0, v_max = 0;
 	for(int i=0; i<imax; i++){
 		for(int j=0; j<jmax; j++){
 			if(abs(U[i][j]) > u_max)
@@ -154,7 +154,8 @@ void calculate_dt(
 		}
 	}
 	if(tau > 0){
-		*dt = tau*fmin((Re/2*(1/pow(dx,2) + 1/pow(dy,2))), fmin(dx/u_max, dy/v_max));
+		double minimum = fmin((Re/2/(1/pow(dx,2) + 1/pow(dy,2))), fmin(dx/u_max, dy/v_max));
+		*dt = tau*minimum;
 	}
 }
 
