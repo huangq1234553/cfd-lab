@@ -101,6 +101,8 @@ int main(int argn, char** args){
 		// Update the timestep-related variables
 		t += dt;
 		n++;
+		write_vtkFile(szProblem, n, xlength, ylength, imax, jmax,
+			dx, dy, U, V, P);
 	}
 
 	free_matrix( U, 0, imax+1, 0, jmax+1);
