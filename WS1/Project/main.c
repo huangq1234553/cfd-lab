@@ -43,7 +43,7 @@
 int main(int argn, char** args){
 
 	char* szFileName = "cavity100.dat";
-	char* szProblem = "cavity100";
+	char* szProblem = "visualization";
 	double Re;                /* reynolds number   */
     double UI;                /* velocity x-direction */
     double VI;                /* velocity y-direction */
@@ -78,6 +78,8 @@ int main(int argn, char** args){
     double** G = matrix(0, imax+1, 0, jmax+1);
     double** RS = matrix(0, imax+1, 0, jmax+1);
     double** P = matrix(0, imax+1, 0, jmax+1);
+
+    init_uvp(UI,VI,PI,imax,jmax,U,V,P);
 
     double t = 0;
 	while(t < t_end){
