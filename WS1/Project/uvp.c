@@ -46,35 +46,38 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double dt, doub
 				// velocity u
 				U[i][j] 
 				// diffusive term
-				+ dt * ( 
-          1 / Re * 
-            (
-              ( U[i + 1][j] - 2 * U[i][j] + U[i - 1][j] ) / dx*dx 
-              + ( U[i][j + 1] - 2 * U[i][j] + U[i][j - 1] ) / dy*dy
-            ) 
-				// convective term
+				+ dt *
+			( 
+				  1 / Re * 
+					(
+						// 	  
+						( U[i + 1][j] - 2 * U[i][j] + U[i - 1][j] ) / (dx*dx) 
+					  + ( U[i][j + 1] - 2 * U[i][j] + U[i][j - 1] ) / (dy*dy)
+					) 
+						// convective term
 				- 1/dx * 
-            ( pow( ((U[i][j] + U[i+1][j]) / 2) , 2) 
-              - pow( ((U[i-1][j] + U[i][j])/2) , 2) 
-            )
-        + alpha/dx * 
-            ( 
-              ( abs(U[i][j] + U[i+1][j]) / 2 * ( U[i][j] - U[i + 1][j] ) /2 ) 
-              - ( abs(U[i-1][j] + U[i][j]) / 2 * ( U[i - 1][j] - U[i][j] ) / 2)
-            )
-				// convective term cont.
+					( pow( ((U[i][j] + U[i+1][j]) / 2) , 2) 
+					  - pow( ((U[i-1][j] + U[i][j])/2) , 2) 
+					)
+				+ alpha/dx * 
+					( 
+					  ( abs(U[i][j] + U[i+1][j]) / 2 * ( U[i][j] - U[i + 1][j] ) /2 ) 
+					  - ( abs(U[i-1][j] + U[i][j]) / 2 * ( U[i - 1][j] - U[i][j] ) / 2)
+					)
+						// convective term cont.
 				- 1/dy * 
-            (
-              (V[i][j]+V[i+1][j]) / 2 * (U[i][j]+U[i][j+1]) / 2 
-              - (V[i][j-1]+V[i+1][j-1]) / 2 * (U[i][j-1]+U[i][j]) / 2
-            ) 
-        + alpha / dy * 
-            (
-              abs(V[i][j]+V[i+1][j]) / 2 * (U[i][j] - U[i][j+1]) / 2 
-              - abs(V[i][j-1]+V[i+1][j-1]) / 2 * (U[i][j-1] - U[i][j]) / 2
-            )
-				// volume force
-				+ GX);
+					(
+					  (V[i][j]+V[i+1][j]) / 2 * (U[i][j]+U[i][j+1]) / 2 
+					  - (V[i][j-1]+V[i+1][j-1]) / 2 * (U[i][j-1]+U[i][j]) / 2
+					) 
+				+ alpha / dy * 
+					(
+					  abs(V[i][j]+V[i+1][j]) / 2 * (U[i][j] - U[i][j+1]) / 2 
+					  - abs(V[i][j-1]+V[i+1][j-1]) / 2 * (U[i][j-1] - U[i][j]) / 2
+					)
+						// volume force
+						+ GX
+		);
 		}
 	}
 
@@ -87,7 +90,7 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double dt, doub
 				// diffusive term
 				+ dt * 
           (
-            (1 / Re * ((V[i + 1][j] - 2 * V[i][j] + V[i - 1][j]) / dx*dx + (V[i][j + 1] - 2 * V[i][j] + V[i][j - 1]) / dy*dy)) 
+            (1 / Re * ((V[i + 1][j] - 2 * V[i][j] + V[i - 1][j]) / (dx*dx) + (V[i][j + 1] - 2 * V[i][j] + V[i][j - 1]) / (dy*dy))) 
 				// convective term
 				- (1 / dy * (
           pow( ((V[i][j] + V[i][j + 1]) / 2) , 2) 
