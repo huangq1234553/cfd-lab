@@ -186,13 +186,18 @@ void calculate_uv(
   double **P
  )
 {
-  // TODO: [Tom] Check if here we must start from 0 or not (same for i/j-max) - boundary should not be updated...
   for (int i=1; i<imax; ++i)
+  {
+    for (int j=1; j<jmax+1; ++j)
+    {
+      U[i][j] = F[i][j] - ( dt*(P[i+1][j] - P[i][j])/dx );
+    }
+  }
+  for (int i=1; i<imax+1; ++i)
   {
     for (int j=1; j<jmax; ++j)
     {
-      U[i][j] = F[i][j] - dt*(P[i+1][j] - P[i][j])/dx;
-      V[i][j] = G[i][j] - dt*(P[i][j+1] - P[i][j])/dy;
+      V[i][j] = G[i][j] - ( dt*(P[i][j+1] - P[i][j])/dy );
     }
   }
 }
