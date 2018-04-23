@@ -128,7 +128,7 @@ void calculate_dt(
 		}
 	}
 	if(tau > 0){
-		*dt = tau*min(Re/2*(1/pow(dx,2) + 1/pow(dy,2)), dx/u_max, dy/v_max);
+		*dt = tau*min((Re/2*(1/pow(dx,2) + 1/pow(dy,2))), min(dx/u_max, dy/v_max));
 	}
 }
 
