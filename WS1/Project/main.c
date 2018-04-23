@@ -43,6 +43,7 @@
 int main(int argn, char** args){
 
 	char* szFileName = "cavity100.dat";
+	char* szProblem = "cavity100";
 	double Re;                /* reynolds number   */
     double UI;                /* velocity x-direction */
     double VI;                /* velocity y-direction */
@@ -64,7 +65,7 @@ int main(int argn, char** args){
     double eps;               /* accuracy bound for pressure*/
     double dt_value;           /* time for output */
 	// double d = 0; // TODO: uncomment for visualization part
-	double n = 0;
+	int n = 0; // Iteration counter
 	int it = 0;
 	double res;					/*residual */
 
@@ -78,11 +79,11 @@ int main(int argn, char** args){
     double** RS = matrix(0, imax+1, 0, jmax+1);
     double** P = matrix(0, imax+1, 0, jmax+1);
 
-    int t=0;
+    double t = 0;
 	while(t < t_end){
 		if(tau > 0){
 			calculate_dt(Re, tau, &dt, dx, dy, imax, jmax, U, V);
-		}	
+		}
 		boundaryvalues(imax, jmax, U, V);
 		calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax, jmax, U, V, F, G);
 		calculate_rs(dt, dx, dy, imax, jmax, F, G, RS);
@@ -93,6 +94,11 @@ int main(int argn, char** args){
 			it++;
 		}
 		calculate_uv(dt, dx, dy, imax, jmax, U, V, F, G, P);
+		// Write visualization file for current iteration
+		write_vtkFile(szProblem, n, xlength, ylength, 
+			imax, jmax, dx, dy,
+			U, V, P);
+		// Update the timestep-related variables
 		t += dt;
 		n++;
 	}
