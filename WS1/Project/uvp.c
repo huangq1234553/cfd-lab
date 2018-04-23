@@ -1,4 +1,5 @@
 #include "uvp.h"	
+#include "helper.c"
 #include <math.h>
 
 
@@ -120,9 +121,9 @@ void calculate_dt(
 	double u_max, v_max;
 	for(int i=0; i<imax; i++){
 		for(int j=0; j<jmax; j++){
-			if abs(U[i][j]) > u_max
+			if(abs(U[i][j]) > u_max)
 				u_max = abs(U[i][j]);
-			if abs(V[i][j]) > v_max
+			if(abs(V[i][j]) > v_max)
 				v_max = abs(U[i][j]);
 		}
 	}
@@ -156,7 +157,7 @@ void calculate_uv(
   double **F,
   double **G,
   double **P
-)
+ )
 {
   // TODO: [Tom] Check if here we must start from 0 or not (same for i/j-max) - boundary should not be updated...
   for (int i=1; i<imax; ++i)
