@@ -42,15 +42,15 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double dt, doub
 	// calculate F in the domain
 	for (int i = 1; i < imax; i++) {
 		for (int j = 1; j <= jmax; j++) {
-			F[i][j] = ...
+			F[i][j] = 
 				// velocity u
-				U[i][j] ...
+				U[i][j] 
 				// diffusive term
-				+ dt * ((1 / Re * ((U[i + 1][j] - 2 * U[i]][j] + U[i - 1][j]) / dx*dx + (U[i][j + 1] - 2 * U[i]][j] + U[i][j - 1]) / dy*dy)) ...
+				+ dt * ((1 / Re * ((U[i + 1][j] - 2 * U[i]][j] + U[i - 1][j]) / dx*dx + (U[i][j + 1] - 2 * U[i]][j] + U[i][j - 1]) / dy*dy)) 
 				// convective term
-				- ( 1/dx * (((U[i][j] + U[i+1][j]) / 2)^2 - ((U[i-1][j] + U[i][j])/2)^2) + alpha/dx * ((abs(U[i][j] + U[i+1][j])/2 * (U[i][j] - U[i + 1][j])/2) - (abs(U[i-1][j] + U[i][j]) / 2 * (U[i - 1][j] - U[i][j]) / 2))) ...
+				- ( 1/dx * (((U[i][j] + U[i+1][j]) / 2)^2 - ((U[i-1][j] + U[i][j])/2)^2) + alpha/dx * ((abs(U[i][j] + U[i+1][j])/2 * (U[i][j] - U[i + 1][j])/2) - (abs(U[i-1][j] + U[i][j]) / 2 * (U[i - 1][j] - U[i][j]) / 2))) 
 				// convective term cont.
-				- (1 / dy * ((V[i][j]+V[i+1][j])/2 * (U[i][j]+U[i][j+1])/2 - (V[i][j-1]+V[i+1][j-1]) / 2 * (U[i][j-1]+U[i][j]) / 2) + alpha / dy * (abs(V[i][j]+V[i+1][j])/2*(U[i][j] - U[i][j+1])/2 - abs(V[i][j-1]+V[i+1][j-1])/2 * (U[i][j-1] - U[i][j])/2)) ...
+				- (1 / dy * ((V[i][j]+V[i+1][j])/2 * (U[i][j]+U[i][j+1])/2 - (V[i][j-1]+V[i+1][j-1]) / 2 * (U[i][j-1]+U[i][j]) / 2) + alpha / dy * (abs(V[i][j]+V[i+1][j])/2*(U[i][j] - U[i][j+1])/2 - abs(V[i][j-1]+V[i+1][j-1])/2 * (U[i][j-1] - U[i][j])/2))
 				// volume force
 				+ GX[i][j]);
 		}
@@ -59,15 +59,15 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double dt, doub
 	// calculate G in the domain
 	for (int i = 1; i <= imax; i++) {
 		for (int j = 1; j < jmax; j++) {
-			G[i][j] = ...
+			G[i][j] = 
 				// velocity v
-				V[i][j] ...
+				V[i][j] 
 				// diffusive term
-				+ dt * ((1 / Re * ((V[i + 1][j] - 2 * V[i]][j] + V[i - 1][j]) / dx*dx + (V[i][j + 1] - 2 * V[i]][j] + V[i][j - 1]) / dy*dy)) ...
+				+ dt * ((1 / Re * ((V[i + 1][j] - 2 * V[i]][j] + V[i - 1][j]) / dx*dx + (V[i][j + 1] - 2 * V[i]][j] + V[i][j - 1]) / dy*dy)) 
 				// convective term
-				- (1 / dy * (((V[i][j] + V[i][j + 1]) / 2) ^ 2 - ((V[i][j - 1] + V[i][j]) / 2) ^ 2) + alpha / dy * ((abs(V[i][j] + V[i][j + 1]) / 2 * (V[i][j] - V[i][j + 1]) / 2) - (abs(V[i][j - 1] + V[i][j]) / 2 * (V[i][j - 1] - V[i][j]) / 2))) ...
+				- (1 / dy * (((V[i][j] + V[i][j + 1]) / 2) ^ 2 - ((V[i][j - 1] + V[i][j]) / 2) ^ 2) + alpha / dy * ((abs(V[i][j] + V[i][j + 1]) / 2 * (V[i][j] - V[i][j + 1]) / 2) - (abs(V[i][j - 1] + V[i][j]) / 2 * (V[i][j - 1] - V[i][j]) / 2))) 
 				// convective term cont.
-				- (1 / dx * ((U[i][j] + U[i][j + 1]) / 2 * (V[i][j] + V[i + 1][j]) / 2 - (U[i - 1][j] + U[i - 1][j + 1]) / 2 * (V[i - 1][j] + V[i][j]) / 2) + alpha / dy * (abs(U[i][j] + U[i][j + 1]) / 2 * (V[i][j] - V[i + 1][j]) / 2 - abs(U[i - 1][j] + U[i - 1][j + 1]) / 2 * (V[i - 1][j] - V[i][j]) / 2)) ...
+				- (1 / dx * ((U[i][j] + U[i][j + 1]) / 2 * (V[i][j] + V[i + 1][j]) / 2 - (U[i - 1][j] + U[i - 1][j + 1]) / 2 * (V[i - 1][j] + V[i][j]) / 2) + alpha / dy * (abs(U[i][j] + U[i][j + 1]) / 2 * (V[i][j] - V[i + 1][j]) / 2 - abs(U[i - 1][j] + U[i - 1][j + 1]) / 2 * (V[i - 1][j] - V[i][j]) / 2)) 
 				// volume force
 				+ GY[i][j]);
 		}
