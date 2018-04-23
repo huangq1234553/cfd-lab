@@ -3,6 +3,7 @@
 #include "init.h"
 #include "sor.h"
 #include "boundary_val.h"
+#include "uvp.h"
 #include <stdio.h>
 
 
@@ -41,7 +42,7 @@
  */
 int main(int argn, char** args){
 
-	char szFileName = "cavity100.dat";
+	char* szFileName = "cavity100.dat";
 	double Re;                /* reynolds number   */
     double UI;                /* velocity x-direction */
     double VI;                /* velocity y-direction */
@@ -62,12 +63,13 @@ int main(int argn, char** args){
 	int  itermax;				/* max. number of iterations  */
     double eps;               /* accuracy bound for pressure*/
     double dt_value;           /* time for output */
-	double d = 0, n = 0;
+	// double d = 0; // TODO: uncomment for visualization part
+	double n = 0;
 	int it = 0;
 	double res;					/*residual */
 
     read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax,
-    				 &jmax, &alpha, &omg, &tau,itermax, &eps, &dt_value); 
+    				 &jmax, &alpha, &omg, &tau, &itermax, &eps, &dt_value); 
 
     double** U = matrix(0, imax+1, 0, jmax+1);
     double** V = matrix(0, imax+1, 0, jmax+1);
@@ -76,6 +78,7 @@ int main(int argn, char** args){
     double** RS = matrix(0, imax+1, 0, jmax+1);
     double** P = matrix(0, imax+1, 0, jmax+1);
 
+    int t=0;
 	while(t < t_end){
 		if(tau > 0){
 			calculate_dt(Re, tau, &dt, dx, dy, imax, jmax, U, V);
