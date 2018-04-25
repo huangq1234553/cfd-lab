@@ -68,6 +68,7 @@ int main(int argn, char** args){
 	double res = 10;		  /* residual */
 	double t = 0;			  /* initial time */
 	int it;					  /* sor iteration counter */
+	double mindt=10000;
 
     read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax, &jmax, &alpha, &omg, &tau, &itermax, &eps, &dt_value); 
 
@@ -88,6 +89,8 @@ int main(int argn, char** args){
 		// dt = tau * min(cond1, cond2, cond3) where tau is a safety factor
 		if(tau > 0){
 			calculate_dt(Re, tau, &dt, dx, dy, imax, jmax, U, V);
+			if (dt < mindt)
+				mindt = dt;
 		}
 		
 		// ensure boundary conditions for velocity
@@ -129,4 +132,5 @@ int main(int argn, char** args){
 	free_matrix( RS, 0, imax+1, 0, jmax+1);
 	free_matrix( P, 0, imax+1, 0, jmax+1);
 
+	printf("Min dt value used: %f", mindt);
 }
