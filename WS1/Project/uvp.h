@@ -38,7 +38,9 @@ void calculate_fg(
   double **F,
   double **G
 );
-
+// Helper functions for calculate_fg
+double secondDerivative(double** A, int i, int j, double h, short axis);
+double productDerivative(double** A, double** B, int i, int j, double h, short axis, double alpha);
 
 /**
  * This operation computes the right hand side of the pressure poisson equation.

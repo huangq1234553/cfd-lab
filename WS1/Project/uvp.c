@@ -2,6 +2,8 @@
 #include "helper.h"
 #include <math.h>
 
+const short XDIR = 0;
+const short YDIR = 1;
 
 /**
  * Determines the value of F and G according to the formula
@@ -47,37 +49,15 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double dt, doub
 				U[i][j] 
 				// diffusive term
 				+ dt *
-			( 
-				  1 / Re * 
-					(
-						// 	  
-						( U[i + 1][j] - 2 * U[i][j] + U[i - 1][j] ) / (dx*dx) 
-					  + ( U[i][j + 1] - 2 * U[i][j] + U[i][j - 1] ) / (dy*dy)
-					) 
+        ( 
+				    1 / Re * ( secondDerivative(U, i, j, dx, XDIR) + secondDerivative(U, i, j, dy, YDIR) ) 
 						// convective term
-				- 1/dx * 
-					( pow( ((U[i][j] + U[i+1][j]) / 2) , 2) 
-					  - pow( ((U[i-1][j] + U[i][j])/2) , 2) 
-					)
-				+ alpha/dx * 
-					( 
-					  ( abs(U[i][j] + U[i+1][j]) / 2 * ( U[i][j] - U[i + 1][j] ) /2 ) 
-					  - ( abs(U[i-1][j] + U[i][j]) / 2 * ( U[i - 1][j] - U[i][j] ) / 2)
-					)
+            - productDerivative(U, U, i, j, dx, XDIR, alpha)
 						// convective term cont.
-				- 1/dy * 
-					(
-					  (V[i][j]+V[i+1][j]) / 2 * (U[i][j]+U[i][j+1]) / 2 
-					  - (V[i][j-1]+V[i+1][j-1]) / 2 * (U[i][j-1]+U[i][j]) / 2
-					) 
-				+ alpha / dy * 
-					(
-					  abs(V[i][j]+V[i+1][j]) / 2 * (U[i][j] - U[i][j+1]) / 2 
-					  - abs(V[i][j-1]+V[i+1][j-1]) / 2 * (U[i][j-1] - U[i][j]) / 2
-					)
+            - productDerivative(U, V, i, j, dy, YDIR, alpha)
 						// volume force
 						+ GX
-		);
+		    );
 		}
 	}
 
@@ -89,19 +69,74 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double dt, doub
 				V[i][j] 
 				// diffusive term
 				+ dt * 
-          (
-            (1 / Re * ((V[i + 1][j] - 2 * V[i][j] + V[i - 1][j]) / (dx*dx) + (V[i][j + 1] - 2 * V[i][j] + V[i][j - 1]) / (dy*dy))) 
-				// convective term
-				- (1 / dy * (
-          pow( ((V[i][j] + V[i][j + 1]) / 2) , 2) 
-          - pow( ((V[i][j - 1] + V[i][j]) / 2) , 2) ) + alpha / dy * ((abs(V[i][j] + V[i][j + 1]) / 2 * (V[i][j] - V[i][j + 1]) / 2) - (abs(V[i][j - 1] + V[i][j]) / 2 * (V[i][j - 1] - V[i][j]) / 2))) 
-				// convective term cont.
-				- (1 / dx * ((U[i][j] + U[i][j + 1]) / 2 * (V[i][j] + V[i + 1][j]) / 2 - (U[i - 1][j] + U[i - 1][j + 1]) / 2 * (V[i - 1][j] + V[i][j]) / 2) + alpha / dy * (abs(U[i][j] + U[i][j + 1]) / 2 * (V[i][j] - V[i + 1][j]) / 2 - abs(U[i - 1][j] + U[i - 1][j + 1]) / 2 * (V[i - 1][j] - V[i][j]) / 2)) 
-				// volume force
-				+ GY);
+        (
+            1 / Re * ( secondDerivative(V, i, j, dx, XDIR) + secondDerivative(V, i, j, dy, YDIR) )
+            // convective term
+            - productDerivative(U, V, i, j, dx, XDIR, alpha)
+            // convective term cont.
+            - productDerivative(V, V, i, j, dy, YDIR, alpha)
+            // volume force
+				    + GY
+        );
 		}
 	}
- }
+}
+
+double secondDerivative(double** A, int i, int j, double h, short axis)
+{
+  // Approximate the second derivative via central difference.
+  // A is the matrix of values.
+  // i,j are the coordinates of the central element.
+  // h is the discretization step for the chosen direction
+  // axis is the index we want to perform the derivative on:
+  // A[i][j], axis=0 --> derivative on i
+  // A[i][j], axis=1 --> derivative on j
+  if (axis==XDIR)
+  { // Over dx
+    return (A[i-1][j] -2*A[i][j] + A[i+1][j]) / (h*h);
+  }
+  else
+  { // Over dy
+    return (A[i][j-1] -2*A[i][j] + A[i][j+1]) / (h*h);
+  }
+}
+
+double productDerivative(double** A, double** B, int i, int j, double h, short axis, double alpha)
+{
+  // Approximate the derivative of the AB product as per formula in the worksheet.
+  // A,B are the matrices of values. (Their order is important: A is along x, B along y)
+  // i,j are the coordinates of the central element.
+  // h is the discretization step for the chosen direction
+  // axis is the index we want to perform the derivative on:
+  // A[i][j], axis=0 --> derivative on i
+  // A[i][j], axis=1 --> derivative on j
+  if (axis==XDIR)
+  { // Over dx
+    return 1/h * 
+            (
+              (A[i][j]+A[i+1][j]) / 2 * (B[i][j]+B[i][j+1]) / 2 
+              - (A[i][j-1]+A[i+1][j-1]) / 2 * (B[i][j-1]+B[i][j]) / 2
+            ) 
+          + alpha / h * 
+            (
+              abs(A[i][j]+A[i+1][j]) / 2 * (B[i][j] - B[i][j+1]) / 2 
+              - abs(A[i][j-1]+A[i+1][j-1]) / 2 * (B[i][j-1] - B[i][j]) / 2
+            );
+  }
+  else
+  { // Over dy
+    return 1/h * 
+            (
+              (B[i][j]+B[i+1][j]) / 2 * (A[i][j]+A[i][j+1]) / 2 
+              - (B[i][j-1]+B[i+1][j-1]) / 2 * (A[i][j-1]+A[i][j]) / 2
+            ) 
+          + alpha / h * 
+            (
+              abs(B[i][j]+B[i+1][j]) / 2 * (A[i][j] - A[i][j+1]) / 2 
+              - abs(B[i][j-1]+B[i+1][j-1]) / 2 * (A[i][j-1] - A[i][j]) / 2
+            );
+  }
+}
 
 /**
  * This operation computes the right hand side of the pressure poisson equation.
