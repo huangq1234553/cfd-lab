@@ -190,10 +190,9 @@ void calculate_uv(
 {
   for (int i=1; i<imax; ++i)
   {
-    for (int j=1; j<jmax; ++j)
+    for (int j=1; j<jmax+1; ++j)
     {
       U[i][j] = F[i][j] - ( dt*(P[i+1][j] - P[i][j])/dx );
-      V[i][j] = G[i][j] - ( dt*(P[i][j+1] - P[i][j])/dy );
     }
   }
   for (int i=1; i<imax+1; ++i)
