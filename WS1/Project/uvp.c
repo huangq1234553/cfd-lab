@@ -114,13 +114,13 @@ double productDerivative(double** A, double** B, int i, int j, double h, short a
   { // Over dx
     return 1/h * 
             (
-              (A[i][j]+A[i+1][j]) / 2 * (B[i][j]+B[i][j+1]) / 2 
-              - (A[i][j-1]+A[i+1][j-1]) / 2 * (B[i][j-1]+B[i][j]) / 2
+              (A[i][j]+A[i][j+1]) / 2 * (B[i][j]+B[i+1][j]) / 2 
+              - (A[i-1][j]+A[i-1][j+1]) / 2 * (B[i-1][j]+B[i][j]) / 2
             ) 
           + alpha / h * 
             (
-              abs(A[i][j]+A[i+1][j]) / 2 * (B[i][j] - B[i][j+1]) / 2 
-              - abs(A[i][j-1]+A[i+1][j-1]) / 2 * (B[i][j-1] - B[i][j]) / 2
+              abs(A[i][j]+A[i][j+1]) / 2 * (B[i][j] - B[i+1][j]) / 2 
+              - abs(A[i-1][j]+A[i-1][j+1]) / 2 * (B[i-1][j] - B[i][j]) / 2
             );
   }
   else
