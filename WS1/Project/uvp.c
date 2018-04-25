@@ -148,18 +148,17 @@ void calculate_dt(
   double **V
 ){
 	double u_max = 0, v_max = 0;
-	for(int i=0; i<imax; i++){
-		for(int j=0; j<jmax; j++){
+	for(int i=1; i<imax+1; i++){
+		for(int j=1; j<jmax+1; j++){
 			if(abs(U[i][j]) > u_max)
 				u_max = abs(U[i][j]);
 			if(abs(V[i][j]) > v_max)
 				v_max = abs(U[i][j]);
 		}
 	}
-	if(tau > 0){
+
 		double minimum = fmin((Re/2/(1/pow(dx,2) + 1/pow(dy,2))), fmin(dx/u_max, dy/v_max));
 		*dt = tau*minimum;
-	}
 }
 
 /**
@@ -191,9 +190,10 @@ void calculate_uv(
 {
   for (int i=1; i<imax; ++i)
   {
-    for (int j=1; j<jmax+1; ++j)
+    for (int j=1; j<jmax; ++j)
     {
       U[i][j] = F[i][j] - ( dt*(P[i+1][j] - P[i][j])/dx );
+      V[i][j] = G[i][j] - ( dt*(P[i][j+1] - P[i][j])/dy );
     }
   }
   for (int i=1; i<imax+1; ++i)
