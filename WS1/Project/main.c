@@ -65,9 +65,9 @@ int main(int argn, char** args){
     double eps;               /* accuracy bound for pressure*/
     double dt_value;          /* time for output */
 	int n = 0;				  /* timestep iteration counter */
-	int it = 0;				  /* sor iteration counter*/
 	double res = 10;		  /* residual */
 	double t = 0;			  /* initial time */
+	int it;					  /* sor iteration counter */
 
     read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax, &jmax, &alpha, &omg, &tau, &itermax, &eps, &dt_value); 
 
@@ -100,6 +100,7 @@ int main(int argn, char** args){
 		calculate_rs(dt, dx, dy, imax, jmax, F, G, RS);
 		
 		// solve the system of eqs arising from implicit pressure uptate scheme using succesive overrelaxation solver
+		it = 0;
 		while(it < itermax && res > eps){
 			sor(omg, dx, dy, imax, jmax, P, RS, &res);
 			it++;
