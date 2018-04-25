@@ -61,16 +61,15 @@ int main(int argn, char** args){
     double alpha;             /* uppwind differencing factor*/
     double omg;               /* relaxation factor */
     double tau;               /* safety factor for time step*/
-	int  itermax;				/* max. number of iterations  */
+	int  itermax;			  /* max. number of iterations  */
     double eps;               /* accuracy bound for pressure*/
-    double dt_value;           /* time for output */
-	// double d = 0; // TODO: uncomment for visualization part
-	int n = 0; // Iteration counter
-	int it = 0;
-	double res;					/*residual */
+    double dt_value;          /* time for output */
+	int n = 0;				  /* timestep iteration counter */
+	int it = 0;				  /* sor iteration counter*/
+	double res = 10;		  /* residual */
+	double t = 0;			  /* initial time */
 
-    read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax,
-    				 &jmax, &alpha, &omg, &tau, &itermax, &eps, &dt_value); 
+    read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax, &jmax, &alpha, &omg, &tau, &itermax, &eps, &dt_value); 
 
     double** U = matrix(0, imax+1, 0, jmax+1);
     double** V = matrix(0, imax+1, 0, jmax+1);
@@ -79,33 +78,48 @@ int main(int argn, char** args){
     double** RS = matrix(0, imax+1, 0, jmax+1);
     double** P = matrix(0, imax+1, 0, jmax+1);
 
-    init_uvp(UI,VI,PI,imax,jmax,U,V,P);
+    // initialise velocities and pressure
+	init_uvp(UI,VI,PI,imax,jmax,U,V,P);
 
-    double t = 0;
+	// simulation interval 0 to t_end
 	while(t < t_end){
+		
+		// adaptive stepsize control based on stability conditions ensures stability of the method!
+		// dt = tau * min(cond1, cond2, cond3) where tau is a safety factor
 		if(tau > 0){
 			calculate_dt(Re, tau, &dt, dx, dy, imax, jmax, U, V);
 		}
+		
+		// ensure boundary conditions for velocity
 		boundaryvalues(imax, jmax, U, V);
+		
+		// momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
 		calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax, jmax, U, V, F, G);
+		
+		// momentum equations M1 and M2 are plugged into continuity equation C to produce PPE - depends on F and G - RS is the rhs of the implicit pressure update scheme
 		calculate_rs(dt, dx, dy, imax, jmax, F, G, RS);
-		it = 0;
-		res = 10;
+		
+		// solve the system of eqs arising from implicit pressure uptate scheme using succesive overrelaxation solver
 		while(it < itermax && res > eps){
 			sor(omg, dx, dy, imax, jmax, P, RS, &res);
 			it++;
 		}
+		
+		// calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
 		calculate_uv(dt, dx, dy, imax, jmax, U, V, F, G, P);
-		// Write visualization file for current iteration
-		write_vtkFile(szProblem, n, xlength, ylength, 
-			imax, jmax, dx, dy,
-			U, V, P);
-		// Update the timestep-related variables
+		
+		// write visualization file for current iteration
+		write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+		
+		// advance in time
 		t += dt;
+		
+		// update timestep iteration cunter
 		n++;
-		write_vtkFile(szProblem, n, xlength, ylength, imax, jmax,
-			dx, dy, U, V, P);
 	}
+
+	// write visualisation file for the last iteration
+	write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
 
 	free_matrix( U, 0, imax+1, 0, jmax+1);
 	free_matrix( V, 0, imax+1, 0, jmax+1);
