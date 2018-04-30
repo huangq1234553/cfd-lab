@@ -68,6 +68,7 @@ int main(int argn, char** args){
 	double res = 10;		  /* residual */
 	double t = 0;			  /* initial time */
 	int it;					  /* sor iteration counter */
+	double mindt=10000;
 
     read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax, &jmax, &alpha, &omg, &tau, &itermax, &eps, &dt_value); 
 
@@ -82,12 +83,16 @@ int main(int argn, char** args){
 	init_uvp(UI,VI,PI,imax,jmax,U,V,P);
 
 	// simulation interval 0 to t_end
+	double currentOutputTime = 0; // For chosing when to output
 	while(t < t_end){
 		
 		// adaptive stepsize control based on stability conditions ensures stability of the method!
 		// dt = tau * min(cond1, cond2, cond3) where tau is a safety factor
+		// NOTE: if tau<0, stepsize is not adaptively computed!
 		if(tau > 0){
 			calculate_dt(Re, tau, &dt, dx, dy, imax, jmax, U, V);
+			if (dt < mindt)
+				mindt = dt;
 		}
 		
 		// ensure boundary conditions for velocity
@@ -109,18 +114,23 @@ int main(int argn, char** args){
 		// calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
 		calculate_uv(dt, dx, dy, imax, jmax, U, V, F, G, P);
 		
-		// write visualization file for current iteration
-		write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
-		
+		// write visualization file for current iteration (only every dt_value step)
+		if (t >= currentOutputTime)
+		{
+			write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+			currentOutputTime += dt_value;
+			// update output timestep iteration cunter
+			n++;
+		}
 		// advance in time
 		t += dt;
-		
-		// update timestep iteration cunter
-		n++;
 	}
 
 	// write visualisation file for the last iteration
 	write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+
+	// Check value of U[imax/2][7*jmax/8] (task6)
+	printf("Final value for U[imax/2][7*jmax/8] = %16e\n", U[imax/2][7*jmax/8]);
 
 	free_matrix( U, 0, imax+1, 0, jmax+1);
 	free_matrix( V, 0, imax+1, 0, jmax+1);
@@ -129,4 +139,7 @@ int main(int argn, char** args){
 	free_matrix( RS, 0, imax+1, 0, jmax+1);
 	free_matrix( P, 0, imax+1, 0, jmax+1);
 
+	printf("Min dt value used: %16e\n", mindt);
+
+	return 0;
 }
