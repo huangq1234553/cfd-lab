@@ -52,7 +52,7 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double dt, doub
         ( 
 				    1 / Re * ( secondDerivative(U, i, j, dx, XDIR) + secondDerivative(U, i, j, dy, YDIR) ) 
 						// convective term
-            - productDerivative(U, U, i, j, dx, XDIR, alpha)
+            - productDerivative(U, i, j, dx, XDIR, alpha)
 						// convective term cont.
             - productDerivative(U, V, i, j, dy, YDIR, alpha)
 						// volume force
@@ -74,7 +74,7 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double dt, doub
             // convective term
             - productDerivative(U, V, i, j, dx, XDIR, alpha)
             // convective term cont.
-            - productDerivative(V, V, i, j, dy, YDIR, alpha)
+            - productDerivative(V, i, j, dy, YDIR, alpha)
             // volume force
 				    + GY
         );
@@ -134,6 +134,43 @@ double productDerivative(double** A, double** B, int i, int j, double h, short a
             (
               abs(B[i][j]+B[i+1][j]) / 2 * (A[i][j] - A[i][j+1]) / 2 
               - abs(B[i][j-1]+B[i+1][j-1]) / 2 * (A[i][j-1] - A[i][j]) / 2
+            );
+  }
+}
+
+double productDerivative(double** A, int i, int j, double h, short axis, double alpha)
+{
+  // Approximate the derivative of the AA product as per formula in the worksheet.
+  // A is the matrices of values.
+  // i,j are the coordinates of the central element.
+  // h is the discretization step for the chosen direction
+  // axis is the index we want to perform the derivative on:
+  // A[i][j], axis=0 --> derivative on i
+  // A[i][j], axis=1 --> derivative on j
+  if (axis==XDIR)
+  { // Over dx
+    return 1/h * 
+            (
+              pow(((A[i][j]+A[i+1][j]) / 2 ), 2)
+              - pow(((A[i-1][j]+A[i][j]) / 2), 2)
+            ) 
+          + alpha / h * 
+            (
+              abs(A[i][j]+A[i+1][j]) / 2 * (A[i][j] - A[i+1][j]) / 2 
+              - abs(A[i-1][j]+A[i][j]) / 2 * (A[i-1][j] - A[i][j]) / 2
+            );
+  }
+  else
+  { // Over dy
+    return 1/h * 
+            (
+              pow(((A[i][j]+A[i][j+1]) / 2), 2)
+              - pow(((A[i][j-1]+A[i][j]) / 2), 2)
+            ) 
+          + alpha / h * 
+            (
+              abs(A[i][j]+A[i][j+1]) / 2 * (A[i][j] - A[i][j+1]) / 2 
+              - abs(A[i][j-1]+A[i][j]) / 2 * (A[i][j-1] - A[i][j]) / 2
             );
   }
 }
