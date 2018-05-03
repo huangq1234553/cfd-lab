@@ -28,17 +28,17 @@ const short YDIR = 1;
  */
 
 void calculate_fg(double Re, double GX, double GY, double alpha, double dt, double dx, double dy, int imax, int jmax, double **U, double **V, double **F, double **G) {
-  // set boundary conditions for F - see discrete momentum equations - apply Neumann BC - first derivative of pressure must be "zero" - dp/dx = 0
-  for (int j = 1; j <= jmax; j++) {
-    F[0][j] = U[0][j];
-    F[imax][j] = U[imax][j];
-  }
+  // // set boundary conditions for F - see discrete momentum equations - apply Neumann BC - first derivative of pressure must be "zero" - dp/dx = 0
+  // for (int j = 1; j <= jmax; j++) {
+  //   F[0][j] = U[0][j];
+  //   F[imax][j] = U[imax][j];
+  // }
 
-  // set boundary conditions for G - see discrete momentum equations - apply Neumann BC - first derivative of pressure must be "zero" - dp/dy = 0
-  for (int i = 1; i <= imax; i++) {
-    G[i][0] = V[i][0];
-    G[i][jmax] = V[i][jmax];
-  }
+  // // set boundary conditions for G - see discrete momentum equations - apply Neumann BC - first derivative of pressure must be "zero" - dp/dy = 0
+  // for (int i = 1; i <= imax; i++) {
+  //   G[i][0] = V[i][0];
+  //   G[i][jmax] = V[i][jmax];
+  // }
 	
   // calculate F in the domain
 	for (int i = 1; i < imax; i++) {
@@ -79,6 +79,18 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double dt, doub
         );
 		}
 	}
+  // set boundary conditions for F - see discrete momentum equations - apply Neumann BC - first derivative of pressure must be "zero" - dp/dx = 0
+  for (int j = 1; j <= jmax; j++) {
+    F[0][j] = U[0][j];
+    F[imax][j] = U[imax][j];
+  }
+
+  // set boundary conditions for G - see discrete momentum equations - apply Neumann BC - first derivative of pressure must be "zero" - dp/dy = 0
+  for (int i = 1; i <= imax; i++) {
+    G[i][0] = V[i][0];
+    G[i][jmax] = V[i][jmax];
+  }
+  
 
 }
 

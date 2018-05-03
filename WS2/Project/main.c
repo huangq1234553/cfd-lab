@@ -81,7 +81,9 @@ int main(int argn, char** args){
 
     // initialise velocities and pressure
 	init_uvp(UI,VI,PI,imax,jmax,U,V,P);
-
+	// printf(V);
+	write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+	n++;
 	// simulation interval 0 to t_end
 	double currentOutputTime = 0; // For chosing when to output
 	while(t < t_end){
@@ -92,13 +94,16 @@ int main(int argn, char** args){
 		if(tau > 0){
 			calculate_dt(Re, tau, &dt, dx, dy, imax, jmax, U, V);
 			// Used to check the minimum time-step for convergence
-			// if (dt < mindt)
-			// 	mindt = dt;
+			if (dt < mindt)
+				mindt = dt;
 		}
 		
 		// ensure boundary conditions for velocity
 		boundaryvalues(imax, jmax, U, V);
-		
+		if(t == 0){
+			write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+			n++;
+		}
 		// momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
 		calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax, jmax, U, V, F, G);
 		
@@ -107,11 +112,12 @@ int main(int argn, char** args){
 		
 		// solve the system of eqs arising from implicit pressure uptate scheme using succesive overrelaxation solver
 		it = 0;
+		
 		while(it < itermax && res > eps){
 			sor(omg, dx, dy, imax, jmax, P, RS, &res);
 			it++;
 		}
-		
+		res = 10;
 		// calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
 		calculate_uv(dt, dx, dy, imax, jmax, U, V, F, G, P);
 		

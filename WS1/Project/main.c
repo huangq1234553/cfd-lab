@@ -94,6 +94,7 @@ int main(int argn, char** args){
 			if (dt < mindt)
 				mindt = dt;
 		}
+		std::cout << dt << std::endl;
 		
 		// ensure boundary conditions for velocity
 		boundaryvalues(imax, jmax, U, V);
