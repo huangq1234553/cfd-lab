@@ -5,6 +5,7 @@
 #include "boundary_val.h"
 #include "uvp.h"
 #include <stdio.h>
+#include <stdarg.h>
 
 
 /**
@@ -40,6 +41,43 @@
  *   iteration loop the operation sor() is used.
  * - calculate_uv() Calculate the velocity at the next time step.
  */
+
+/*
+ * Logging machinery - how to:
+ * 1) Make sure to call openLogFile() once at the beginning of main(), before calling any logmsg().
+ * 2) To log a message both to log file and to console, call logmsg() as follows:
+ *      logmsg(time, message, [arg1, arg2, ...]);
+ *   time must be the current simulation time, message a printf-friendly string,
+ *   then optional args in prtf style can be passed.
+ * 3) Make sure to call closeLogfile() before exiting the main (this closes the file at OS level).
+ */
+static char* LOG_FILE_NAME = "sim.log";
+static FILE* LOG_FILE;
+
+void openLogFile()
+{
+    LOG_FILE = fopen(LOG_FILE_NAME, "w");
+}
+void logmsg(double t, char* fmt, ...)
+{
+    // Newline at the end of the message is included.
+    va_list args;
+    va_start(args,fmt);
+    printf("[%12.9f] ", t);
+    vprintf(fmt, args);
+    printf("\n");
+    va_end(args);
+    va_start(args,fmt);
+    fprintf(LOG_FILE, "[%12.9f] ", t);
+    vfprintf(LOG_FILE, fmt, args);
+    fprintf(LOG_FILE, "\n");
+    va_end(args);
+}
+void closeLogFile()
+{
+    fclose(LOG_FILE);
+}
+
 int main(int argn, char** args){
 
 	char* szFileName = "cavity100.dat";
@@ -69,7 +107,8 @@ int main(int argn, char** args){
 	double t = 0;			  /* initial time */
 	int it;					  /* sor iteration counter */
 	double mindt=10000;
-
+    
+    openLogFile(); // Initialize the log file descriptor.
     read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax, &jmax, &alpha, &omg, &tau, &itermax, &eps, &dt_value); 
 
     double** U = matrix(0, imax+1, 0, jmax+1);
@@ -81,8 +120,9 @@ int main(int argn, char** args){
 
     // initialise velocities and pressure
 	init_uvp(UI,VI,PI,imax,jmax,U,V,P);
-	// printf(V);
-	write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+	
+	// TODO: Check if this visualization output can be removed!
+//	write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
 	n++;
 	// simulation interval 0 to t_end
 	double currentOutputTime = 0; // For chosing when to output
@@ -112,13 +152,16 @@ int main(int argn, char** args){
 		
 		// solve the system of eqs arising from implicit pressure uptate scheme using succesive overrelaxation solver
 		it = 0;
-		
-		while(it < itermax && res > eps){
+        res = 1e9;
+        while(it < itermax && res > eps){
 			sor(omg, dx, dy, imax, jmax, P, RS, &res);
 			it++;
 		}
-		// printf("The iteration is %d, the timestep is %f\n", it, t);
-		res = 10;
+        if (it == itermax)
+        {
+//            printf("[%12.9f] WARNING: max number of iterations reached on SOR. Probably it did not converge!\n", t);
+            logmsg(t, "WARNING: max number of iterations reached on SOR. Probably it did not converge!");
+        }
 		// calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
 		calculate_uv(dt, dx, dy, imax, jmax, U, V, F, G, P);
 		
@@ -130,6 +173,9 @@ int main(int argn, char** args){
 			// update output timestep iteration counter
 			n++;
 		}
+        // Recap shell output
+//        printf("[%12.9f] INFO: dt=%f, numSorIterations=%d, sorResidual=%f\n", t, dt, it, res);
+        logmsg(t, "INFO: dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res);
 		// advance in time
 		t += dt;
 	}
@@ -138,7 +184,7 @@ int main(int argn, char** args){
 	write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
 
 	// Check value of U[imax/2][7*jmax/8] (task6)
-	printf("Final value for U[imax/2][7*jmax/8] = %16e\n", U[imax/2][7*jmax/8]);
+	logmsg(t, "Final value for U[imax/2][7*jmax/8] = %16e", U[imax/2][7*jmax/8]);
 
 	free_matrix( U, 0, imax+1, 0, jmax+1);
 	free_matrix( V, 0, imax+1, 0, jmax+1);
@@ -147,7 +193,10 @@ int main(int argn, char** args){
 	free_matrix( RS, 0, imax+1, 0, jmax+1);
 	free_matrix( P, 0, imax+1, 0, jmax+1);
 
-	printf("Min dt value used: %16e\n", mindt);
+	logmsg(t, "Min dt value used: %16e", mindt);
+    
+    closeLogFile(); // Properly close the log file
 
 	return 0;
 }
+
