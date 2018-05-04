@@ -150,7 +150,7 @@ int main(int argn, char** args){
     write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
 
 	// Check value of U[imax/2][7*jmax/8] (task6)
-    logEvent(t, "Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
+    logMsg("Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
 
 	free_matrix( U, 0, imax+1, 0, jmax+1);
 	free_matrix( V, 0, imax+1, 0, jmax+1);
@@ -159,7 +159,7 @@ int main(int argn, char** args){
 	free_matrix( RS, 0, imax+1, 0, jmax+1);
 	free_matrix( P, 0, imax+1, 0, jmax+1);
     
-    logEvent(t, "Min dt value used: %16e", mindt);
+    logMsg("Min dt value used: %16e", mindt);
     
     closeLogFile(); // Properly close the log file
 
