@@ -117,6 +117,7 @@ int main(int argn, char** args){
 			sor(omg, dx, dy, imax, jmax, P, RS, &res);
 			it++;
 		}
+		// printf("The iteration is %d, the timestep is %f\n", it, t);
 		res = 10;
 		// calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
 		calculate_uv(dt, dx, dy, imax, jmax, U, V, F, G, P);
