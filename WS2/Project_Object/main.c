@@ -43,7 +43,7 @@
 int main(int argn, char** args){
 
 	char* szFileName = "cavity100.dat";
-	char* szProblem = "visualization";
+	// char* szProblem = "visualization";
 	double Re;                /* reynolds number   */
     double UI;                /* velocity x-direction */
     double VI;                /* velocity y-direction */
@@ -64,19 +64,18 @@ int main(int argn, char** args){
 	int  itermax;			  /* max. number of iterations  */
     double eps;               /* accuracy bound for pressure*/
     double dt_value;          /* time for output */
-	int n = 0;				  /* timestep iteration counter */
-	double res = 10;		  /* residual */
-	double t = 0;			  /* initial time */
-	int it;					  /* sor iteration counter */
-	double mindt=10000;
-	char* problem;
-	char* geometry;
-	int* Flag;
+	// int n = 0;				  /* timestep iteration counter */
+	// double res = 10;		  /* residual */
+	// double t = 0;			  /* initial time */
+	// int it;					  /* sor iteration counter */
+	// double mindt=10000;
 
-    read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax, &jmax, &alpha, &omg, &tau, &itermax, &eps, &dt_value, &problem, &geometry); 
+	char* geometry = "a";
+	char* problem = "b";
 
+    read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax, &jmax, &alpha, &omg, &tau, &itermax, &eps, &dt_value, &geometry, &problem); 
 
-    int** Flag = imatrix(0, imax+1, 0, jmax+1);
+    // int** Flag = imatrix(0, imax+1, 0, jmax+1);
     double** U = matrix(0, imax+1, 0, jmax+1);
     double** V = matrix(0, imax+1, 0, jmax+1);
     double** F = matrix(0, imax+1, 0, jmax+1);
@@ -86,65 +85,65 @@ int main(int argn, char** args){
 
     // initialise velocities and pressure
 	init_uvp(UI,VI,PI,imax,jmax,U,V,P);
-	init_flag(problem, geometry, imax, jmax, Flag);
+	// init_flag(problem, geometry, imax, jmax, Flag);
 	// printf(V);
-	write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
-	n++;
+	// write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+	// n++;
 	// simulation interval 0 to t_end
-	double currentOutputTime = 0; // For chosing when to output
-	while(t < t_end){
+	// double currentOutputTime = 0; // For chosing when to output
+	// while(t < t_end){
 		
-		// adaptive stepsize control based on stability conditions ensures stability of the method!
-		// dt = tau * min(cond1, cond2, cond3) where tau is a safety factor
-		// NOTE: if tau<0, stepsize is not adaptively computed!
-		if(tau > 0){
-			calculate_dt(Re, tau, &dt, dx, dy, imax, jmax, U, V);
-			// Used to check the minimum time-step for convergence
-			if (dt < mindt)
-				mindt = dt;
-		}
+	// 	// adaptive stepsize control based on stability conditions ensures stability of the method!
+	// 	// dt = tau * min(cond1, cond2, cond3) where tau is a safety factor
+	// 	// NOTE: if tau<0, stepsize is not adaptively computed!
+	// 	if(tau > 0){
+	// 		calculate_dt(Re, tau, &dt, dx, dy, imax, jmax, U, V);
+	// 		// Used to check the minimum time-step for convergence
+	// 		if (dt < mindt)
+	// 			mindt = dt;
+	// 	}
 		
-		// ensure boundary conditions for velocity
-		boundaryvalues(imax, jmax, U, V);
-		if(t == 0){
-			write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
-			n++;
-		}
-		// momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
-		calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax, jmax, U, V, F, G);
+	// 	// ensure boundary conditions for velocity
+	// 	boundaryvalues(imax, jmax, U, V);
+	// 	if(t == 0){
+	// 		write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+	// 		n++;
+	// 	}
+	// 	// momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
+	// 	calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax, jmax, U, V, F, G);
 		
-		// momentum equations M1 and M2 are plugged into continuity equation C to produce PPE - depends on F and G - RS is the rhs of the implicit pressure update scheme
-		calculate_rs(dt, dx, dy, imax, jmax, F, G, RS);
+	// 	// momentum equations M1 and M2 are plugged into continuity equation C to produce PPE - depends on F and G - RS is the rhs of the implicit pressure update scheme
+	// 	calculate_rs(dt, dx, dy, imax, jmax, F, G, RS);
 		
-		// solve the system of eqs arising from implicit pressure uptate scheme using succesive overrelaxation solver
-		it = 0;
+	// 	// solve the system of eqs arising from implicit pressure uptate scheme using succesive overrelaxation solver
+	// 	it = 0;
 		
-		while(it < itermax && res > eps){
-			sor(omg, dx, dy, imax, jmax, P, RS, &res);
-			it++;
-		}
-		// printf("The iteration is %d, the timestep is %f\n", it, t);
-		res = 10;
-		// calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
-		calculate_uv(dt, dx, dy, imax, jmax, U, V, F, G, P);
+	// 	while(it < itermax && res > eps){
+	// 		sor(omg, dx, dy, imax, jmax, P, RS, &res);
+	// 		it++;
+	// 	}
+	// 	// printf("The iteration is %d, the timestep is %f\n", it, t);
+	// 	res = 10;
+	// 	// calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
+	// 	calculate_uv(dt, dx, dy, imax, jmax, U, V, F, G, P);
 		
-		// write visualization file for current iteration (only every dt_value step)
-		if (t >= currentOutputTime)
-		{
-			write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
-			currentOutputTime += dt_value;
-			// update output timestep iteration counter
-			n++;
-		}
-		// advance in time
-		t += dt;
-	}
+	// 	// write visualization file for current iteration (only every dt_value step)
+	// 	if (t >= currentOutputTime)
+	// 	{
+	// 		write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+	// 		currentOutputTime += dt_value;
+	// 		// update output timestep iteration counter
+	// 		n++;
+	// 	}
+	// 	// advance in time
+	// 	t += dt;
+	// }
 
-	// write visualisation file for the last iteration
-	write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+	// // write visualisation file for the last iteration
+	// write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
 
-	// Check value of U[imax/2][7*jmax/8] (task6)
-	printf("Final value for U[imax/2][7*jmax/8] = %16e\n", U[imax/2][7*jmax/8]);
+	// // Check value of U[imax/2][7*jmax/8] (task6)
+	// printf("Final value for U[imax/2][7*jmax/8] = %16e\n", U[imax/2][7*jmax/8]);
 
 	free_matrix( U, 0, imax+1, 0, jmax+1);
 	free_matrix( V, 0, imax+1, 0, jmax+1);
@@ -152,8 +151,11 @@ int main(int argn, char** args){
 	free_matrix( G, 0, imax+1, 0, jmax+1);
 	free_matrix( RS, 0, imax+1, 0, jmax+1);
 	free_matrix( P, 0, imax+1, 0, jmax+1);
+	// if(Flag){
+	// 	free_imatrix(Flag, 0, imax+1, 0, jmax+1);
+	// }
 
-	printf("Min dt value used: %16e\n", mindt);
+	// printf("Min dt value used: %16e\n", mindt);
 
 	return 0;
 }
