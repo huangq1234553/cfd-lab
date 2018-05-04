@@ -4,8 +4,7 @@
 #include "sor.h"
 #include "boundary_val.h"
 #include "uvp.h"
-#include <stdio.h>
-#include <stdarg.h>
+#include "logger.h"
 
 
 /**
@@ -41,42 +40,6 @@
  *   iteration loop the operation sor() is used.
  * - calculate_uv() Calculate the velocity at the next time step.
  */
-
-/*
- * Logging machinery - how to:
- * 1) Make sure to call openLogFile() once at the beginning of main(), before calling any logmsg().
- * 2) To log a message both to log file and to console, call logmsg() as follows:
- *      logmsg(time, message, [arg1, arg2, ...]);
- *   time must be the current simulation time, message a printf-friendly string,
- *   then optional args in prtf style can be passed.
- * 3) Make sure to call closeLogfile() before exiting the main (this closes the file at OS level).
- */
-static char* LOG_FILE_NAME = "sim.log";
-static FILE* LOG_FILE;
-
-void openLogFile()
-{
-    LOG_FILE = fopen(LOG_FILE_NAME, "w");
-}
-void logmsg(double t, char* fmt, ...)
-{
-    // Newline at the end of the message is included.
-    va_list args;
-    va_start(args,fmt);
-    printf("[%12.9f] ", t);
-    vprintf(fmt, args);
-    printf("\n");
-    va_end(args);
-    va_start(args,fmt);
-    fprintf(LOG_FILE, "[%12.9f] ", t);
-    vfprintf(LOG_FILE, fmt, args);
-    fprintf(LOG_FILE, "\n");
-    va_end(args);
-}
-void closeLogFile()
-{
-    fclose(LOG_FILE);
-}
 
 int main(int argn, char** args){
 
@@ -123,7 +86,7 @@ int main(int argn, char** args){
 	
 	// TODO: Check if this visualization output can be removed!
 //	write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
-	n++;
+//	n++;
 	// simulation interval 0 to t_end
 	double currentOutputTime = 0; // For chosing when to output
 	while(t < t_end){
@@ -133,6 +96,7 @@ int main(int argn, char** args){
 		// NOTE: if tau<0, stepsize is not adaptively computed!
 		if(tau > 0){
 			calculate_dt(Re, tau, &dt, dx, dy, imax, jmax, U, V);
+            dt = fmin(dt, dt_value); // test, to avoid a dt bigger than visualization interval
 			// Used to check the minimum time-step for convergence
 			if (dt < mindt)
 				mindt = dt;
@@ -140,10 +104,10 @@ int main(int argn, char** args){
 		
 		// ensure boundary conditions for velocity
 		boundaryvalues(imax, jmax, U, V);
-		if(t == 0){
-			write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
-			n++;
-		}
+//		if(t == 0){
+//			write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+//			n++;
+//		}
 		// momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
 		calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax, jmax, U, V, F, G);
 		
@@ -160,7 +124,7 @@ int main(int argn, char** args){
         if (it == itermax)
         {
 //            printf("[%12.9f] WARNING: max number of iterations reached on SOR. Probably it did not converge!\n", t);
-            logmsg(t, "WARNING: max number of iterations reached on SOR. Probably it did not converge!");
+            logEvent(t, "WARNING: max number of iterations reached on SOR. Probably it did not converge!");
         }
 		// calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
 		calculate_uv(dt, dx, dy, imax, jmax, U, V, F, G, P);
@@ -168,6 +132,7 @@ int main(int argn, char** args){
 		// write visualization file for current iteration (only every dt_value step)
 		if (t >= currentOutputTime)
 		{
+            logEvent(t, "INFO: Writing visualization file n=%d", n);
 			write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
 			currentOutputTime += dt_value;
 			// update output timestep iteration counter
@@ -175,16 +140,17 @@ int main(int argn, char** args){
 		}
         // Recap shell output
 //        printf("[%12.9f] INFO: dt=%f, numSorIterations=%d, sorResidual=%f\n", t, dt, it, res);
-        logmsg(t, "INFO: dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res);
+        logEvent(t, "INFO: dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res);
 		// advance in time
 		t += dt;
 	}
 
 	// write visualisation file for the last iteration
-	write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+    logEvent(t, "INFO: Writing visualization file n=%d", n);
+    write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
 
 	// Check value of U[imax/2][7*jmax/8] (task6)
-	logmsg(t, "Final value for U[imax/2][7*jmax/8] = %16e", U[imax/2][7*jmax/8]);
+    logEvent(t, "Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
 
 	free_matrix( U, 0, imax+1, 0, jmax+1);
 	free_matrix( V, 0, imax+1, 0, jmax+1);
@@ -192,8 +158,8 @@ int main(int argn, char** args){
 	free_matrix( G, 0, imax+1, 0, jmax+1);
 	free_matrix( RS, 0, imax+1, 0, jmax+1);
 	free_matrix( P, 0, imax+1, 0, jmax+1);
-
-	logmsg(t, "Min dt value used: %16e", mindt);
+    
+    logEvent(t, "Min dt value used: %16e", mindt);
     
     closeLogFile(); // Properly close the log file
 
