@@ -27,7 +27,7 @@
 extern clock_t last_timer_reset;   
 
 
-int min( int a, int b);
+int min( int a, int b);	       
 int max( int a, int b);
 double fmin( double a, double b);
 double fmax( double a, double b);
@@ -267,7 +267,6 @@ void init_imatrix( int **m, int nrl, int nrh, int ncl, int nch, int a);
 
 /**
  * reads in a ASCII pgm-file and returns the colour information in a two-dimensional integer array.
- * At this, a boundary layer around the image is additionally stored and initialised with 0. 
  */
 int **read_pgm(const char *filename);
 
