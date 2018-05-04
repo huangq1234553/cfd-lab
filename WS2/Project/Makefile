@@ -8,7 +8,8 @@ OBJ = 	helper.o\
       	uvp.o\
       	sor.o\
       	main.o\
-      	visual.o
+      	visual.o\
+      	logger.o
 
 
 all:  $(OBJ)
@@ -20,10 +21,10 @@ all:  $(OBJ)
 clean:
 	rm $(OBJ)
 
-helper.o      : helper.h 
+helper.o      : helper.h logger.h
 init.o        : helper.h init.h 
 boundary_val.o: helper.h boundary_val.h 
 uvp.o         : helper.h uvp.h
 visual.o      : helper.h
 
-main.o        : helper.h init.h boundary_val.h uvp.h visual.h sor.h
+main.o        : helper.h init.h boundary_val.h uvp.h visual.h sor.h logger.h
