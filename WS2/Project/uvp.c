@@ -49,11 +49,11 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double dt, doub
 				// diffusive term
 				+ dt *
         ( 
-				    1 / Re * ( secondDerivative(U, i, j, dx, XDIR) + secondDerivative(U, i, j, dy, YDIR) ) 
+				    1 / Re * ( secondDerivativeDx(U, i, j, dx) + secondDerivativeDy(U, i, j, dy) )
 						// convective term
-            - productDerivative_double(U, i, j, dx, XDIR, alpha)
+            - squareDerivativeDx(U, i, j, dx, alpha)
 						// convective term cont.
-            - productDerivative(U, V, i, j, dy, YDIR, alpha)
+            - productDerivativeDy(U, V, i, j, dy, alpha)
 						// volume force
 						+ GX
 		    );
@@ -69,11 +69,11 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double dt, doub
 				// diffusive term
 				+ dt * 
         (
-            1 / Re * ( secondDerivative(V, i, j, dx, XDIR) + secondDerivative(V, i, j, dy, YDIR) )
+            1 / Re * ( secondDerivativeDx(V, i, j, dx) + secondDerivativeDy(V, i, j, dy) )
             // convective term
-            - productDerivative(U, V, i, j, dx, XDIR, alpha)
+            - productDerivativeDx(U, V, i, j, dx, alpha)
             // convective term cont.
-            - productDerivative_double(V, i, j, dy, YDIR, alpha)
+            - squareDerivativeDy(V, i, j, dy, alpha)
             // volume force
 				    + GY
         );
@@ -81,37 +81,30 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double dt, doub
 	}
 }
 
-double secondDerivative(double** A, int i, int j, double h, short axis)
+double secondDerivativeDx(double** A, int i, int j, double h)
 {
-  // Approximate the second derivative via central difference.
-  // A is the matrix of values.
-  // i,j are the coordinates of the central element.
-  // h is the discretization step for the chosen direction
-  // axis is the index we want to perform the derivative on:
-  // A[i][j], axis=0 --> derivative on i
-  // A[i][j], axis=1 --> derivative on j
-  if (axis==XDIR)
-  { // Over dx
+    // Approximate the second derivative via central difference.
+    // A is the matrix of values.
+    // i,j are the coordinates of the central element.
+    // h is the discretization step for the chosen direction
     return (A[i-1][j] -2*A[i][j] + A[i+1][j]) / (h*h);
-  }
-  else
-  { // Over dy
+}
+double secondDerivativeDy(double** A, int i, int j, double h)
+{
+    // Approximate the second derivative via central difference.
+    // A is the matrix of values.
+    // i,j are the coordinates of the central element.
+    // h is the discretization step for the chosen direction
     return (A[i][j-1] -2*A[i][j] + A[i][j+1]) / (h*h);
-  }
 }
 
-double productDerivative(double** A, double** B, int i, int j, double h, short axis, double alpha)
+double productDerivativeDx(double** A, double** B, int i, int j, double h, double alpha)
 {
   // Approximate the derivative of the AB product as per formula in the worksheet.
   // A,B are the matrices of values. (Their order is important: A is along x, B along y)
   // i,j are the coordinates of the central element.
   // h is the discretization step for the chosen direction
-  // axis is the index we want to perform the derivative on:
-  // A[i][j], axis=0 --> derivative on i
-  // A[i][j], axis=1 --> derivative on j
-  if (axis==XDIR)
-  { // Over dx
-    return 1/h * 
+  return 1/h *
             (
               (A[i][j] + A[i][j+1]) / 2 * (B[i][j] + B[i+1][j]) / 2 
               - (A[i-1][j] + A[i-1][j+1]) / 2 * (B[i-1][j] + B[i][j]) / 2
@@ -121,34 +114,32 @@ double productDerivative(double** A, double** B, int i, int j, double h, short a
               fabs(A[i][j] + A[i][j+1]) / 2 * (B[i][j] - B[i+1][j]) / 2 
               - fabs(A[i-1][j] + A[i-1][j+1]) / 2 * (B[i-1][j] - B[i][j]) / 2
             );
-  }
-  else
-  { // Over dy
-    return 1/h * 
-            (
-              (B[i][j] + B[i+1][j]) / 2 * (A[i][j] + A[i][j+1]) / 2 
-              - (B[i][j-1] + B[i+1][j-1]) / 2 * (A[i][j-1] + A[i][j]) / 2
-            ) 
-          + alpha / h * 
-            (
-              fabs(B[i][j]+B[i+1][j]) / 2 * (A[i][j] - A[i][j+1]) / 2 
-              - fabs(B[i][j-1]+B[i+1][j-1]) / 2 * (A[i][j-1] - A[i][j]) / 2
-            );
-  }
+}
+double productDerivativeDy(double** A, double** B, int i, int j, double h, double alpha)
+{
+    // Approximate the derivative of the AB product as per formula in the worksheet.
+    // A,B are the matrices of values. (Their order is important: A is along x, B along y)
+    // i,j are the coordinates of the central element.
+    // h is the discretization step for the chosen direction
+    return 1/h *
+               (
+                       (B[i][j] + B[i+1][j]) / 2 * (A[i][j] + A[i][j+1]) / 2
+                       - (B[i][j-1] + B[i+1][j-1]) / 2 * (A[i][j-1] + A[i][j]) / 2
+               )
+               + alpha / h *
+                 (
+                         fabs(B[i][j]+B[i+1][j]) / 2 * (A[i][j] - A[i][j+1]) / 2
+                         - fabs(B[i][j-1]+B[i+1][j-1]) / 2 * (A[i][j-1] - A[i][j]) / 2
+                 );
 }
 
-double productDerivative_double(double** A, int i, int j, double h, short axis, double alpha)
+double squareDerivativeDx(double **A, int i, int j, double h, double alpha)
 {
-  // Approximate the derivative of the AA product as per formula in the worksheet.
-  // A is the matrices of values.
-  // i,j are the coordinates of the central element.
-  // h is the discretization step for the chosen direction
-  // axis is the index we want to perform the derivative on:
-  // A[i][j], axis=0 --> derivative on i
-  // A[i][j], axis=1 --> derivative on j
-  if (axis==XDIR)
-  { // Over dx
-    return 1/h * 
+    // Approximate the derivative of the AA product as per formula in the worksheet.
+    // A is the matrices of values.
+    // i,j are the coordinates of the central element.
+    // h is the discretization step for the chosen direction
+    return 1/h *
             (
               pow( (A[i][j] + A[i+1][j]) / 2 , 2)
               - pow( (A[i-1][j] + A[i][j]) / 2 , 2)
@@ -158,20 +149,23 @@ double productDerivative_double(double** A, int i, int j, double h, short axis, 
               fabs(A[i][j] + A[i+1][j]) / 2 * (A[i][j] - A[i+1][j]) / 2 
               - fabs(A[i-1][j] + A[i][j]) / 2 * (A[i-1][j] - A[i][j]) / 2
             );
-  }
-  else
-  { // Over dy
-    return 1/h * 
-            (
-              pow( (A[i][j] + A[i][j+1]) / 2 , 2)
-              - pow( (A[i][j-1] + A[i][j]) / 2 , 2)
-            ) 
-          + alpha / h * 
-            (
-              fabs(A[i][j] + A[i][j+1]) / 2 * (A[i][j] - A[i][j+1]) / 2 
-              - fabs(A[i][j-1] + A[i][j]) / 2 * (A[i][j-1] - A[i][j]) / 2
-            );
-  }
+}
+double squareDerivativeDy(double **A, int i, int j, double h, double alpha)
+{
+    // Approximate the derivative of the AA product as per formula in the worksheet.
+    // A is the matrices of values.
+    // i,j are the coordinates of the central element.
+    // h is the discretization step for the chosen direction
+    return 1/h *
+               (
+                       pow( (A[i][j] + A[i][j+1]) / 2 , 2)
+                       - pow( (A[i][j-1] + A[i][j]) / 2 , 2)
+               )
+               + alpha / h *
+                 (
+                         fabs(A[i][j] + A[i][j+1]) / 2 * (A[i][j] - A[i][j+1]) / 2
+                         - fabs(A[i][j-1] + A[i][j]) / 2 * (A[i][j-1] - A[i][j]) / 2
+                 );
 }
 
 /**
