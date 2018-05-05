@@ -56,8 +56,7 @@ void boundaryvalues(int imax, int jmax, double **U, double **V, int **Flags, Bou
                 //compute U
                 if (isNeighbourObstacle(cell, RIGHT) && (i != imax))
                 {
-    int test = 7 && 6;
-    printf(test);                    U[i][j] = 0;
+                    U[i][j] = 0;
                 }
             }
         }
