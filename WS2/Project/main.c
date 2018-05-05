@@ -80,6 +80,7 @@ int main(int argc, char** argv){
     read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax, &jmax,
                     &alpha, &omg, &tau, &itermax, &eps, &dt_value, problem, geometry);
 
+    int** Flag = imatrix(0, imax+1, 0, jmax+1);
     double** U = matrix(0, imax+1, 0, jmax+1);
     double** V = matrix(0, imax+1, 0, jmax+1);
     double** F = matrix(0, imax+1, 0, jmax+1);
@@ -89,6 +90,9 @@ int main(int argc, char** argv){
 
     // initialise velocities and pressure
 	init_uvp(UI,VI,PI,imax,jmax,U,V,P);
+
+	// create flag array to determine boundary connditions
+    init_flag(problem, geometry, imax, jmax, Flag);
 	
 	// TODO: Check if this visualization output can be removed!
 //	write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
@@ -158,7 +162,8 @@ int main(int argc, char** argv){
 	// Check value of U[imax/2][7*jmax/8] (task6)
     logMsg("Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
 
-	free_matrix( U, 0, imax+1, 0, jmax+1);
+    free_imatrix( Flag, 0, imax+1, 0, jmax+1);
+    free_matrix( U, 0, imax+1, 0, jmax+1);
 	free_matrix( V, 0, imax+1, 0, jmax+1);
 	free_matrix( F, 0, imax+1, 0, jmax+1);
 	free_matrix( G, 0, imax+1, 0, jmax+1);

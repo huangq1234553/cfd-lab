@@ -32,6 +32,12 @@ int max( int a, int b);
 double fmin( double a, double b);
 double fmax( double a, double b);
 
+int isObstable(int flag);
+int isFluid(int flag);
+int isNeighbour(int flag, int direction);
+int skipU(int flag);
+int skipV(int flag);
+
 
 /**
  * Error handling:

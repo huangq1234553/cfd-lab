@@ -30,6 +30,17 @@ double fmax( double a, double b)
     if( a > b ) return a;
     return b;
 }
+/* ----------------------------------------------------------------------- */
+/*                             custom auxiliary functions                  */
+/* ----------------------------------------------------------------------- */
+
+int isObstable(int flag){
+}
+int isFluid(int flag);
+int isNeighbour(int flag, int direction);
+int skipU(int flag);
+int skipV(int flag);
+
 
 
 /* ----------------------------------------------------------------------- */

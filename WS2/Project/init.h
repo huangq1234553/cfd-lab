@@ -81,5 +81,13 @@ void init_uvp(
   double **P
 );
 
+void init_flag(
+  char* problem,
+  char* geometry,
+  int imax,
+  int jmax,
+  int** Flag
+);
+
 #endif
 
