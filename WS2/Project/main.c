@@ -86,7 +86,7 @@ int main(int argc, char** argv){
                     &alpha, &omg,
                     &tau, &itermax, &eps, &dt_value, problem, geometry, boundaryInfo);
 
-    int** Flag = imatrix(0, imax+1, 0, jmax+1);
+    int** Flags = imatrix(0, imax+1, 0, jmax+1);
     double** U = matrix(0, imax+1, 0, jmax+1);
     double** V = matrix(0, imax+1, 0, jmax+1);
     double** F = matrix(0, imax+1, 0, jmax+1);
@@ -98,7 +98,7 @@ int main(int argc, char** argv){
 	init_uvp(UI,VI,PI,imax,jmax,U,V,P);
 
 	// create flag array to determine boundary connditions
-    init_flag(problem, geometry, imax, jmax, Flag);
+    init_flag(problem, geometry, imax, jmax, Flags);
     
     // Debug
     logEvent(t, "INFO: Writing visualization file n=%d", n);
@@ -121,19 +121,19 @@ int main(int argc, char** argv){
 		}
 		
 		// ensure boundary conditions for velocity
-        boundaryvalues(imax, jmax, U, V, Flag, boundaryInfo);
+        boundaryvalues(imax, jmax, U, V, Flags, boundaryInfo);
         
 		// momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
-        calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax, jmax, U, V, F, G, Flag);
+        calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax, jmax, U, V, F, G, Flags);
 		
 		// momentum equations M1 and M2 are plugged into continuity equation C to produce PPE - depends on F and G - RS is the rhs of the implicit pressure update scheme
-		calculate_rs(dt, dx, dy, imax, jmax, F, G, RS);
+        calculate_rs(dt, dx, dy, imax, jmax, F, G, RS, Flags);
 		
 		// solve the system of eqs arising from implicit pressure uptate scheme using succesive overrelaxation solver
 		it = 0;
         res = 1e9;
         while(it < itermax && res > eps){
-            sor(omg, dx, dy, imax, jmax, P, RS, Flag, &res);
+            sor(omg, dx, dy, imax, jmax, P, RS, Flags, &res);
 			it++;
 		}
         if (it == itermax)
@@ -142,7 +142,7 @@ int main(int argc, char** argv){
             logEvent(t, "WARNING: max number of iterations reached on SOR. Probably it did not converge!");
         }
 		// calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
-        calculate_uv(dt, dx, dy, imax, jmax, U, V, F, G, P, Flag);
+        calculate_uv(dt, dx, dy, imax, jmax, U, V, F, G, P, Flags);
 		
 		// write visualization file for current iteration (only every dt_value step)
 		if (t >= currentOutputTime)
@@ -167,7 +167,7 @@ int main(int argc, char** argv){
 	// Check value of U[imax/2][7*jmax/8] (task6)
     logMsg("Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
 
-    free_imatrix( Flag, 0, imax+1, 0, jmax+1);
+    free_imatrix( Flags, 0, imax+1, 0, jmax+1);
     free_matrix( U, 0, imax+1, 0, jmax+1);
 	free_matrix( V, 0, imax+1, 0, jmax+1);
 	free_matrix( F, 0, imax+1, 0, jmax+1);

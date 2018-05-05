@@ -40,16 +40,8 @@ double squareDerivativeDy(double **A, int i, int j, double h, double alpha);
  * @f$ rs = \frac{1}{\delta t} \left( \frac{F^{(n)}_{i,j}-F^{(n)}_{i-1,j}}{\delta x} + \frac{G^{(n)}_{i,j}-G^{(n)}_{i,j-1}}{\delta y} \right)  @f$
  *
  */
-void calculate_rs(
-  double dt,
-  double dx,
-  double dy,
-  int imax,
-  int jmax,
-  double **F,
-  double **G,
-  double **RS
-);
+void
+calculate_rs(double dt, double dx, double dy, int imax, int jmax, double **F, double **G, double **RS, int **Flags);
 
 
 /**
