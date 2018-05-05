@@ -77,8 +77,9 @@ int main(int argc, char** argv){
 	double t = 0;			  /* initial time */
 	int it;					  /* sor iteration counter */
 	double mindt=10000;
+
     BoundaryInfo boundaryInfo[4];
-    
+
     openLogFile(); // Initialize the log file descriptor.
     read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax, &jmax,
                     &alpha, &omg, &tau, &itermax, &eps, &dt_value, problem, geometry);
@@ -113,7 +114,8 @@ int main(int argc, char** argv){
 		}
 		
 		// ensure boundary conditions for velocity
-        boundaryvalues(imax, jmax, U, V, Flag, NULL);
+        boundaryvalues(imax, jmax, U, V, Flag, boundaryInfo);
+
 //		if(t == 0){
 //			write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
 //			n++;

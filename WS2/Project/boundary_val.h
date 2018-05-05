@@ -31,6 +31,11 @@ typedef struct BoundaryInfo
 /**
  * The boundary values of the problem are set.
  */
+
 void boundaryvalues(int imax, int jmax, double **U, double **V, int **Flags, BoundaryInfo *boundaryInfo);
+void leftboundary (int imax, int jmax, double **U, double **V, BoundaryInfo bI[4]);
+void rightboundary (int imax, int jmax, double **U, double **V, BoundaryInfo bI[4]);
+void topboundary (int imax, int jmax, double **U, double **V, BoundaryInfo bI[4]);
+void bottomboundary (int imax, int jmax, double **U, double **V, BoundaryInfo bI[4]);
 
 #endif
