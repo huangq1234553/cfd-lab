@@ -58,7 +58,8 @@ int isNeighbourFluid(int flag, Direction direction){
 
 // Returns 1 (True) if the cell is present at a corner (bordering only 2 fluid cells)
 int isCorner(int flag){
-    return ((flag&(1<<TOP))>>4)^((flag&(1<<BOT))>>3) && ((flag&(1<<LEFT))>>2)^((flag&(1<<RIGHT))>>1);
+//    return ((flag&(1<<TOP))>>TOP)^((flag&(1<<BOT))>>BOT) && ((flag&(1<<LEFT))>>LEFT)^((flag&(1<<RIGHT))>>RIGHT);
+    return ((flag>>TOP)&1)^((flag>>BOT)&1) && ((flag>>LEFT)&1)^((flag>>RIGHT)&1);
 }
 
 
