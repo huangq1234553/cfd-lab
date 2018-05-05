@@ -21,6 +21,9 @@ all:  $(OBJ)
 clean:
 	rm $(OBJ)
 
+image:
+    convert -posterize 2 -depth 1 -compress none -negate testGeometry.jpg testGeometry.pgm; sed -i s/"255"/"1"/g testGeometry.pgm
+
 helper.o      : helper.h logger.h
 init.o        : helper.h init.h 
 boundary_val.o: helper.h boundary_val.h 

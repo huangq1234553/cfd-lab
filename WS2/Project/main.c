@@ -41,6 +41,8 @@
  * - calculate_uv() Calculate the velocity at the next time step.
  */
 
+// TODO: check if geometry is not forbidden!
+
 int main(int argc, char** argv){
 
     // Handling the problem file name which is passed as 1st argument.
