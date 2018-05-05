@@ -73,6 +73,30 @@ int skipV(int flag){
     return (flag&(1<<LEFT)) && (flag&(1<<TOP)) && (flag&(1<<RIGHT));
 }
 
+// Function that checks geometry for forbidden cases
+void geometryCheck(int** Flag, int imax, int jmax){
+    int isForbidden = 0;
+    for (int j = jmax; j > 0; j--)
+    {
+        for (int i = 1; i < imax + 1; i++)
+        {
+            if( isFluid(Flag[i][j]) )
+            {
+                continue;
+            }
+            else if( ( isFluid(Flag[i][j + 1]) || isFluid(Flag[i][j - 1]) ) &&
+                 ( isFluid(Flag[i - 1][j]) || isFluid(Flag[i + 1][j]) )  )
+            {
+                printf("Forbidden Geometry present at (%d,%d)\n", i, j);
+                isForbidden++;
+            }
+        }
+    }
+    if(!isForbidden){
+        printf("Geometry has no forbidden errors!");
+    }
+}
+
 
 /* ----------------------------------------------------------------------- */
 /*                         local auxiliary functions                       */

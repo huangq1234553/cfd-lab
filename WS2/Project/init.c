@@ -120,6 +120,6 @@ void init_flag(
         printf("\n");
     }
     printf("%d\n", (*counter));
-    
+    geometryCheck(Flag, imax, jmax);
     free_imatrix(pic, 0, imax + 1, 0, jmax + 1);
 }

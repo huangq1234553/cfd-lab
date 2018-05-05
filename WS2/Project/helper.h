@@ -42,6 +42,7 @@ int isNeighbourFluid(int flag, Direction direction);    // Current cell's neighb
 int isCorner(int flag); // Current cell is a corner obstacle
 int skipU(int flag);    // Current cell is surrounded by obstacles to its Top-Right-Bottom
 int skipV(int flag);    // Current cell is surrounded by obstacles to its Left-Top-Right
+void geometryCheck(int** flag, int imax, int jmax);  //Checks if forbidden geometry is in pgm
 
 
 /**
