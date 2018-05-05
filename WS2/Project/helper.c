@@ -56,6 +56,12 @@ int isNeighbourFluid(int flag, int direction){
     return !(flag&direction);
 }
 
+// Returns 1 (True) if the cell is present at a corner (bordering only 2 fluid cells)
+int isCorner(int flag){
+    return (flag&TOP>>4)^(flag&BOT>>3) && (flag&LEFT>>1)^(flag&RIGHT>>2);
+}
+
+
 // Computes skip condition for u-boundary value determination (if top, right and bottom cells are obstacles)
 int skipU(int flag){
     return (flag&TOP) && (flag&RIGHT) && (flag&BOT);

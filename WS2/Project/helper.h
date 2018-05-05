@@ -36,6 +36,7 @@ int isObstacle(int flag);
 int isFluid(int flag);
 int isNeighbourObstacle(int flag, int direction);
 int isNeighbourFluid(int flag, int direction);
+int isCorner(int flag);
 int skipU(int flag);
 int skipV(int flag);
 
