@@ -34,7 +34,8 @@ double fmax( double a, double b);
 
 int isObstacle(int flag);
 int isFluid(int flag);
-int isNeighbour(int flag, int direction);
+int isNeighbourObstacle(int flag, int direction);
+int isNeighbourFluid(int flag, int direction);
 int skipU(int flag);
 int skipV(int flag);
 

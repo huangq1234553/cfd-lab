@@ -47,8 +47,13 @@ int isFluid(int flag){
 }
 
 // Returns 1 (True) if the neighbouring cell in the indicated direction is an obstacle
-int isNeighbour(int flag, int direction){
+int isNeighbourObstacle(int flag, int direction){
     return flag&direction;
+}
+
+// Returns 1 (True) if the neighbouring cell in the indicated direction is fluid
+int isNeighbourFluid(int flag, int direction){
+    return !(flag&direction);
 }
 
 // Computes skip condition for u-boundary value determination (if top, right and bottom cells are obstacles)
