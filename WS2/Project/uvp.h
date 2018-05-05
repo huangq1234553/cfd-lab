@@ -23,8 +23,8 @@
  * @f$ i=1,\ldots,imax, \quad j=1,\ldots,jmax-1 @f$
  *
  */
-void calculate_fg(double Re, double GX, double GY, double alpha, double dt, double dx, double dy, int imax, int jmax,
-                  double **U, double **V, double **F, double **G, int **Flags);
+void calculate_fg(double Re, double GX, double GY, double alpha, double beta, double dt, double dx, double dy, int imax, int jmax,
+                  double **U, double **V, double **F, double **G, double **T, int **Flags);
 // Helper functions for calculate_fg
 double secondDerivativeDx(double** A, int i, int j, double h);
 double secondDerivativeDy(double** A, int i, int j, double h);
@@ -81,5 +81,9 @@ void calculate_dt(
  */
 void calculate_uv(double dt, double dx, double dy, int imax, int jmax, double **U, double **V, double **F, double **G,
                   double **P, int **Flags);
+
+
+void calculate_T(double Re, double Pr, double dt, double dx, double dy, double alpha, int imax, int jmax,
+                 double **T, double **U, double **V);
 
 #endif

@@ -78,11 +78,11 @@ int main(int argc, char** argv){
 	int it;					  /* sor iteration counter */
 	double mindt=10000;       /* arbitrary counter that keeps track of minimum dt value in calculation */
 	int noFluidCells;		  /* number of fluid cells in simulation */
-	double beta 			  /* coefficient of thermal expansion */
-	double TI 				  /* initial temperature */
-	double T_h 				  /* hot surface boundary condition */
-	double T_c 			      /* cold surface boundary condition */
-	double Pr 				  /* Prandtl number */
+	double beta; 			  /* coefficient of thermal expansion */
+	double TI; 				  /* initial temperature */
+	double T_h; 				  /* hot surface boundary condition */
+	double T_c; 			      /* cold surface boundary condition */
+	double Pr; 				  /* Prandtl number */
 
     BoundaryInfo boundaryInfo[4];
 
@@ -130,9 +130,12 @@ int main(int argc, char** argv){
 		
 		// ensure boundary conditions for velocity
         boundaryvalues(imax, jmax, U, V, Flags, boundaryInfo);
+
+		// calculate T using energy equation in 2D with boussinesq approximation
+//        calculate_T(Re, Pr, dt, dx, dy, alpha, imax, jmax, T, U, V);
         
 		// momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
-        calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax, jmax, U, V, F, G, Flags);
+        calculate_fg(Re, GX, GY, alpha, beta, dt, dx, dy, imax, jmax, U, V, F, G, T, Flags);
 		
 		// momentum equations M1 and M2 are plugged into continuity equation C to produce PPE - depends on F and G - RS is the rhs of the implicit pressure update scheme
         calculate_rs(dt, dx, dy, imax, jmax, F, G, RS, Flags);

@@ -27,8 +27,8 @@ const short YDIR = 1;
  *
  */
 
-void calculate_fg(double Re, double GX, double GY, double alpha, double dt, double dx, double dy, int imax, int jmax,
-                  double **U, double **V, double **F, double **G, int **Flags)
+void calculate_fg(double Re, double GX, double GY, double alpha, double beta, double dt, double dx, double dy, int imax, int jmax,
+                  double **U, double **V, double **F, double **G, double **T, int **Flags)
 {
     // set boundary conditions for G - see discrete momentum equations - apply Neumann BC - first derivative of pressure must be "zero" - dp/dy = 0
     for (int i = 1; i <= imax; i++)
@@ -69,7 +69,7 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double dt, doub
                               // convective term cont.
                               - productDerivativeDy(U, V, i, j, dy, alpha)
                               // volume force
-                              + GX
+                              + (1 - beta * T[i][j]) * GX
                       );
         }
     }
@@ -99,7 +99,7 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double dt, doub
                               // convective term cont.
                               - squareDerivativeDy(V, i, j, dy, alpha)
                               // volume force
-                              + GY
+                              + (1 - beta * T[i][j]) * GY
                       );
         }
     }
@@ -300,6 +300,41 @@ void calculate_uv(double dt, double dx, double dy, int imax, int jmax, double **
             }
             //
             V[i][j] = G[i][j] - (dt / dy * (P[i][j + 1] - P[i][j]));
+        }
+    }
+}
+
+
+void calculate_T(double Re, double Pr, double dt, double dx, double dy, double alpha, int imax, int jmax,
+                 double **T, double **U, double **V){
+    for(int i=0; i < imax+1; ++i){
+        for(int j=0; j < jmax+1; ++j){
+            T[i][j] = T[i][j] + dt *
+                        (
+                                - 1/dx * (
+                                        U[i][j] * ( T[i][j] + T[i+1][j] ) / 2
+                                        - U[i-1][j] * ( T[i-1][j] + T[i][j] ) / 2
+                                          )
+                                - alpha * 1/dx * (
+                                        fabs(U[i][j]) * ( T[i][j] + T[i+1][j] ) / 2
+                                        - fabs(U[i-1][j]) * ( T[i-1][j] + T[i][j] ) / 2
+                                )
+
+                                - 1/dy * (
+                                        V[i][j] * ( T[i][j] + T[i][j+1] ) / 2
+                                        - V[i][j-1] * ( T[i][j-1] + T[i][j] ) / 2
+                                )
+                                - alpha * 1/dy * (
+                                        fabs(V[i][j]) * ( T[i][j] + T[i][j+1] ) / 2
+                                        - fabs(V[i][j-1]) * ( T[i][j-1] + T[i][j] ) / 2
+                                )
+
+                                + 1/(Re * Pr) *
+                                (
+                                        ( T[i+1][j] - 2 * T[i][j] + T[i-1][j]) / (dx*dx)
+                                        + ( T[i][j+1] - 2 * T[i][j] + T[i][j-1]) / (dy*dy)
+                                )
+                        );
         }
     }
 }
