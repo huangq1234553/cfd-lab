@@ -116,7 +116,7 @@ int main(int argc, char** argv){
 //			n++;
 //		}
 		// momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
-		calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax, jmax, U, V, F, G);
+        calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax, jmax, U, V, F, G, Flag);
 		
 		// momentum equations M1 and M2 are plugged into continuity equation C to produce PPE - depends on F and G - RS is the rhs of the implicit pressure update scheme
 		calculate_rs(dt, dx, dy, imax, jmax, F, G, RS);
@@ -134,7 +134,7 @@ int main(int argc, char** argv){
             logEvent(t, "WARNING: max number of iterations reached on SOR. Probably it did not converge!");
         }
 		// calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
-		calculate_uv(dt, dx, dy, imax, jmax, U, V, F, G, P);
+        calculate_uv(dt, dx, dy, imax, jmax, U, V, F, G, P, Flag);
 		
 		// write visualization file for current iteration (only every dt_value step)
 		if (t >= currentOutputTime)
