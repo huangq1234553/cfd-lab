@@ -34,13 +34,30 @@ double fmax( double a, double b)
 /*                             custom auxiliary functions                  */
 /* ----------------------------------------------------------------------- */
 
+// Returns 1 (True) if the cell is an obstacle
 int isObstable(int flag){
+    return flag&1;
 }
-int isFluid(int flag);
-int isNeighbour(int flag, int direction);
-int skipU(int flag);
-int skipV(int flag);
 
+// Returns 1 (True) if the cell is fluid
+int isFluid(int flag){
+    return !(flag&1);
+}
+
+// Returns 1 (True) if the neighbouring cell in the indicated direction is an obstacle
+int isNeighbour(int flag, int direction){
+    return flag&direction;
+}
+
+// Computes skip condition for u-boundary value determination (if top, right and bottom cells are obstacles)
+int skipU(int flag){
+    return (flag&16) && (flag&8) && (flag&4);
+}
+
+// Computes skip condition for v-boundary value determination (if left, top and right cells are obstacles)
+int skipV(int flag){
+    return (flag&16) && (flag&4) && (flag&2);
+}
 
 
 /* ----------------------------------------------------------------------- */
