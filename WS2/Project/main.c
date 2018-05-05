@@ -93,10 +93,7 @@ int main(int argc, char** argv){
 
 	// create flag array to determine boundary connditions
     init_flag(problem, geometry, imax, jmax, Flag);
-	
-	// TODO: Check if this visualization output can be removed!
-//	write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
-//	n++;
+    
 	// simulation interval 0 to t_end
 	double currentOutputTime = 0; // For chosing when to output
 	while(t < t_end){
@@ -113,7 +110,7 @@ int main(int argc, char** argv){
 		}
 		
 		// ensure boundary conditions for velocity
-		boundaryvalues(imax, jmax, U, V);
+        boundaryvalues(imax, jmax, U, V, NULL); // TODO: replace the NULL with the actual Flags pointer
 //		if(t == 0){
 //			write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
 //			n++;
