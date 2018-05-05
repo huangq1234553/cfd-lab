@@ -1,60 +1,56 @@
 #include "helper.h"
 #include "init.h"
+#include "boundary_val.h"
 
-int read_parameters(const char *szFileName,    /* name of the file */
-                    double *Re,                 /* reynolds number   */
-                    double *UI,                 /* velocity x-direction */
-                    double *VI,                 /* velocity y-direction */
-                    double *PI,                 /* pressure */
-                    double *GX,                 /* gravitation x-direction */
-                    double *GY,                 /* gravitation y-direction */
-                    double *t_end,              /* end time */
-                    double *xlength,            /* length of the domain x-dir.*/
-                    double *ylength,            /* length of the domain y-dir.*/
-                    double *dt,                 /* time step */
-                    double *dx,                 /* length of a cell x-dir. */
-                    double *dy,                 /* length of a cell y-dir. */
-                    int *imax,                 /* number of cells x-direction*/
-                    int *jmax,                 /* number of cells y-direction*/
-                    double *alpha,              /* uppwind differencing factor*/
-                    double *omg,                /* relaxation factor */
-                    double *tau,                /* safety factor for time step*/
-                    int *itermax,              /* max. number of iterations  */
-                    double *eps,                /* accuracy bound for pressure*/
-                    double *dt_value,           /* time for output */
-                    char *problem,       /* problem string */
-                    char *geometry)    /* path/filename to geometry file */
+int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, double *PI, double *GX, double *GY,
+                    double *t_end, double *xlength, double *ylength, double *dt, double *dx, double *dy, int *imax,
+                    int *jmax, double *alpha, double *omg, double *tau, int *itermax, double *eps, double *dt_value,
+                    char *problem, char *geometry, BoundaryInfo boundaryInfo[4])    /* path/filename to geometry file */
 {
-    READ_DOUBLE(szFileName, *xlength);
-    READ_DOUBLE(szFileName, *ylength);
+    READ_DOUBLE(szFileName, *xlength, REQUIRED);
+    READ_DOUBLE(szFileName, *ylength, REQUIRED);
     
-    READ_DOUBLE(szFileName, *Re);
-    READ_DOUBLE(szFileName, *t_end);
-    READ_DOUBLE(szFileName, *dt);
+    READ_DOUBLE(szFileName, *Re, REQUIRED);
+    READ_DOUBLE(szFileName, *t_end, REQUIRED);
+    READ_DOUBLE(szFileName, *dt, REQUIRED);
     
-    READ_INT   (szFileName, *imax);
-    READ_INT   (szFileName, *jmax);
+    READ_INT   (szFileName, *imax, REQUIRED);
+    READ_INT   (szFileName, *jmax, REQUIRED);
     
-    READ_DOUBLE(szFileName, *omg);
-    READ_DOUBLE(szFileName, *eps);
-    READ_DOUBLE(szFileName, *tau);
-    READ_DOUBLE(szFileName, *alpha);
+    READ_DOUBLE(szFileName, *omg, REQUIRED);
+    READ_DOUBLE(szFileName, *eps, REQUIRED);
+    READ_DOUBLE(szFileName, *tau, REQUIRED);
+    READ_DOUBLE(szFileName, *alpha, REQUIRED);
     
-    READ_INT   (szFileName, *itermax);
-    READ_DOUBLE(szFileName, *dt_value);
+    READ_INT   (szFileName, *itermax, REQUIRED);
+    READ_DOUBLE(szFileName, *dt_value, REQUIRED);
     
-    READ_DOUBLE(szFileName, *UI);
-    READ_DOUBLE(szFileName, *VI);
-    READ_DOUBLE(szFileName, *GX);
-    READ_DOUBLE(szFileName, *GY);
-    READ_DOUBLE(szFileName, *PI);
+    READ_DOUBLE(szFileName, *UI, REQUIRED);
+    READ_DOUBLE(szFileName, *VI, REQUIRED);
+    READ_DOUBLE(szFileName, *GX, REQUIRED);
+    READ_DOUBLE(szFileName, *GY, REQUIRED);
+    READ_DOUBLE(szFileName, *PI, REQUIRED);
     
-    READ_STRING(szFileName, problem);
-    READ_STRING(szFileName, geometry);
+    READ_STRING(szFileName, problem, REQUIRED);
+    READ_STRING(szFileName, geometry, REQUIRED);
     
     *dx = *xlength / (double) (*imax);
     *dy = *ylength / (double) (*jmax);
     
+    // Now read boundary-related variables
+    initBoundaryInfo(boundaryInfo+L,DIRICHLET,DIRICHLET,1,1);
+    *(boundaryInfo[L].valuesU) = 0;
+    *(boundaryInfo[L].valuesV) = 0;
+    initBoundaryInfo(boundaryInfo+R,DIRICHLET,DIRICHLET,1,1);
+    *(boundaryInfo[R].valuesU) = 0;
+    *(boundaryInfo[R].valuesV) = 0;
+    initBoundaryInfo(boundaryInfo+T,DIRICHLET,DIRICHLET,1,1);
+    *(boundaryInfo[T].valuesU) = 1;
+    *(boundaryInfo[T].valuesV) = 0;
+    initBoundaryInfo(boundaryInfo+B,DIRICHLET,DIRICHLET,1,1);
+    *(boundaryInfo[B].valuesU) = 0;
+    *(boundaryInfo[B].valuesV) = 0;
+    //
     return 1;
 }
 
@@ -123,14 +119,14 @@ void init_flag(
         }
     }
     // Set the inner domain flags
-    for (int i = 1; i < imax + 1; i++)
+    for (int j = jmax; j > 0; j--)
     {
-        for (int j = 1; j < jmax + 1; j++)
+        for (int i = 1; i < imax + 1; i++)
         {
-            Flag[i][j] += TOP * isObstacle(Flag[i][j + 1])
-                          + BOT * isObstacle(Flag[i][j - 1])
-                          + LEFT * isObstacle(Flag[i - 1][j])
-                          + RIGHT * isObstacle(Flag[i + 1][j]);
+            Flag[i][j] += (1<<TOP) * isObstacle(Flag[i][j + 1])
+                          + (1<<BOT) * isObstacle(Flag[i][j - 1])
+                          + (1<<LEFT) * isObstacle(Flag[i - 1][j])
+                          + (1<<RIGHT) * isObstacle(Flag[i + 1][j]);
             printf("%d ", Flag[i][j]);
         }
         printf("\n");

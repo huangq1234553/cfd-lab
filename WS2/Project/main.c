@@ -81,8 +81,10 @@ int main(int argc, char** argv){
     BoundaryInfo boundaryInfo[4];
 
     openLogFile(); // Initialize the log file descriptor.
+    
     read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax, &jmax,
-                    &alpha, &omg, &tau, &itermax, &eps, &dt_value, problem, geometry);
+                    &alpha, &omg,
+                    &tau, &itermax, &eps, &dt_value, problem, geometry, boundaryInfo);
 
     int** Flag = imatrix(0, imax+1, 0, jmax+1);
     double** U = matrix(0, imax+1, 0, jmax+1);
@@ -97,6 +99,11 @@ int main(int argc, char** argv){
 
 	// create flag array to determine boundary connditions
     init_flag(problem, geometry, imax, jmax, Flag);
+    
+    // Debug
+    logEvent(t, "INFO: Writing visualization file n=%d", n);
+    write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+    n++;
     
 	// simulation interval 0 to t_end
 	double currentOutputTime = 0; // For chosing when to output
@@ -115,11 +122,7 @@ int main(int argc, char** argv){
 		
 		// ensure boundary conditions for velocity
         boundaryvalues(imax, jmax, U, V, Flag, boundaryInfo);
-
-//		if(t == 0){
-//			write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
-//			n++;
-//		}
+        
 		// momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
         calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax, jmax, U, V, F, G, Flag);
 		

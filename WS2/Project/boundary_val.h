@@ -28,11 +28,15 @@ typedef struct BoundaryInfo
     double* valuesV;
 } BoundaryInfo;
 
+// Initialize a BoundaryInfo object
+void
+initBoundaryInfo(BoundaryInfo *boundaryInfo, BoundaryType typeU, BoundaryType typeV, int numValuesU, int numValuesV);
+
 /**
  * The boundary values of the problem are set.
  */
 
-void boundaryvalues(int imax, int jmax, double **U, double **V, int **Flags, BoundaryInfo *boundaryInfo);
+void boundaryvalues(int imax, int jmax, double **U, double **V, int **Flags, BoundaryInfo boundaryInfo[4]);
 void leftboundary (int imax, int jmax, double **U, double **V, BoundaryInfo bI[4]);
 void rightboundary (int imax, int jmax, double **U, double **V, BoundaryInfo bI[4]);
 void topboundary (int imax, int jmax, double **U, double **V, BoundaryInfo bI[4]);
