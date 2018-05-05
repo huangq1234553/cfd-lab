@@ -1,4 +1,5 @@
 #include "sor.h"
+#include "helper.h"
 #include <math.h>
 
 void sor(double omg, double dx, double dy, int imax, int jmax, double **P, double **RS, int **Flags, double *res) {
