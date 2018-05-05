@@ -5,7 +5,8 @@
 int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, double *PI, double *GX, double *GY,
                     double *t_end, double *xlength, double *ylength, double *dt, double *dx, double *dy, int *imax,
                     int *jmax, double *alpha, double *omg, double *tau, int *itermax, double *eps, double *dt_value,
-                    char *problem, char *geometry, BoundaryInfo boundaryInfo[4])    /* path/filename to geometry file */
+                    char *problem, char *geometry, BoundaryInfo boundaryInfo[4],
+                    double *beta, double *TI, double *T_h, double *T_c, double* Pr)    /* path/filename to geometry file */
 {
     READ_DOUBLE(szFileName, *xlength, REQUIRED);
     READ_DOUBLE(szFileName, *ylength, REQUIRED);
@@ -31,6 +32,12 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
     READ_DOUBLE(szFileName, *GY, REQUIRED);
     READ_DOUBLE(szFileName, *PI, REQUIRED);
     
+    READ_DOUBLE(szFileName, *beta, OPTIONAL);
+    READ_DOUBLE(szFileName, *TI, OPTIONAL);
+    READ_DOUBLE(szFileName, *T_h, OPTIONAL);
+    READ_DOUBLE(szFileName, *T_c, OPTIONAL);
+    READ_DOUBLE(szFileName, *Pr, OPTIONAL);
+
     READ_STRING(szFileName, problem, REQUIRED);
     READ_STRING(szFileName, geometry, REQUIRED);
     

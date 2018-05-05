@@ -77,7 +77,12 @@ int main(int argc, char** argv){
 	double t = 0;			  /* initial time */
 	int it;					  /* sor iteration counter */
 	double mindt=10000;       /* arbitrary counter that keeps track of minimum dt value in calculation */
-	int noFluidCells;
+	int noFluidCells;		  /* number of fluid cells in simulation */
+	double beta 			  /* coefficient of thermal expansion */
+	double TI 				  /* initial temperature */
+	double T_h 				  /* hot surface boundary condition */
+	double T_c 			      /* cold surface boundary condition */
+	double Pr 				  /* Prandtl number */
 
     BoundaryInfo boundaryInfo[4];
 
@@ -85,7 +90,8 @@ int main(int argc, char** argv){
     
     read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax, &jmax,
                     &alpha, &omg,
-                    &tau, &itermax, &eps, &dt_value, problem, geometry, boundaryInfo);
+                    &tau, &itermax, &eps, &dt_value, problem, geometry, boundaryInfo,
+                    &beta, &TI, &T_h, &T_c, &Pr);
 
     int** Flags = imatrix(0, imax+1, 0, jmax+1);
     double** U = matrix(0, imax+1, 0, jmax+1);
@@ -94,6 +100,7 @@ int main(int argc, char** argv){
     double** G = matrix(0, imax+1, 0, jmax+1);
     double** RS = matrix(0, imax+1, 0, jmax+1);
     double** P = matrix(0, imax+1, 0, jmax+1);
+    double** T = matrix(0, imax+1, 0, jmax+1);
 
     // initialise velocities and pressure
 	init_uvp(UI,VI,PI,imax,jmax,U,V,P);
@@ -175,6 +182,7 @@ int main(int argc, char** argv){
 	free_matrix( G, 0, imax+1, 0, jmax+1);
 	free_matrix( RS, 0, imax+1, 0, jmax+1);
 	free_matrix( P, 0, imax+1, 0, jmax+1);
+	free_matrix( T, 0, imax+1, 0, jmax+1);
     
     logMsg("Min dt value used: %16e", mindt);
     

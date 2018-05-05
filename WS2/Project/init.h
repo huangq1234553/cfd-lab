@@ -45,7 +45,8 @@
 int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, double *PI, double *GX, double *GY,
                     double *t_end, double *xlength, double *ylength, double *dt, double *dx, double *dy, int *imax,
                     int *jmax, double *alpha, double *omg, double *tau, int *itermax, double *eps, double *dt_value,
-                    char *problem, char *geometry, BoundaryInfo boundaryInfo[4]);
+                    char *problem, char *geometry, BoundaryInfo boundaryInfo[4], 
+                    double *beta, double *TI, double *T_h, double *T_c, double* Pr);
 
 /**
  * The arrays U,V and P are initialized to the constant values UI, VI and PI on
