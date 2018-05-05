@@ -1,7 +1,7 @@
 #include "boundary_val.h"
 #include "helper.h"
 
-void boundaryvalues(int imax, int jmax, double **U, double **V, int **Flags)
+void boundaryvalues(int imax, int jmax, double **U, double **V, int **Flags, BoundaryInfo *boundaryInfo)
 {
 	// TODO: Enhance this part to support configurable boundary conditions
 	// Boundary values at the domain boundary

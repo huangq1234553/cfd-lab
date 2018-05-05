@@ -75,6 +75,7 @@ int main(int argc, char** argv){
 	double t = 0;			  /* initial time */
 	int it;					  /* sor iteration counter */
 	double mindt=10000;
+    BoundaryInfo boundaryInfo[4];
     
     openLogFile(); // Initialize the log file descriptor.
     read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax, &jmax,
@@ -110,7 +111,7 @@ int main(int argc, char** argv){
 		}
 		
 		// ensure boundary conditions for velocity
-        boundaryvalues(imax, jmax, U, V, Flag); // TODO: replace the NULL with the actual Flags pointer
+        boundaryvalues(imax, jmax, U, V, Flag, NULL);
 //		if(t == 0){
 //			write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
 //			n++;

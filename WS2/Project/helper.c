@@ -47,12 +47,12 @@ int isFluid(int flag){
 }
 
 // Returns 1 (True) if the neighbouring cell in the indicated direction is an obstacle
-int isNeighbourObstacle(int flag, int direction){
+int isNeighbourObstacle(int flag, Direction direction){
     return flag&direction;
 }
 
 // Returns 1 (True) if the neighbouring cell in the indicated direction is fluid
-int isNeighbourFluid(int flag, int direction){
+int isNeighbourFluid(int flag, Direction direction){
     return !(flag&direction);
 }
 

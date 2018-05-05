@@ -24,7 +24,7 @@
 /**
  * Stores the last timer value 
  */
-enum directions{CENTER=1, TOP=16, BOT=8, LEFT=4, RIGHT=2};
+typedef enum Direction {CENTER=1, TOP=16, BOT=8, LEFT=4, RIGHT=2} Direction;
 extern clock_t last_timer_reset;   
 
 
@@ -35,8 +35,8 @@ double fmax( double a, double b);
 
 int isObstacle(int flag);
 int isFluid(int flag);
-int isNeighbourObstacle(int flag, int direction);
-int isNeighbourFluid(int flag, int direction);
+int isNeighbourObstacle(int flag, Direction direction);
+int isNeighbourFluid(int flag, Direction direction);
 int isCorner(int flag);
 int skipU(int flag);
 int skipV(int flag);

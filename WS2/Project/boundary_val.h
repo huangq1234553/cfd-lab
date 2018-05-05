@@ -32,6 +32,6 @@ typedef struct BoundaryInfo
 /**
  * The boundary values of the problem are set.
  */
-void boundaryvalues(int imax, int jmax, double **U, double **V, int **Flags, BoundaryInfo boundaryInfo[4]);
+void boundaryvalues(int imax, int jmax, double **U, double **V, int **Flags, BoundaryInfo *boundaryInfo);
 
 #endif
