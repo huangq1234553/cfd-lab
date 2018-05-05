@@ -15,7 +15,6 @@ typedef enum BoundarySide
 typedef enum BoundaryType
 {
     DIRICHLET,
-    INTERPOLATION,
     NEUMANN
 } BoundaryType;
 

@@ -33,13 +33,13 @@ int max( int a, int b);
 double fmin( double a, double b);
 double fmax( double a, double b);
 
-int isObstacle(int flag);
-int isFluid(int flag);
-int isNeighbourObstacle(int flag, Direction direction);
-int isNeighbourFluid(int flag, Direction direction);
-int isCorner(int flag);
-int skipU(int flag);
-int skipV(int flag);
+int isObstacle(int flag);   // Current cell is an obstacle
+int isFluid(int flag);      // Current cell is fluid
+int isNeighbourObstacle(int flag, Direction direction); // Current cell's neighbor in the specified direction is obstacle
+int isNeighbourFluid(int flag, Direction direction);    // Current cell's neighbor in the specified direction is fluid
+int isCorner(int flag); // Current cell is a corner obstacle
+int skipU(int flag);    // Current cell is surrounded by obstacles to its Top-Right-Bottom
+int skipV(int flag);    // Current cell is surrounded by obstacles to its Left-Top-Right
 
 
 /**
