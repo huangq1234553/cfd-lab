@@ -37,7 +37,7 @@ double fmax( double a, double b)
 /* ----------------------------------------------------------------------- */
 
 // Returns 1 (True) if the cell is an obstacle
-int isObstable(int flag){
+int isObstacle(int flag){
     return flag&CENTER;
 }
 
