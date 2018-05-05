@@ -4,7 +4,7 @@
 #include "helper.h"
 #include "logger.h"
 
-enum directions{CENTER=1, TOP=16, BOT=8, LEFT=4, RIGHT=2};
+
 
 /* ----------------------------------------------------------------------- */
 /*                             auxiliary functions                         */
@@ -58,7 +58,7 @@ int isNeighbourFluid(int flag, int direction){
 
 // Returns 1 (True) if the cell is present at a corner (bordering only 2 fluid cells)
 int isCorner(int flag){
-    return (flag&TOP>>4)^(flag&BOT>>3) && (flag&LEFT>>1)^(flag&RIGHT>>2);
+    return ((flag&TOP)>>4)^((flag&BOT)>>3) && ((flag&LEFT)>>1)^((flag&RIGHT)>>2);
 }
 
 

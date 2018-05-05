@@ -24,6 +24,7 @@
 /**
  * Stores the last timer value 
  */
+enum directions{CENTER=1, TOP=16, BOT=8, LEFT=4, RIGHT=2};
 extern clock_t last_timer_reset;   
 
 
