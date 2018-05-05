@@ -114,7 +114,7 @@ void init_flag(
                           + (1<<BOT) * isObstacle(Flag[i][j - 1])
                           + (1<<LEFT) * isObstacle(Flag[i - 1][j])
                           + (1<<RIGHT) * isObstacle(Flag[i + 1][j]);
-            printf("%d ", Flag[i][j]);
+            printf("%d ", isCorner(Flag[i][j]));
             (*counter) += isFluid(Flag[i][j]);
         }
         printf("\n");

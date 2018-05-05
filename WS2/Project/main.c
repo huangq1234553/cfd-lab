@@ -134,7 +134,7 @@ int main(int argc, char** argv){
 		it = 0;
         res = 1e9;
         while(it < itermax && res > eps){
-            sor(omg, dx, dy, imax, jmax, P, RS, Flags, &res);
+            sor(omg, dx, dy, imax, jmax, P, RS, Flags, &res, noFluidCells);
 			it++;
 		}
         if (it == itermax)

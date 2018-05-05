@@ -84,16 +84,16 @@ void geometryCheck(int** Flag, int imax, int jmax){
             {
                 continue;
             }
-            else if( ( isFluid(Flag[i][j + 1]) || isFluid(Flag[i][j - 1]) ) &&
-                 ( isFluid(Flag[i - 1][j]) || isFluid(Flag[i + 1][j]) )  )
+            else if( ( isFluid(Flag[i][j + 1]) && isFluid(Flag[i][j - 1]) ) ||
+                 ( isFluid(Flag[i - 1][j]) && isFluid(Flag[i + 1][j]) )  )
             {
                 printf("Forbidden Geometry present at (%d,%d)\n", i, j);
                 isForbidden++;
             }
         }
     }
-    if(!isForbidden){
-        printf("Geometry has no forbidden errors!");
+    if(isForbidden == 0){
+        printf("Geometry has no forbidden errors!\n");
     }
 }
 

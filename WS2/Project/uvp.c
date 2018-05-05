@@ -49,9 +49,11 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double dt, doub
     {
         for (int j = 1; j <= jmax; j++)
         {
-            if (isObstacle(Flags[i][j]))
+            if (isObstacle(Flags[i][j]) || isNeighbourObstacle(Flags[i][j], RIGHT))
             {
                 // If we are on an obstacle cell we don't need to compute F, so we skip it.
+                // continue;
+                F[i][j] = U[i][j];
                 continue;
             }
             //
@@ -77,9 +79,11 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double dt, doub
     {
         for (int j = 1; j < jmax; j++)
         {
-            if (isObstacle(Flags[i][j]))
+            if (isObstacle(Flags[i][j]) || isNeighbourObstacle(Flags[i][j], TOP))
             {
                 // If we are on an obstacle cell we don't need to compute G, so we skip it.
+                // continue;
+                G[i][j] = V[i][j];
                 continue;
             }
             //
@@ -248,7 +252,8 @@ void calculate_dt(
             }
         }
     }
-    
+
+    printf("%f\n", dy / v_max);
     double minimum = fmin((Re / 2 / (1 / pow(dx, 2) + 1 / pow(dy, 2))), fmin(dx / u_max, dy / v_max));
     *dt = tau * minimum;
 }
@@ -274,7 +279,7 @@ void calculate_uv(double dt, double dx, double dy, int imax, int jmax, double **
     {
         for (int j = 1; j < jmax + 1; ++j)
         {
-            if (isObstacle(Flags[i][j]))
+            if (isObstacle(Flags[i][j]) || isNeighbourObstacle(Flags[i][j], RIGHT))
             {
                 // If we are on an obstacle cell we don't need to compute the velocity.
                 continue;
@@ -287,7 +292,7 @@ void calculate_uv(double dt, double dx, double dy, int imax, int jmax, double **
     {
         for (int j = 1; j < jmax; ++j)
         {
-            if (isObstacle(Flags[i][j]))
+            if (isObstacle(Flags[i][j]) || isNeighbourObstacle(Flags[i][j], TOP))
             {
                 // If we are on an obstacle cell we don't need to compute the velocity.
                 continue;
