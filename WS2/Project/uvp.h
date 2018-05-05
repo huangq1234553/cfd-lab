@@ -54,6 +54,7 @@ calculate_rs(double dt, double dx, double dy, int imax, int jmax, double **F, do
  */
 void calculate_dt(
   double Re,
+  double Pr,
   double tau,
   double *dt,
   double dx,

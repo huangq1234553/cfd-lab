@@ -227,6 +227,7 @@ void calculate_rs(double dt, double dx, double dy, int imax, int jmax, double **
 
 void calculate_dt(
         double Re,
+        double Pr,
         double tau,
         double *dt,
         double dx,
@@ -254,7 +255,7 @@ void calculate_dt(
     }
 
     printf("%f\n", dy / v_max);
-    double minimum = fmin((Re / 2 / (1 / pow(dx, 2) + 1 / pow(dy, 2))), fmin(dx / u_max, dy / v_max));
+    double minimum = fmin((Re * Pr / 2 / (1 / pow(dx, 2) + 1 / pow(dy, 2))), fmin(dx / u_max, dy / v_max));
     *dt = tau * minimum;
 }
 

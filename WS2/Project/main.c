@@ -121,7 +121,7 @@ int main(int argc, char** argv){
 		// dt = tau * min(cond1, cond2, cond3) where tau is a safety factor
 		// NOTE: if tau<0, stepsize is not adaptively computed!
 		if(tau > 0){
-			calculate_dt(Re, tau, &dt, dx, dy, imax, jmax, U, V);
+			calculate_dt(Re, Pr, tau, &dt, dx, dy, imax, jmax, U, V);
             dt = fmin(dt, dt_value); // test, to avoid a dt bigger than visualization interval
 			// Used to check the minimum time-step for convergence
 			if (dt < mindt)
