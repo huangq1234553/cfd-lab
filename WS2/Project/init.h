@@ -52,15 +52,17 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
  * The arrays U,V and P are initialized to the constant values UI, VI and PI on
  * the whole domain.
  */
-void init_uvp(
+void init_uvpt(
   double UI,
   double VI,
   double PI,
+  double TI,
   int imax,
   int jmax,
   double **U,
   double **V,
-  double **P
+  double **P,
+  double **T
 );
 
 void init_flag(

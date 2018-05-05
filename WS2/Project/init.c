@@ -61,15 +61,17 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
     return 1;
 }
 
-void init_uvp(
+void init_uvpt(
         double UI,
         double VI,
         double PI,
+        double TI,
         int imax,
         int jmax,
         double **U,
         double **V,
-        double **P
+        double **P,
+        double **T
 )
 {
     init_matrix(U, 0, imax + 1, 0, jmax + 1, UI);
