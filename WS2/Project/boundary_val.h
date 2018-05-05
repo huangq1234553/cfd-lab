@@ -4,11 +4,19 @@
 /*
  * Auxiliary data structures to handle the boundary values.
  */
+typedef enum BoundarySide
+{
+    T,
+    B,
+    L,
+    R
+} BoundarySide;
+
 typedef enum BoundaryType
 {
     DIRICHLET,
-    NEUMANN,
-    SAME
+    INTERPOLATION,
+    NEUMANN
 } BoundaryType;
 
 typedef struct BoundaryInfo
