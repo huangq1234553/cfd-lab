@@ -9,30 +9,31 @@ void sor(double omg, double dx, double dy, int imax, int jmax, double **P, doubl
     double coeff = omg / (2.0 * (1.0 / (dx * dx) + 1.0 / (dy * dy)));
     int C;
     
-    /* set boundary values on obstacle interface */
-    for (i = 1; i <= imax; i++)
-    {
-        for (j = 1; j <= jmax; j++)
-        {
-            C = Flags[i][j];
-            // proceed if obstacle
-            if (isObstacle(C))
-            {
-                if (isCorner(C))
-                {
-                    P[i][j] = (P[i + isNeighbourObstacle(C, LEFT) - isNeighbourObstacle(C, RIGHT)][j] +
-                               P[i][j + isNeighbourObstacle(C, BOT) - isNeighbourObstacle(C, TOP)]) / 2;
-                }
-                else
-                {
-                    P[i][j] = (!isNeighbourObstacle(C, TOP)) * P[i][j + 1];
-                    P[i][j] += (!isNeighbourObstacle(C, BOT)) * P[i][j - 1];
-                    P[i][j] += (!isNeighbourObstacle(C, RIGHT)) * P[i + 1][j];
-                    P[i][j] += (!isNeighbourObstacle(C, LEFT)) * P[i - 1][j];
-                }
-            }
-        }
-    }
+//    /* set boundary values on obstacle interface */
+//    for (i = 1; i <= imax; i++)
+//    {
+//        for (j = 1; j <= jmax; j++)
+//        {
+//            C = Flags[i][j];
+//            // proceed if obstacle
+//            if (isObstacle(C))
+//            {
+//                if (isCorner(C))
+//                {
+//                    P[i][j] = (P[i + isNeighbourObstacle(C, LEFT) - isNeighbourObstacle(C, RIGHT)][j] +
+//                               P[i][j + isNeighbourObstacle(C, BOT) - isNeighbourObstacle(C, TOP)]) / 2;
+//                }
+//                else
+//                {
+//                    double p = (!isNeighbourObstacle(C, TOP)) * P[i][j + 1];
+//                    p += (!isNeighbourObstacle(C, BOT)) * P[i][j - 1];
+//                    p += (!isNeighbourObstacle(C, RIGHT)) * P[i + 1][j];
+//                    p += (!isNeighbourObstacle(C, LEFT)) * P[i - 1][j];
+//                    P[i][j] = p;
+//                }
+//            }
+//        }
+//    }
     
     /* SOR iteration */
     for (i = 1; i <= imax; i++)
@@ -88,30 +89,30 @@ void sor(double omg, double dx, double dy, int imax, int jmax, double **P, doubl
         P[imax + 1][j] = P[imax][j];
     }
     
-//    /* set boundary values on obstacle interface */
-//    for (i = 1; i <= imax; i++)
-//    {
-//        for (j = 1; j <= jmax; j++)
-//        {
-//            C = Flags[i][j];
-//            // proceed if obstacle
-//            if (isObstacle(C))
-//            {
-//                if (isCorner(C))
-//                {
-//                    P[i][j] = (P[i + isNeighbourObstacle(C, LEFT) - isNeighbourObstacle(C, RIGHT)][j] +
-//                               P[i][j + isNeighbourObstacle(C, BOT) - isNeighbourObstacle(C, TOP)]) / 2;
-//                }
-//                else
-//                {
-//                    P[i][j] = (!isNeighbourObstacle(C, TOP)) * P[i][j + 1];
-//                    P[i][j] += (!isNeighbourObstacle(C, BOT)) * P[i][j - 1];
-//                    P[i][j] += (!isNeighbourObstacle(C, RIGHT)) * P[i + 1][j];
-//                    P[i][j] += (!isNeighbourObstacle(C, LEFT)) * P[i - 1][j];
-//                }
-//            }
-//        }
-//    }
+    /* set boundary values on obstacle interface */
+    for (i = 1; i <= imax; i++)
+    {
+        for (j = 1; j <= jmax; j++)
+        {
+            C = Flags[i][j];
+            // proceed if obstacle
+            if (isObstacle(C))
+            {
+                if (isCorner(C))
+                {
+                    P[i][j] = (P[i + isNeighbourObstacle(C, LEFT) - isNeighbourObstacle(C, RIGHT)][j] +
+                               P[i][j + isNeighbourObstacle(C, BOT) - isNeighbourObstacle(C, TOP)]) / 2;
+                }
+                else
+                {
+                    P[i][j] = (!isNeighbourObstacle(C, TOP)) * P[i][j + 1];
+                    P[i][j] += (!isNeighbourObstacle(C, BOT)) * P[i][j - 1];
+                    P[i][j] += (!isNeighbourObstacle(C, RIGHT)) * P[i + 1][j];
+                    P[i][j] += (!isNeighbourObstacle(C, LEFT)) * P[i - 1][j];
+                }
+            }
+        }
+    }
 
 }
 
