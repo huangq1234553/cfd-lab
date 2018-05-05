@@ -76,7 +76,8 @@ int main(int argc, char** argv){
 	double res = 10;		  /* residual */
 	double t = 0;			  /* initial time */
 	int it;					  /* sor iteration counter */
-	double mindt=10000;
+	double mindt=10000;       /* arbitrary counter that keeps track of minimum dt value in calculation */
+	int noFluidCells;
 
     BoundaryInfo boundaryInfo[4];
 
@@ -98,7 +99,7 @@ int main(int argc, char** argv){
 	init_uvp(UI,VI,PI,imax,jmax,U,V,P);
 
 	// create flag array to determine boundary connditions
-    init_flag(problem, geometry, imax, jmax, Flags);
+    init_flag(problem, geometry, imax, jmax, Flags, &noFluidCells);
     
     // Debug
     logEvent(t, "INFO: Writing visualization file n=%d", n);

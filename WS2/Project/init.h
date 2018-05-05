@@ -67,7 +67,8 @@ void init_flag(
   char* geometry,
   int imax,
   int jmax,
-  int** Flag
+  int** Flag,
+  int* counter
 );
 
 #endif

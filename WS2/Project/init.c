@@ -75,49 +75,36 @@ void init_flag(
         char *geometry,
         int imax,
         int jmax,
-        int **Flag
+        int **Flag,
+        int *counter
 )
 {
     int **pic = NULL;
     
     pic = read_pgm(geometry); // NOTE: this is covering just the inner part of the image, so it is imax*jmax
-    
-    // Set the corner cases
-    // bottom-left
-    Flag[0][0] = 1;
-    // top-left
-    Flag[0][jmax + 1] = 1;
-    // bottom-right
-    Flag[imax + 1][0] = 1;
-    // top-right
-    Flag[imax + 1][jmax + 1] = 1;
+
     // Set the outer boundary + the first inner layers
-    for (int i = 1; i < imax + 1; ++i)
+    for (int i = 0; i < imax + 1; ++i)
     {
         // Outer boundary
         Flag[i][0] = 1;
         Flag[i][jmax + 1] = 1;
-        // First inner rows
-        Flag[i][1] = pic[i - 1][0];
-        Flag[i][jmax] = pic[i - 1][jmax - 1];
     }
-    for (int j = 1; j < imax + 1; ++j)
+    for (int j = 0; j < imax + 1; ++j)
     {
         // Outer boundary
         Flag[0][j] = 1;
         Flag[imax + 1][j] = 1;
-        // First inner columns
-        Flag[1][j] = pic[0][j - 1];
-        Flag[imax][j] = pic[imax - 1][j - 1];
     }
     // Set the inner domain geometry
-    for (int i = 2; i < imax; i++)
+    for (int i = 1; i < imax+1; i++)
     {
-        for (int j = 2; j < jmax; j++)
+        for (int j = 1; j < jmax+1; j++)
         {
             Flag[i][j] = pic[i - 1][j - 1];
         }
     }
+    *counter = 0;
     // Set the inner domain flags
     for (int j = jmax; j > 0; j--)
     {
@@ -128,9 +115,11 @@ void init_flag(
                           + (1<<LEFT) * isObstacle(Flag[i - 1][j])
                           + (1<<RIGHT) * isObstacle(Flag[i + 1][j]);
             printf("%d ", Flag[i][j]);
+            (*counter) += isFluid(Flag[i][j]);
         }
         printf("\n");
     }
+    printf("%d\n", (*counter));
     
     free_imatrix(pic, 0, imax + 1, 0, jmax + 1);
 }
