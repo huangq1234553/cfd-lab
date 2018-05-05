@@ -4,6 +4,8 @@
 #include "helper.h"
 #include "logger.h"
 
+enum directions{CENTER=1, TOP=16, BOT=8, LEFT=4, RIGHT=2};
+
 /* ----------------------------------------------------------------------- */
 /*                             auxiliary functions                         */
 /* ----------------------------------------------------------------------- */
@@ -36,12 +38,12 @@ double fmax( double a, double b)
 
 // Returns 1 (True) if the cell is an obstacle
 int isObstable(int flag){
-    return flag&1;
+    return flag&CENTER;
 }
 
 // Returns 1 (True) if the cell is fluid
 int isFluid(int flag){
-    return !(flag&1);
+    return !(flag&CENTER);
 }
 
 // Returns 1 (True) if the neighbouring cell in the indicated direction is an obstacle
@@ -51,12 +53,12 @@ int isNeighbour(int flag, int direction){
 
 // Computes skip condition for u-boundary value determination (if top, right and bottom cells are obstacles)
 int skipU(int flag){
-    return (flag&16) && (flag&8) && (flag&4);
+    return (flag&TOP) && (flag&RIGHT) && (flag&BOT);
 }
 
 // Computes skip condition for v-boundary value determination (if left, top and right cells are obstacles)
 int skipV(int flag){
-    return (flag&16) && (flag&4) && (flag&2);
+    return (flag&LEFT) && (flag&TOP) && (flag&RIGHT);
 }
 
 
