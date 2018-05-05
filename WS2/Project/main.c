@@ -41,10 +41,15 @@
  * - calculate_uv() Calculate the velocity at the next time step.
  */
 
-int main(int argn, char** args){
+int main(int argc, char** argv){
 
-	char* szFileName = "cavity100.dat";
-	char* szProblem = "visualization";
+    // Handling the problem file name which is passed as 1st argument.
+	char szFileName[256]; // We assume name will not be longer than 256 chars...
+    strcpy(szFileName, argv[1]);
+    strcat(szFileName, ".dat");
+    //
+	char problem[256];
+    char geometry[1024]; // bigger since this can be a full path
 	double Re;                /* reynolds number   */
     double UI;                /* velocity x-direction */
     double VI;                /* velocity y-direction */
@@ -72,7 +77,8 @@ int main(int argn, char** args){
 	double mindt=10000;
     
     openLogFile(); // Initialize the log file descriptor.
-    read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax, &jmax, &alpha, &omg, &tau, &itermax, &eps, &dt_value); 
+    read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax, &jmax,
+                    &alpha, &omg, &tau, &itermax, &eps, &dt_value, problem, geometry);
 
     double** U = matrix(0, imax+1, 0, jmax+1);
     double** V = matrix(0, imax+1, 0, jmax+1);
@@ -85,7 +91,7 @@ int main(int argn, char** args){
 	init_uvp(UI,VI,PI,imax,jmax,U,V,P);
 	
 	// TODO: Check if this visualization output can be removed!
-//	write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+//	write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
 //	n++;
 	// simulation interval 0 to t_end
 	double currentOutputTime = 0; // For chosing when to output
@@ -105,7 +111,7 @@ int main(int argn, char** args){
 		// ensure boundary conditions for velocity
 		boundaryvalues(imax, jmax, U, V);
 //		if(t == 0){
-//			write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+//			write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
 //			n++;
 //		}
 		// momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
@@ -133,7 +139,7 @@ int main(int argn, char** args){
 		if (t >= currentOutputTime)
 		{
             logEvent(t, "INFO: Writing visualization file n=%d", n);
-			write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+			write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
 			currentOutputTime += dt_value;
 			// update output timestep iteration counter
 			n++;
@@ -147,7 +153,7 @@ int main(int argn, char** args){
 
 	// write visualisation file for the last iteration
     logEvent(t, "INFO: Writing visualization file n=%d", n);
-    write_vtkFile(szProblem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+    write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
 
 	// Check value of U[imax/2][7*jmax/8] (task6)
     logMsg("Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);

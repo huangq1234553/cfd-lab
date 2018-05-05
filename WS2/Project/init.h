@@ -37,6 +37,8 @@
  * @param eps        tolerance limit for pressure calculation
  * @param dt_value   time steps for output (after how many time steps one should
  *                   write into the output file)
+ * @param problem    the problem short string (no spaces please!)
+ * @param geometry   /path/to/geometry.pgm file
  */
 int read_parameters( 
   const char *szFileName,
@@ -59,7 +61,9 @@ int read_parameters(
   double *tau,
   int  *itermax,
   double *eps,
-  double *dt_value
+  double *dt_value,
+  char* problem,
+  char* geometry
 );
 
 /**

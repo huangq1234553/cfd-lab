@@ -52,4 +52,9 @@ PI		0
 UI		0
 VI		0
 
-
+#--------------------------------------------
+#       problem description
+#       and path to geometry file
+#--------------------------------------------
+problem     testProblem
+geometry    testGeometry.pgm
