@@ -84,10 +84,21 @@ void init_flag(
 
   pic = read_pgm(geometry);
 
-  for(int i=0; i<imax+1; i++){
-    for(int j=0; j<jmax+1; j++){
-      Flag[i][j] = pic[i][j]*16;
+  for(int i=0; i<imax+2; i++){
+    for(int j=0; j<jmax+2; j++){
+        Flag[i][j] = pic[i][j];
+        printf("%d ", Flag[i][j]);
     }
+    printf("\n");
   }
+
+  for(int i=1; i<imax+1; i++){
+      for(int j=1; j<jmax+1; j++){
+          Flag[i][j] += pic[i][j+1]*16 + pic[i][j-1]*8 + pic[i+1][j]*4 + pic[i-1][j]*2 + pic[i][j];
+          printf("%d ", Flag[i][j]);
+      }
+      printf("\n");
+  }
+
   free_imatrix(pic, 0, imax+1, 0, jmax+1);
 }
