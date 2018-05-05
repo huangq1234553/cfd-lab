@@ -4,10 +4,10 @@
 void boundaryvalues(int imax, int jmax, double **U, double **V, int **Flags, BoundaryInfo boundaryInfo[4])
 {
     // Setting boundary conditions on the outer boundary
-    leftboundary(imax, jmax, U, V, boundaryInfo);
-    rightboundary(imax, jmax, U, V, boundaryInfo);
-    topboundary(imax, jmax, U, V, boundaryInfo);
-    bottomboundary(imax, jmax, U, V, boundaryInfo);
+    setLeftBoundaryVelocities(imax, jmax, U, V, boundaryInfo);
+    setRightBoundaryVelocities(imax, jmax, U, V, boundaryInfo);
+    setTopBoundaryVelocities(imax, jmax, U, V, boundaryInfo);
+    setBottomBoundaryVelocities(imax, jmax, U, V, boundaryInfo);
     
     // Boundary values at geometries in the internal part of the domain
     for (int i = 1; i <= imax; ++i)
@@ -63,21 +63,20 @@ void boundaryvalues(int imax, int jmax, double **U, double **V, int **Flags, Bou
     }
 }
 
-void leftboundary(int imax, int jmax, double **U, double **V, BoundaryInfo bI[4])
+void setLeftBoundaryVelocities(int imax, int jmax, double **U, double **V, BoundaryInfo *bI)
 {
     for (int j = 1; j <= jmax; j++)
     {
-        
         //bI[2] == LEFT
-        if (bI[2].typeU == DIRICHLET)
+        if (bI[L].typeU == DIRICHLET)
         {
-            if (bI[2].constU)
+            if (bI[L].constU)
             {
-                U[0][j] = *(bI[2].valuesU);
+                U[0][j] = *(bI[L].valuesU);
             }
             else
             {
-                U[0][j] = (bI[2].valuesU)[j - 1];
+                U[0][j] = (bI[L].valuesU)[j - 1];
             }
         }
         else
@@ -85,15 +84,15 @@ void leftboundary(int imax, int jmax, double **U, double **V, BoundaryInfo bI[4]
             U[0][j] = U[1][j];
         }
         
-        if (bI[2].typeV == DIRICHLET)
+        if (bI[L].typeV == DIRICHLET)
         {
-            if (bI[2].constV)
+            if (bI[L].constV)
             {
-                V[0][j] = 2 * (bI[2].valuesV)[0] - V[1][j];
+                V[0][j] = 2 * (bI[L].valuesV)[0] - V[1][j];
             }
             else
             {
-                V[0][j] = 2 * (bI[2].valuesV)[j - 1] - V[1][j];
+                V[0][j] = 2 * (bI[L].valuesV)[j - 1] - V[1][j];
             }
         }
         else
@@ -103,21 +102,20 @@ void leftboundary(int imax, int jmax, double **U, double **V, BoundaryInfo bI[4]
     }
 }
 
-void rightboundary(int imax, int jmax, double **U, double **V, BoundaryInfo bI[4])
+void setRightBoundaryVelocities(int imax, int jmax, double **U, double **V, BoundaryInfo *bI)
 {
     for (int j = 1; j <= jmax; j++)
     {
-        
         //bI[3] == RIGHT
-        if (bI[3].typeU == DIRICHLET)
+        if (bI[R].typeU == DIRICHLET)
         {
-            if (bI[3].constU)
+            if (bI[R].constU)
             {
-                U[imax][j] = *(bI[3].valuesU);
+                U[imax][j] = *(bI[R].valuesU);
             }
             else
             {
-                U[imax][j] = (bI[3].valuesU)[j - 1];
+                U[imax][j] = (bI[R].valuesU)[j - 1];
             }
         }
         else
@@ -125,15 +123,15 @@ void rightboundary(int imax, int jmax, double **U, double **V, BoundaryInfo bI[4
             U[imax][j] = U[imax - 1][j];
         }
         
-        if (bI[3].typeV == DIRICHLET)
+        if (bI[R].typeV == DIRICHLET)
         {
-            if (bI[3].constV)
+            if (bI[R].constV)
             {
-                V[imax + 1][j] = 2 * (bI[3].valuesV)[0] - V[imax][j];
+                V[imax + 1][j] = 2 * (bI[R].valuesV)[0] - V[imax][j];
             }
             else
             {
-                V[imax + 1][j] = 2 * (bI[3].valuesV)[j - 1] - V[imax][j];
+                V[imax + 1][j] = 2 * (bI[R].valuesV)[j - 1] - V[imax][j];
             }
         }
         else
@@ -143,21 +141,21 @@ void rightboundary(int imax, int jmax, double **U, double **V, BoundaryInfo bI[4
     }
 }
 
-void topboundary(int imax, int jmax, double **U, double **V, BoundaryInfo bI[4])
+void setTopBoundaryVelocities(int imax, int jmax, double **U, double **V, BoundaryInfo *bI)
 {
     for (int i = 1; i <= imax; i++)
     {
         
         //bI[0] == TOP
-        if (bI[0].typeV == DIRICHLET)
+        if (bI[T].typeV == DIRICHLET)
         {
-            if (bI[0].constV)
+            if (bI[T].constV)
             {
-                V[i][jmax] = *(bI[0].valuesV);
+                V[i][jmax] = *(bI[T].valuesV);
             }
             else
             {
-                V[i][jmax] = (bI[0].valuesV)[i - 1];
+                V[i][jmax] = (bI[T].valuesV)[i - 1];
             }
         }
         else
@@ -165,15 +163,15 @@ void topboundary(int imax, int jmax, double **U, double **V, BoundaryInfo bI[4])
             V[i][jmax] = V[i][jmax - 1];
         }
         
-        if (bI[0].typeU == DIRICHLET)
+        if (bI[T].typeU == DIRICHLET)
         {
-            if (bI[0].constU)
+            if (bI[T].constU)
             {
-                U[i][jmax + 1] = 2 * (bI[0].valuesU)[0] - U[i][jmax];
+                U[i][jmax + 1] = 2 * (bI[T].valuesU)[0] - U[i][jmax];
             }
             else
             {
-                U[i][jmax + 1] = 2 * (bI[0].valuesU)[i - 1] - U[i][jmax];
+                U[i][jmax + 1] = 2 * (bI[T].valuesU)[i - 1] - U[i][jmax];
             }
         }
         else
@@ -183,21 +181,21 @@ void topboundary(int imax, int jmax, double **U, double **V, BoundaryInfo bI[4])
     }
 }
 
-void bottomboundary(int imax, int jmax, double **U, double **V, BoundaryInfo bI[4])
+void setBottomBoundaryVelocities(int imax, int jmax, double **U, double **V, BoundaryInfo *bI)
 {
     for (int i = 1; i <= imax; i++)
     {
         
         //bI[1] == BOTTOM
-        if (bI[1].typeV == DIRICHLET)
+        if (bI[B].typeV == DIRICHLET)
         {
-            if (bI[1].constV)
+            if (bI[B].constV)
             {
-                V[i][0] = *(bI[1].valuesV);
+                V[i][0] = *(bI[B].valuesV);
             }
             else
             {
-                V[i][0] = (bI[1].valuesV)[i - 1];
+                V[i][0] = (bI[B].valuesV)[i - 1];
             }
         }
         else
@@ -205,15 +203,15 @@ void bottomboundary(int imax, int jmax, double **U, double **V, BoundaryInfo bI[
             V[i][0] = V[i][1];
         }
         
-        if (bI[0].typeU == DIRICHLET)
+        if (bI[B].typeU == DIRICHLET)
         {
-            if (bI[1].constU)
+            if (bI[B].constU)
             {
-                U[i][0] = 2 * (bI[1].valuesU)[0] - U[i][1];
+                U[i][0] = 2 * (bI[B].valuesU)[0] - U[i][1];
             }
             else
             {
-                U[i][0] = 2 * (bI[1].valuesU)[i - 1] - U[i][1];
+                U[i][0] = 2 * (bI[B].valuesU)[i - 1] - U[i][1];
             }
         }
         else

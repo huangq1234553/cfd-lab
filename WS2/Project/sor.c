@@ -7,39 +7,13 @@ void sor(double omg, double dx, double dy, int imax, int jmax, double **P, doubl
     int i, j;
     double rloc;
     double coeff = omg / (2.0 * (1.0 / (dx * dx) + 1.0 / (dy * dy)));
-    int cell;
-    
-//    /* set boundary values on obstacle interface */
-    for (i = 1; i <= imax; i++)
-    {
-        for (j = 1; j <= jmax; j++)
-        {
-            cell = Flags[i][j];
-            // proceed if obstacle
-            if (isObstacle(cell))
-            {
-                if (isCorner(cell))
-                {
-                    P[i][j] = (P[i + isNeighbourObstacle(cell, LEFT) - isNeighbourObstacle(cell, RIGHT)][j] +
-                               P[i][j + isNeighbourObstacle(cell, BOT) - isNeighbourObstacle(cell, TOP)]) / 2;
-                }
-                else
-                {
-                    P[i][j] = (isNeighbourFluid(cell, TOP)) * P[i][j + 1];
-                    P[i][j] += (isNeighbourFluid(cell, BOT)) * P[i][j - 1];
-                    P[i][j] += (isNeighbourFluid(cell, RIGHT)) * P[i + 1][j];
-                    P[i][j] += (isNeighbourFluid(cell, LEFT)) * P[i - 1][j];
-                }
-            }
-        }
-    }
     
     /* SOR iteration */
     for (i = 1; i <= imax; i++)
     {
         for (j = 1; j <= jmax; j++)
         {
-            cell = Flags[i][j];
+            int cell = Flags[i][j];
             // proceed if fluid
             if (isFluid(cell))
             {
@@ -58,7 +32,7 @@ void sor(double omg, double dx, double dy, int imax, int jmax, double **P, doubl
     {
         for (j = 1; j <= jmax; j++)
         {
-            cell = Flags[i][j];
+            int cell = Flags[i][j];
             // proceed if fluid
             if (isFluid(cell))
             {
@@ -86,6 +60,30 @@ void sor(double omg, double dx, double dy, int imax, int jmax, double **P, doubl
         P[0][j] = P[1][j];
         P[imax + 1][j] = P[imax][j];
     }
-
+    
+    /* set boundary values on obstacle interface */
+    for (i = 1; i <= imax; i++)
+    {
+        for (j = 1; j <= jmax; j++)
+        {
+            int C = Flags[i][j];
+            // proceed if obstacle
+            if (isObstacle(C))
+            {
+                if (isCorner(C))
+                {
+                    P[i][j] = (P[i + isNeighbourObstacle(C, LEFT) - isNeighbourObstacle(C, RIGHT)][j] +
+                               P[i][j + isNeighbourObstacle(C, BOT) - isNeighbourObstacle(C, TOP)]) / 2;
+                }
+                else
+                {
+                    P[i][j] = (!isNeighbourObstacle(C, TOP)) * P[i][j + 1];
+                    P[i][j] += (!isNeighbourObstacle(C, BOT)) * P[i][j - 1];
+                    P[i][j] += (!isNeighbourObstacle(C, RIGHT)) * P[i + 1][j];
+                    P[i][j] += (!isNeighbourObstacle(C, LEFT)) * P[i - 1][j];
+                }
+            }
+        }
+    }
 }
 

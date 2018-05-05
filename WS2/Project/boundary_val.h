@@ -37,9 +37,9 @@ initBoundaryInfo(BoundaryInfo *boundaryInfo, BoundaryType typeU, BoundaryType ty
  */
 
 void boundaryvalues(int imax, int jmax, double **U, double **V, int **Flags, BoundaryInfo boundaryInfo[4]);
-void leftboundary (int imax, int jmax, double **U, double **V, BoundaryInfo bI[4]);
-void rightboundary (int imax, int jmax, double **U, double **V, BoundaryInfo bI[4]);
-void topboundary (int imax, int jmax, double **U, double **V, BoundaryInfo bI[4]);
-void bottomboundary (int imax, int jmax, double **U, double **V, BoundaryInfo bI[4]);
+void setLeftBoundaryVelocities(int imax, int jmax, double **U, double **V, BoundaryInfo *bI);
+void setRightBoundaryVelocities(int imax, int jmax, double **U, double **V, BoundaryInfo *bI);
+void setTopBoundaryVelocities(int imax, int jmax, double **U, double **V, BoundaryInfo *bI);
+void setBottomBoundaryVelocities(int imax, int jmax, double **U, double **V, BoundaryInfo *bI);
 
 #endif
