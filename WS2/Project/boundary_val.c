@@ -38,7 +38,7 @@ void boundaryvalues(int imax, int jmax, double **U, double **V, int **Flags)
                 // Compute v
                 if (!skipV(cell))
                 {
-                    if (isNeighbourFluid(cell, TOP))
+                    if (isNeighbourFluid(cell,TOP))
                     {
                         V[i][j] = 0;
                     }
@@ -56,7 +56,7 @@ void boundaryvalues(int imax, int jmax, double **U, double **V, int **Flags)
                     }
                     else
                     {
-                        U[i][j] = -U[i][j+isNeighbourObstacle(cell,BOTTOM)-isNeighbourObstacle(cell,TOP)];
+                        U[i][j] = -U[i][j+isNeighbourObstacle(cell,BOT)-isNeighbourObstacle(cell,TOP)];
                     }
                 }
             }

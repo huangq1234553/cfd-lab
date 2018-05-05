@@ -110,7 +110,7 @@ int main(int argc, char** argv){
 		}
 		
 		// ensure boundary conditions for velocity
-        boundaryvalues(imax, jmax, U, V, NULL); // TODO: replace the NULL with the actual Flags pointer
+        boundaryvalues(imax, jmax, U, V, Flag); // TODO: replace the NULL with the actual Flags pointer
 //		if(t == 0){
 //			write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
 //			n++;
