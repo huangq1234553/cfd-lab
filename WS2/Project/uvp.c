@@ -255,7 +255,7 @@ void calculate_dt(
         }
     }
 
-    printf("%f\n", dy / v_max);
+    //printf("%f\n", dy / v_max); // todo: can this be removed?
     double minimum = fmin((Re * Pr / 2 / (1 / pow(dx, 2) + 1 / pow(dy, 2))), fmin(dx / u_max, dy / v_max));
     *dt = tau * minimum;
 }

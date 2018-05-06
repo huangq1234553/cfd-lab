@@ -149,7 +149,6 @@ int main(int argc, char** argv){
 		}
         if (it == itermax)
         {
-//            printf("[%12.9f] WARNING: max number of iterations reached on SOR. Probably it did not converge!\n", t);
             logEvent(t, "WARNING: max number of iterations reached on SOR. Probably it did not converge!");
         }
 		// calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
@@ -165,7 +164,6 @@ int main(int argc, char** argv){
 			n++;
 		}
         // Recap shell output
-//        printf("[%12.9f] INFO: dt=%f, numSorIterations=%d, sorResidual=%f\n", t, dt, it, res);
         logEvent(t, "INFO: dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res);
 		// advance in time
 		t += dt;
