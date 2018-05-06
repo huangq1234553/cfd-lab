@@ -44,7 +44,7 @@ void write_vtkFile(const char *szProblem,
 
   fprintf(fp,"\n");
   fprintf(fp,"CELL_DATA %i \n", ((imax)*(jmax)) );
-  fprintf(fp, "SCALARS pressure float 1 \n"); 
+  fprintf(fp, "SCALARS pressure float\n"); 
   fprintf(fp, "LOOKUP_TABLE default \n");
   for(j = 1; j < jmax+1; j++) {
     for(i = 1; i < imax+1; i++) {
@@ -53,9 +53,8 @@ void write_vtkFile(const char *szProblem,
   }
 
   fprintf(fp,"\n");
-  fprintf(fp,"CELL_DATA %i \n", ((imax)*(jmax)) );
-  fprintf(fp, "SCALARS temperature float 1 \n"); 
-  fprintf(fp, "LOOKUP_TABLE default \n");
+  fprintf(fp, "SCALARS temperature float\n"); 
+  fprintf(fp, "LOOKUP_TABLE temp \n");
   for(j = 1; j < jmax+1; j++) {
     for(i = 1; i < imax+1; i++) {
       fprintf(fp, "%f\n", T[i][j] );
