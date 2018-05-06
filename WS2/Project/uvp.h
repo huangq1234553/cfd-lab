@@ -2,6 +2,8 @@
 #define __UVP_H__
 
 
+#include "boundary_val.h"
+
 /**
  * Determines the value of U and G according to the formula
  *
@@ -23,9 +25,11 @@
  * @f$ i=1,\ldots,imax, \quad j=1,\ldots,jmax-1 @f$
  *
  */
-void calculate_fg(double Re, double GX, double GY, double alpha, double beta, double dt, double dx, double dy, int imax, int jmax,
-                  double **U, double **V, double **F, double **G, double **T, int **Flags);
+void calculate_fg(double Re, double GX, double GY, double alpha, double beta, double dt, double dx, double dy, int imax,
+                  int jmax, double **U, double **V, double **F, double **G, double **T, int **Flags);
 // Helper functions for calculate_fg
+double computeF(double Re, double GX, double alpha, double beta, double dt, double dx, double dy, double **U, double **V, double **T, int i, int j);
+double computeG(double Re, double GY, double alpha, double beta, double dt, double dx, double dy, double **U, double **V, double **T, int i, int j);
 double secondDerivativeDx(double** A, int i, int j, double h);
 double secondDerivativeDy(double** A, int i, int j, double h);
 double productDerivativeDx(double** A, double** B, int i, int j, double h, double alpha);

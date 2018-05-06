@@ -58,6 +58,7 @@ void sor(double omg, double dx, double dy, int imax, int jmax, double **P, doubl
     for (j = 1; j <= jmax; j++)
     {
         P[0][j] = P[1][j];
+//        P[0][j] = 0; // debug test
         P[imax + 1][j] = P[imax][j];
     }
     

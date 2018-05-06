@@ -1,19 +1,28 @@
 #include "boundary_val.h"
 #include "helper.h"
+#include "logger.h"
 
 void boundaryvalues(int imax, int jmax, double **U, double **V, int **Flags, BoundaryInfo boundaryInfo[4])
 {
     // Setting boundary conditions on the outer boundary
-    setLeftBoundaryVelocities(imax, jmax, U, V, boundaryInfo);
-    setRightBoundaryVelocities(imax, jmax, U, V, boundaryInfo);
-    setTopBoundaryVelocities(imax, jmax, U, V, boundaryInfo);
-    setBottomBoundaryVelocities(imax, jmax, U, V, boundaryInfo);
+    setLeftBoundaryVelocities(imax, jmax, U, V, Flags, boundaryInfo);
+    setRightBoundaryVelocities(imax, jmax, U, V, Flags, boundaryInfo);
+    setTopBoundaryVelocities(imax, jmax, U, V, Flags, boundaryInfo);
+    setBottomBoundaryVelocities(imax, jmax, U, V, Flags, boundaryInfo);
     
     // Boundary values at geometries in the internal part of the domain
     for (int i = 1; i <= imax; ++i)
     {
         for (int j = 1; j <= jmax; ++j)
         {
+//            // debug, print the right boundary edge velocities
+//            if (i == imax)
+//            {
+//                double u = U[i][j];
+//                double v = (V[i][j] + V[i+1][j])/2;
+//                logRawString("u=%f, v=%f | ", u, v);
+//            }
+            //
             int cell = Flags[i][j];
             if (isObstacle(cell))
             {
@@ -61,22 +70,25 @@ void boundaryvalues(int imax, int jmax, double **U, double **V, int **Flags, Bou
             }
         }
     }
+    logRawString("\n"); //debug
 }
 
-void setLeftBoundaryVelocities(int imax, int jmax, double **U, double **V, BoundaryInfo *bI)
+void setLeftBoundaryVelocities(int imax, int jmax, double **U, double **V, int **Flags, BoundaryInfo *boundaryInfo)
 {
     for (int j = 1; j <= jmax; j++)
     {
-        //bI[2] == LEFT
-        if (bI[L].typeU == DIRICHLET)
+        //boundaryInfo[2] == LEFT
+        int rightNeighbourIsFluid = isNeighbourFluid(Flags[0][j],RIGHT);
+        if (boundaryInfo[LEFTBOUNDARY].typeU == DIRICHLET
+            && rightNeighbourIsFluid)
         {
-            if (bI[L].constU)
+            if (boundaryInfo[LEFTBOUNDARY].constU)
             {
-                U[0][j] = *(bI[L].valuesU);
+                U[0][j] = *(boundaryInfo[LEFTBOUNDARY].valuesU);
             }
             else
             {
-                U[0][j] = (bI[L].valuesU)[j - 1];
+                U[0][j] = (boundaryInfo[LEFTBOUNDARY].valuesU)[j - 1];
             }
         }
         else
@@ -84,15 +96,16 @@ void setLeftBoundaryVelocities(int imax, int jmax, double **U, double **V, Bound
             U[0][j] = U[1][j];
         }
         
-        if (bI[L].typeV == DIRICHLET)
+        if (boundaryInfo[LEFTBOUNDARY].typeV == DIRICHLET
+            && rightNeighbourIsFluid)
         {
-            if (bI[L].constV)
+            if (boundaryInfo[LEFTBOUNDARY].constV)
             {
-                V[0][j] = 2 * (bI[L].valuesV)[0] - V[1][j];
+                V[0][j] = 2 * (boundaryInfo[LEFTBOUNDARY].valuesV)[0] - V[1][j];
             }
             else
             {
-                V[0][j] = 2 * (bI[L].valuesV)[j - 1] - V[1][j];
+                V[0][j] = 2 * (boundaryInfo[LEFTBOUNDARY].valuesV)[j - 1] - V[1][j];
             }
         }
         else
@@ -102,20 +115,22 @@ void setLeftBoundaryVelocities(int imax, int jmax, double **U, double **V, Bound
     }
 }
 
-void setRightBoundaryVelocities(int imax, int jmax, double **U, double **V, BoundaryInfo *bI)
+void setRightBoundaryVelocities(int imax, int jmax, double **U, double **V, int **Flags, BoundaryInfo *boundaryInfo)
 {
     for (int j = 1; j <= jmax; j++)
     {
-        //bI[3] == RIGHT
-        if (bI[R].typeU == DIRICHLET)
+        //boundaryInfo[3] == RIGHT
+        int leftNeighbourIsFluid = isNeighbourFluid(Flags[imax+1][j],LEFT);
+        if (boundaryInfo[RIGHTBOUNDARY].typeU == DIRICHLET
+                && leftNeighbourIsFluid)
         {
-            if (bI[R].constU)
+            if (boundaryInfo[RIGHTBOUNDARY].constU)
             {
-                U[imax][j] = *(bI[R].valuesU);
+                U[imax][j] = *(boundaryInfo[RIGHTBOUNDARY].valuesU);
             }
             else
             {
-                U[imax][j] = (bI[R].valuesU)[j - 1];
+                U[imax][j] = (boundaryInfo[RIGHTBOUNDARY].valuesU)[j - 1];
             }
         }
         else
@@ -123,15 +138,16 @@ void setRightBoundaryVelocities(int imax, int jmax, double **U, double **V, Boun
             U[imax][j] = U[imax - 1][j];
         }
         
-        if (bI[R].typeV == DIRICHLET)
+        if (boundaryInfo[RIGHTBOUNDARY].typeV == DIRICHLET
+                && leftNeighbourIsFluid)
         {
-            if (bI[R].constV)
+            if (boundaryInfo[RIGHTBOUNDARY].constV)
             {
-                V[imax + 1][j] = 2 * (bI[R].valuesV)[0] - V[imax][j];
+                V[imax + 1][j] = 2 * (boundaryInfo[RIGHTBOUNDARY].valuesV)[0] - V[imax][j];
             }
             else
             {
-                V[imax + 1][j] = 2 * (bI[R].valuesV)[j - 1] - V[imax][j];
+                V[imax + 1][j] = 2 * (boundaryInfo[RIGHTBOUNDARY].valuesV)[j - 1] - V[imax][j];
             }
         }
         else
@@ -141,21 +157,22 @@ void setRightBoundaryVelocities(int imax, int jmax, double **U, double **V, Boun
     }
 }
 
-void setTopBoundaryVelocities(int imax, int jmax, double **U, double **V, BoundaryInfo *bI)
+void setTopBoundaryVelocities(int imax, int jmax, double **U, double **V, int **Flags, BoundaryInfo *boundaryInfo)
 {
     for (int i = 1; i <= imax; i++)
     {
-        
-        //bI[0] == TOP
-        if (bI[T].typeV == DIRICHLET)
+        //boundaryInfo[0] == TOP
+        int bottomNeighbourIsFluid = isNeighbourFluid(Flags[i][jmax+1],BOT);
+        if (boundaryInfo[TOPBOUNDARY].typeV == DIRICHLET
+                && bottomNeighbourIsFluid)
         {
-            if (bI[T].constV)
+            if (boundaryInfo[TOPBOUNDARY].constV)
             {
-                V[i][jmax] = *(bI[T].valuesV);
+                V[i][jmax] = *(boundaryInfo[TOPBOUNDARY].valuesV);
             }
             else
             {
-                V[i][jmax] = (bI[T].valuesV)[i - 1];
+                V[i][jmax] = (boundaryInfo[TOPBOUNDARY].valuesV)[i - 1];
             }
         }
         else
@@ -163,15 +180,16 @@ void setTopBoundaryVelocities(int imax, int jmax, double **U, double **V, Bounda
             V[i][jmax] = V[i][jmax - 1];
         }
         
-        if (bI[T].typeU == DIRICHLET)
+        if (boundaryInfo[TOPBOUNDARY].typeU == DIRICHLET
+                && bottomNeighbourIsFluid)
         {
-            if (bI[T].constU)
+            if (boundaryInfo[TOPBOUNDARY].constU)
             {
-                U[i][jmax + 1] = 2 * (bI[T].valuesU)[0] - U[i][jmax];
+                U[i][jmax + 1] = 2 * (boundaryInfo[TOPBOUNDARY].valuesU)[0] - U[i][jmax];
             }
             else
             {
-                U[i][jmax + 1] = 2 * (bI[T].valuesU)[i - 1] - U[i][jmax];
+                U[i][jmax + 1] = 2 * (boundaryInfo[TOPBOUNDARY].valuesU)[i - 1] - U[i][jmax];
             }
         }
         else
@@ -181,21 +199,22 @@ void setTopBoundaryVelocities(int imax, int jmax, double **U, double **V, Bounda
     }
 }
 
-void setBottomBoundaryVelocities(int imax, int jmax, double **U, double **V, BoundaryInfo *bI)
+void setBottomBoundaryVelocities(int imax, int jmax, double **U, double **V, int **Flags, BoundaryInfo *boundaryInfo)
 {
     for (int i = 1; i <= imax; i++)
     {
-        
-        //bI[1] == BOTTOM
-        if (bI[B].typeV == DIRICHLET)
+        //boundaryInfo[1] == BOTTOM
+        int topNeighbourIsFluid = isNeighbourFluid(Flags[i][0],TOP);
+        if (boundaryInfo[BOTTOMBOUNDARY].typeV == DIRICHLET
+                && topNeighbourIsFluid)
         {
-            if (bI[B].constV)
+            if (boundaryInfo[BOTTOMBOUNDARY].constV)
             {
-                V[i][0] = *(bI[B].valuesV);
+                V[i][0] = *(boundaryInfo[BOTTOMBOUNDARY].valuesV);
             }
             else
             {
-                V[i][0] = (bI[B].valuesV)[i - 1];
+                V[i][0] = (boundaryInfo[BOTTOMBOUNDARY].valuesV)[i - 1];
             }
         }
         else
@@ -203,15 +222,16 @@ void setBottomBoundaryVelocities(int imax, int jmax, double **U, double **V, Bou
             V[i][0] = V[i][1];
         }
         
-        if (bI[B].typeU == DIRICHLET)
+        if (boundaryInfo[BOTTOMBOUNDARY].typeU == DIRICHLET
+                && topNeighbourIsFluid)
         {
-            if (bI[B].constU)
+            if (boundaryInfo[BOTTOMBOUNDARY].constU)
             {
-                U[i][0] = 2 * (bI[B].valuesU)[0] - U[i][1];
+                U[i][0] = 2 * (boundaryInfo[BOTTOMBOUNDARY].valuesU)[0] - U[i][1];
             }
             else
             {
-                U[i][0] = 2 * (bI[B].valuesU)[i - 1] - U[i][1];
+                U[i][0] = 2 * (boundaryInfo[BOTTOMBOUNDARY].valuesU)[i - 1] - U[i][1];
             }
         }
         else

@@ -1,6 +1,7 @@
 #include "helper.h"
 #include "init.h"
 #include "boundary_val.h"
+#include "logger.h"
 
 int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, double *PI, double *GX, double *GY,
                     double *t_end, double *xlength, double *ylength, double *dt, double *dx, double *dy, int *imax,
@@ -45,38 +46,48 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
     *dy = *ylength / (double) (*jmax);
     
     // Now read boundary-related variables
-    initBoundaryInfo(boundaryInfo+L,DIRICHLET,DIRICHLET,1,1);
-    *(boundaryInfo[L].valuesU) = 1;
-    *(boundaryInfo[L].valuesV) = 0;
-    initBoundaryInfo(boundaryInfo+R,DIRICHLET,DIRICHLET,1,1);
-    *(boundaryInfo[R].valuesU) = 1;
-    *(boundaryInfo[R].valuesV) = 0;
-    initBoundaryInfo(boundaryInfo+T,DIRICHLET,DIRICHLET,1,1);
-    *(boundaryInfo[T].valuesU) = 0;
-    *(boundaryInfo[T].valuesV) = 0;
-    initBoundaryInfo(boundaryInfo+B,DIRICHLET,DIRICHLET,1,1);
-    *(boundaryInfo[B].valuesU) = 0;
-    *(boundaryInfo[B].valuesV) = 0;
+//    initBoundaryInfo(boundaryInfo+LEFTBOUNDARY,NEUMANN,NEUMANN,1,1);
+    initBoundaryInfo(boundaryInfo+LEFTBOUNDARY,DIRICHLET,DIRICHLET,1,1);
+    *(boundaryInfo[LEFTBOUNDARY].valuesU) = 1;
+    *(boundaryInfo[LEFTBOUNDARY].valuesV) = 0;
+    //
+    initBoundaryInfo(boundaryInfo+RIGHTBOUNDARY,NEUMANN,NEUMANN,1,1); // outflow
+//    initBoundaryInfo(boundaryInfo+RIGHTBOUNDARY,DIRICHLET,DIRICHLET,1,1); // no-slip
+//    *(boundaryInfo[RIGHTBOUNDARY].valuesU) = 0;
+//    *(boundaryInfo[RIGHTBOUNDARY].valuesV) = 0;
+    //
+    
+    initBoundaryInfo(boundaryInfo+TOPBOUNDARY,NEUMANN,NEUMANN,1,1); // outflow
+//    initBoundaryInfo(boundaryInfo+TOPBOUNDARY,DIRICHLET,DIRICHLET,1,1);
+//    *(boundaryInfo[TOPBOUNDARY].valuesU) = 0;
+//    *(boundaryInfo[TOPBOUNDARY].valuesV) = 0;
+    initBoundaryInfo(boundaryInfo+BOTTOMBOUNDARY,DIRICHLET,DIRICHLET,1,1);
+    *(boundaryInfo[BOTTOMBOUNDARY].valuesU) = 0;
+    *(boundaryInfo[BOTTOMBOUNDARY].valuesV) = 0;
     //
     return 1;
 }
 
-void init_uvpt(
-        double UI,
-        double VI,
-        double PI,
-        double TI,
-        int imax,
-        int jmax,
-        double **U,
-        double **V,
-        double **P,
-        double **T
-)
+void init_uvpt(double UI, double VI, double PI, double TI, int imax, int jmax, double **U, double **V, double **P,
+               double **T, int **Flags)
 {
     init_matrix(U, 0, imax + 1, 0, jmax + 1, UI);
     init_matrix(V, 0, imax + 1, 0, jmax + 1, VI);
     init_matrix(P, 0, imax + 1, 0, jmax + 1, PI);
+    init_matrix(T, 0, imax + 1, 0, jmax + 1, TI);
+    for (int i = 0; i <= imax+1; ++i)
+    {
+        for (int j = 0; j <= jmax+1; ++j)
+        {
+            if (isObstacle(Flags[i][j]))
+            {
+                U[i][j] = 0;
+                V[i][j] = 0;
+                P[i][j] = 0;
+                T[i][j] = 0;
+            }
+        }
+    }
 }
 
 void init_flag(
@@ -114,6 +125,29 @@ void init_flag(
         }
     }
     *counter = 0;
+    // Set the boundary domain flags
+    for (int j=1; j<jmax+1; ++j)
+    {
+        Flag[0][j] += (1<<TOP) * 1
+                      + (1<<BOT) * 1
+                      + (1<<LEFT) * 1
+                      + (1<<RIGHT) * isObstacle(Flag[1][j]);
+        Flag[imax+1][j] += (1<<TOP) * 1
+                      + (1<<BOT) * 1
+                      + (1<<LEFT) * isObstacle(Flag[imax][j])
+                      + (1<<RIGHT) * 1;
+    }
+    for (int i=1; i<imax+1; ++i)
+    {
+        Flag[i][0] += (1<<TOP) * isObstacle(Flag[i][1])
+                      + (1<<BOT) * 1
+                      + (1<<LEFT) * 1
+                      + (1<<RIGHT) * 1;
+        Flag[i][jmax+1] += (1<<TOP) * 1
+                           + (1<<BOT) * isObstacle(Flag[i][jmax])
+                           + (1<<LEFT) * 1
+                           + (1<<RIGHT) * 1;
+    }
     // Set the inner domain flags
     for (int j = jmax; j > 0; j--)
     {
@@ -123,12 +157,12 @@ void init_flag(
                           + (1<<BOT) * isObstacle(Flag[i][j - 1])
                           + (1<<LEFT) * isObstacle(Flag[i - 1][j])
                           + (1<<RIGHT) * isObstacle(Flag[i + 1][j]);
-            printf("%d ", isCorner(Flag[i][j]));
+            logRawString("%d ", isObstacle(Flag[i][j]));
             (*counter) += isFluid(Flag[i][j]);
         }
-        printf("\n");
+        logRawString("\n");
     }
-    printf("%d\n", (*counter));
+    logMsg("Total fluid cells in domain: %d", (*counter));
     geometryCheck(Flag, imax, jmax);
     free_imatrix(pic, 0, imax + 1, 0, jmax + 1);
 }

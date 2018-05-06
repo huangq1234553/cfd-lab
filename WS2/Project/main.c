@@ -101,18 +101,18 @@ int main(int argc, char** argv){
     double** RS = matrix(0, imax+1, 0, jmax+1);
     double** P = matrix(0, imax+1, 0, jmax+1);
     double** T = matrix(0, imax+1, 0, jmax+1);
-
-    // initialise velocities and pressure
-    init_uvpt(UI, VI, PI, TI, imax, jmax, U, V, P, T);
-
-	// create flag array to determine boundary connditions
+    
+    // create flag array to determine boundary connditions
     init_flag(problem, geometry, imax, jmax, Flags, &noFluidCells);
     
-    // Debug
-    logEvent(t, "INFO: Writing visualization file n=%d", n);
-    write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T);
-    n++;
+    // initialise velocities and pressure
+    init_uvpt(UI, VI, PI, TI, imax, jmax, U, V, P, T, Flags);
     
+//    // Debug
+//    logEvent(t, "INFO: Writing visualization file n=%d", n);
+//    write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T);
+//    n++;
+//
 	// simulation interval 0 to t_end
 	double currentOutputTime = 0; // For chosing when to output
 	while(t < t_end){
@@ -158,7 +158,7 @@ int main(int argc, char** argv){
 		if (t >= currentOutputTime)
 		{
             logEvent(t, "INFO: Writing visualization file n=%d", n);
-			write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T);
+            write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
 			currentOutputTime += dt_value;
 			// update output timestep iteration counter
 			n++;
@@ -171,7 +171,7 @@ int main(int argc, char** argv){
 
 	// write visualisation file for the last iteration
     logEvent(t, "INFO: Writing visualization file n=%d", n);
-    write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T);
+    write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
 
 	// Check value of U[imax/2][7*jmax/8] (task6)
     logMsg("Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);

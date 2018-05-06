@@ -1,5 +1,6 @@
 #include "uvp.h"
 #include "helper.h"
+#include "boundary_val.h"
 #include <math.h>
 
 const short XDIR = 0;
@@ -27,17 +28,18 @@ const short YDIR = 1;
  *
  */
 
-void calculate_fg(double Re, double GX, double GY, double alpha, double beta, double dt, double dx, double dy, int imax, int jmax,
-                  double **U, double **V, double **F, double **G, double **T, int **Flags)
+void calculate_fg(double Re, double GX, double GY, double alpha, double beta, double dt, double dx, double dy, int imax,
+                  int jmax, double **U, double **V, double **F, double **G, double **T, int **Flags)
 {
-    // set boundary conditions for G - see discrete momentum equations - apply Neumann BC - first derivative of pressure must be "zero" - dp/dy = 0
+    // Compute F, G on boundaries
+    // set boundary conditions for G - see discrete momentum equations - In any case apply Neumann BC - first derivative of pressure must be "zero" - dp/dy = 0
     for (int i = 1; i <= imax; i++)
     {
         G[i][0] = V[i][0];
         G[i][jmax] = V[i][jmax];
     }
     
-    // // set boundary conditions for F - see discrete momentum equations - apply Neumann BC - first derivative of pressure must be "zero" - dp/dx = 0
+    // // set boundary conditions for F - see discrete momentum equations - In any case apply Neumann BC - first derivative of pressure must be "zero" - dp/dx = 0
     for (int j = 1; j <= jmax; j++)
     {
         F[0][j] = U[0][j];
@@ -58,20 +60,7 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double beta, do
                 continue;
             }
             //
-            F[i][j] =
-                    // velocity u
-                    U[i][j]
-                    // diffusive term
-                    + dt *
-                      (
-                              1 / Re * (secondDerivativeDx(U, i, j, dx) + secondDerivativeDy(U, i, j, dy))
-                              // convective term
-                              - squareDerivativeDx(U, i, j, dx, alpha)
-                              // convective term cont.
-                              - productDerivativeDy(U, V, i, j, dy, alpha)
-                              // volume force
-                              + (1 - beta * T[i][j]) * GX
-                      );
+            F[i][j] = computeF(Re, GX, alpha, beta, dt, dx, dy, U, V, T, i, j);
         }
     }
     
@@ -88,22 +77,41 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double beta, do
                 continue;
             }
             //
-            G[i][j] =
-                    // velocity v
-                    V[i][j]
-                    // diffusive term
-                    + dt *
-                      (
-                              1 / Re * (secondDerivativeDx(V, i, j, dx) + secondDerivativeDy(V, i, j, dy))
-                              // convective term
-                              - productDerivativeDx(U, V, i, j, dx, alpha)
-                              // convective term cont.
-                              - squareDerivativeDy(V, i, j, dy, alpha)
-                              // volume force
-                              + (1 - beta * T[i][j]) * GY
-                      );
+            G[i][j] = computeG(Re, GY, alpha, beta, dt, dx, dy, U, V, T, i, j);
         }
     }
+}
+
+double computeF(double Re, double GX, double alpha, double beta, double dt, double dx, double dy, double **U, double **V, double **T, int i, int j)
+{
+    return U[i][j] // velocity u
+           // diffusive term
+           + dt *
+             (
+                     1 / Re * (secondDerivativeDx(U, i, j, dx) + secondDerivativeDy(U, i, j, dy))
+                     // convective term
+                     - squareDerivativeDx(U, i, j, dx, alpha)
+                     // convective term cont.
+                     - productDerivativeDy(U, V, i, j, dy, alpha)
+                     // volume force
+                     + (1 - beta * T[i][j]) * GX
+             );
+}
+
+double computeG(double Re, double GY, double alpha, double beta, double dt, double dx, double dy, double **U, double **V, double **T, int i, int j)
+{
+    return V[i][j] // velocity v
+    // diffusive term
+    + dt *
+      (
+              1 / Re * (secondDerivativeDx(V, i, j, dx) + secondDerivativeDy(V, i, j, dy))
+              // convective term
+              - productDerivativeDx(U, V, i, j, dx, alpha)
+              // convective term cont.
+              - squareDerivativeDy(V, i, j, dy, alpha)
+              // volume force
+              + (1 - beta * T[i][j]) * GY
+      );
 }
 
 double secondDerivativeDx(double **A, int i, int j, double h)
