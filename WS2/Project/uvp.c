@@ -49,10 +49,11 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double beta, do
     {
         for (int j = 1; j <= jmax; j++)
         {
-            if (isObstacle(Flags[i][j]) || isNeighbourObstacle(Flags[i][j], RIGHT))
+            // We need to compute F only on edges between 2 fluid cells (see p.6 WS2).
+            int cell = Flags[i][j];
+            if (isObstacle(cell) || isNeighbourObstacle(cell, RIGHT))
             {
-                // If we are on an obstacle cell we don't need to compute F, so we skip it.
-                // continue;
+                // Boundary condition for F at the obstacle-fluid interface. (or on the obstacle itself)
                 F[i][j] = U[i][j];
                 continue;
             }
@@ -79,10 +80,10 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double beta, do
     {
         for (int j = 1; j < jmax; j++)
         {
+            // We need to compute G only on edges between 2 fluid cells (see p.6 WS2).
             if (isObstacle(Flags[i][j]) || isNeighbourObstacle(Flags[i][j], TOP))
             {
-                // If we are on an obstacle cell we don't need to compute G, so we skip it.
-                // continue;
+                // Boundary condition for G at the obstacle-fluid interface. (or on the obstacle itself)
                 G[i][j] = V[i][j];
                 continue;
             }
@@ -208,7 +209,7 @@ void calculate_rs(double dt, double dx, double dy, int imax, int jmax, double **
     {
         for (int j = 1; j < jmax + 1; j++)
         {
-            if (isFluid(Flags[i][j]))
+            if (isFluid(Flags[i][j])) // TODO: double check if this restriction is correct
             {
                 RS[i][j] = ((F[i][j] - F[i - 1][j]) / dx + (G[i][j] - G[i][j - 1]) / dy) / dt;
             }
@@ -280,26 +281,24 @@ void calculate_uv(double dt, double dx, double dy, int imax, int jmax, double **
     {
         for (int j = 1; j < jmax + 1; ++j)
         {
-            if (isObstacle(Flags[i][j]) || isNeighbourObstacle(Flags[i][j], RIGHT))
+            int cell = Flags[i][j];
+            if (isFluid(cell) && isNeighbourFluid(cell,RIGHT))
             {
-                // If we are on an obstacle cell we don't need to compute the velocity.
-                continue;
+                // We need to compute velocity updates only on edges between 2 fluid cells (see p.6 WS2).
+                U[i][j] = F[i][j] - (dt / dx * (P[i + 1][j] - P[i][j]));
             }
-            //
-            U[i][j] = F[i][j] - (dt / dx * (P[i + 1][j] - P[i][j]));
         }
     }
     for (int i = 1; i < imax + 1; ++i)
     {
         for (int j = 1; j < jmax; ++j)
         {
-            if (isObstacle(Flags[i][j]) || isNeighbourObstacle(Flags[i][j], TOP))
+            int cell = Flags[i][j];
+            if (isFluid(cell) && isNeighbourFluid(cell,TOP))
             {
-                // If we are on an obstacle cell we don't need to compute the velocity.
-                continue;
+                // We need to compute velocity updates only on edges between 2 fluid cells (see p.6 WS2).
+                V[i][j] = G[i][j] - (dt / dy * (P[i][j + 1] - P[i][j]));
             }
-            //
-            V[i][j] = G[i][j] - (dt / dy * (P[i][j + 1] - P[i][j]));
         }
     }
 }
