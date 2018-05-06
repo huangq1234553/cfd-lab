@@ -30,12 +30,12 @@ dt_value    10
 itermax		1000
 eps		    0.001
 omg		    1.7
-alpha		0.99
+alpha		0.9
 
 #--------------------------------------------
 #               reynoldsnumber
 #--------------------------------------------
-Re		    10000000
+Re		    10000
 
 #--------------------------------------------
 #               temperature
@@ -60,7 +60,7 @@ PI		    0
 #--------------------------------------------
 #       initialization velocity
 #--------------------------------------------
-UI		    1
+UI		    0
 VI		    0
 
 #--------------------------------------------
@@ -69,3 +69,13 @@ VI		    0
 #--------------------------------------------
 problem     testProblem
 geometry    testGeometry.pgm
+
+#--------------------------------------------
+#       boundary description
+#       accepted types are:
+#       NOSLIP, MOVINGWALL, FREESLIP, INFLOW, OUTFLOW
+#--------------------------------------------
+top_boundary_type       MOVINGWALL
+top_boundary_U          -1
+right_boundary_type     OUTFLOW
+

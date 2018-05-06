@@ -214,7 +214,8 @@ char *find_string(const char *szFileName, const char *szVarName, Optional option
 	return szValue;
     }  
    
-    READ_ERROR("variable not found", szVarName, szFileName, nLine);
+    if (optional == REQUIRED)
+        READ_ERROR("variable not found", szVarName, szFileName, nLine);
     
     return NULL;		/* dummy to satisfy the compiler  */
 } 
@@ -232,13 +233,14 @@ void read_string(const char *szFileName, const char *szVarName, char *pVariable,
     else
 	szValue = find_string(szFileName, szVarName, optional);
     
-    if( sscanf( szValue, "%s", pVariable) == 0)
-	READ_ERROR("wrong format", szVarName, szFileName,0);
-
-//    printf( "File: %s\t\t%s%s= %s\n", szFileName,
-//	                              szVarName,
-//	                              &("               "[min_int( strlen(szVarName), 15)]),
-//	                              pVariable );
+    if (szValue)
+    {
+        if (sscanf(szValue, "%s", pVariable) == 0)
+        READ_ERROR("wrong format", szVarName, szFileName, 0);
+    }
+    else // If not found default to 0
+        strcpy(pVariable, "NULLSTRING");
+    
     logMsg( "File: %s\t\t%s%s= %s", szFileName,
             szVarName,
             &("               "[min_int( strlen(szVarName), 15)]),
@@ -258,13 +260,14 @@ void read_int(const char *szFileName, const char *szVarName, int *pVariable, Opt
     else
 	szValue = find_string(szFileName, szVarName, optional);
     
-    if( sscanf( szValue, "%d", pVariable) == 0)
-	READ_ERROR("wrong format", szVarName, szFileName, 0);
-
-//    printf( "File: %s\t\t%s%s= %d\n", szFileName,
-//	                              szVarName,
-//	                              &("               "[min_int( strlen(szVarName), 15)]),
-//	                              *pVariable );
+    if (szValue)
+    {
+        if (sscanf(szValue, "%d", pVariable) == 0)
+        READ_ERROR("wrong format", szVarName, szFileName, 0);
+    }
+    else // If not found default to 0
+        *pVariable = 0;
+    
     logMsg( "File: %s\t\t%s%s= %d", szFileName,
             szVarName,
             &("               "[min_int( strlen(szVarName), 15)]),
@@ -284,13 +287,14 @@ void read_double(const char *szFileName, const char *szVarName, double *pVariabl
     else
         szValue = find_string(szFileName, szVarName, optional);
     
-    if( sscanf( szValue, "%lf", pVariable) == 0)
-	READ_ERROR("wrong format", szVarName, szFileName, 0);
-
-//    printf( "File: %s\t\t%s%s= %f\n", szFileName,
-//	                              szVarName,
-//	                              &("               "[min_int( strlen(szVarName), 15)]),
-//	                              *pVariable );
+    if (szValue)
+    {
+        if (sscanf(szValue, "%lf", pVariable) == 0)
+        READ_ERROR("wrong format", szVarName, szFileName, 0);
+    }
+    else // If not found default to 0
+        *pVariable = 0.0;
+    
     logMsg( "File: %s\t\t%s%s= %f", szFileName,
             szVarName,
             &("               "[min_int( strlen(szVarName), 15)]),
