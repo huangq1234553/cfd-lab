@@ -93,7 +93,12 @@ void geometryCheck(int** Flag, int imax, int jmax){
         }
     }
     if(isForbidden == 0){
-        logMsg("Geometry has no forbidden errors!");
+        logMsg("Geometry has no forbidden configurations!");
+    }
+    else
+    {
+        logMsg("%d forbidden geometries found!",isForbidden);
+        ERROR("Forbidden geometries!");
     }
 }
 
