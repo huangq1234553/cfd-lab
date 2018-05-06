@@ -46,13 +46,13 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
     
     // Now read boundary-related variables
     initBoundaryInfo(boundaryInfo+L,DIRICHLET,DIRICHLET,1,1);
-    *(boundaryInfo[L].valuesU) = 0;
+    *(boundaryInfo[L].valuesU) = 1;
     *(boundaryInfo[L].valuesV) = 0;
     initBoundaryInfo(boundaryInfo+R,DIRICHLET,DIRICHLET,1,1);
-    *(boundaryInfo[R].valuesU) = 0;
+    *(boundaryInfo[R].valuesU) = 1;
     *(boundaryInfo[R].valuesV) = 0;
     initBoundaryInfo(boundaryInfo+T,DIRICHLET,DIRICHLET,1,1);
-    *(boundaryInfo[T].valuesU) = 1;
+    *(boundaryInfo[T].valuesU) = 0;
     *(boundaryInfo[T].valuesV) = 0;
     initBoundaryInfo(boundaryInfo+B,DIRICHLET,DIRICHLET,1,1);
     *(boundaryInfo[B].valuesU) = 0;
@@ -99,7 +99,7 @@ void init_flag(
         Flag[i][0] = 1;
         Flag[i][jmax + 1] = 1;
     }
-    for (int j = 0; j < imax + 1; ++j)
+    for (int j = 0; j < jmax + 1; ++j)
     {
         // Outer boundary
         Flag[0][j] = 1;
