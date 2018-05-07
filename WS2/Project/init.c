@@ -1,76 +1,13 @@
 #include "helper.h"
 #include "init.h"
-#include "boundary_val.h"
 #include "logger.h"
-
-typedef enum HLBoundaryType
-{
-    NOSLIP,
-    MOVINGWALL,
-    FREESLIP,
-    INFLOW,
-    OUTFLOW
-} HLBoundaryType;
+#include "boundary_configurator.h"
 
 void setDefaultStringIfRequired(char *variable, const char *defaultValue)
 {
     if (strcmp(variable, "NULLSTRING") == 0)
     {
         strcpy(variable, defaultValue);
-    }
-}
-
-void configureBoundary(BoundaryInfo *boundaryInfo, BoundarySide boundarySide,
-                       const char *boundaryTypeStr, double u, double v)
-{
-    if (strcmp(boundaryTypeStr, "NOSLIP") == 0)
-    {
-        initBoundaryInfo(boundaryInfo + boundarySide, DIRICHLET, DIRICHLET, 1, 1);
-        *(boundaryInfo[boundarySide].valuesU) = 0;
-        *(boundaryInfo[boundarySide].valuesV) = 0;
-    }
-    else if (strcmp(boundaryTypeStr, "MOVINGWALL") == 0)
-    {
-        initBoundaryInfo(boundaryInfo + boundarySide, DIRICHLET, DIRICHLET, 1, 1);
-        switch (boundarySide)
-        {
-            case LEFTBOUNDARY:
-            case RIGHTBOUNDARY:
-                *(boundaryInfo[boundarySide].valuesU) = 0;
-                *(boundaryInfo[boundarySide].valuesV) = v;
-            case TOPBOUNDARY:
-            case BOTTOMBOUNDARY:
-                *(boundaryInfo[boundarySide].valuesU) = u;
-                *(boundaryInfo[boundarySide].valuesV) = 0;
-        }
-    }
-    else if (strcmp(boundaryTypeStr, "FREESLIP") == 0)
-    {
-        switch (boundarySide)
-        {
-            case LEFTBOUNDARY:
-            case RIGHTBOUNDARY:
-                initBoundaryInfo(boundaryInfo + boundarySide, DIRICHLET, NEUMANN, 1, 1);
-                *(boundaryInfo[boundarySide].valuesU) = 0;
-            case TOPBOUNDARY:
-            case BOTTOMBOUNDARY:
-                initBoundaryInfo(boundaryInfo + boundarySide, NEUMANN, DIRICHLET, 1, 1);
-                *(boundaryInfo[boundarySide].valuesV) = 0;
-        }
-    }
-    else if (strcmp(boundaryTypeStr, "INFLOW") == 0)
-    {
-        initBoundaryInfo(boundaryInfo + boundarySide, DIRICHLET, DIRICHLET, 1, 1);
-        *(boundaryInfo[boundarySide].valuesU) = u;
-        *(boundaryInfo[boundarySide].valuesV) = v;
-    }
-    else if (strcmp(boundaryTypeStr, "OUTFLOW") == 0)
-    {
-        initBoundaryInfo(boundaryInfo + boundarySide, NEUMANN, NEUMANN, 1, 1);
-    }
-    else
-    {
-        ERROR("Invalid boundary type!");
     }
 }
 
@@ -154,7 +91,7 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
     configureBoundary(boundaryInfo, RIGHTBOUNDARY, right_boundary_type, right_boundary_U, right_boundary_V);
     configureBoundary(boundaryInfo, TOPBOUNDARY, top_boundary_type, top_boundary_U, top_boundary_V);
     configureBoundary(boundaryInfo, BOTTOMBOUNDARY, bottom_boundary_type, bottom_boundary_U, bottom_boundary_V);
-    // TODO: add support for more complex profiles and/or autogeneration of parabolic one
+    // TODO: add support for more complex profiles and/or autogeneration of parabolic one. Do this into the new boundary_configurator.c file
     
     return 1;
 }
