@@ -129,6 +129,8 @@ int main(int argc, char** argv){
 		}
 		
 		// ensure boundary conditions for velocity
+        // Special boundary condition are addressed here by using the boundaryInfo data.
+        // These special boundary values are configured at configuration time in read_parameters(). Still TODO !
         boundaryvalues(imax, jmax, U, V, Flags, boundaryInfo);
 
 		// calculate T using energy equation in 2D with boussinesq approximation
