@@ -22,8 +22,18 @@ if [[ ! $1 ]]; then
 fi
 
 INFILE="$1"
-BASENAME=${INFILE%.*}
-OUTFILE=${BASENAME}.pgm
+BASENAME="${INFILE%.*}"
+EXTENSION="${INFILE##*.}"
+if [[ "${EXTENSION}" == "pgm" ]]; then
+    echo "WARNING: a .pgm file was passed as input, do you want to perform the inverse convertion to .jpg?"
+    echo -e "[y/N]:"
+    read choice
+    [[ "${choice}" != "y" ]] && exit 1
+    OUTFILE="${BASENAME}.jpg"
+    CONVERT_FLAGS="-negate"
+else
+    OUTFILE="${BASENAME}.pgm"
+fi
 
 if [[ $2 && $3 ]]; then
     WIDTH=$2
