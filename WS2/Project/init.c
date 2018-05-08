@@ -56,41 +56,90 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
     
     // Now read boundary-related variables
     char left_boundary_type[16];
+    char left_boundary_temp_type[16];
     char right_boundary_type[16];
+    char right_boundary_temp_type[16];
     char top_boundary_type[16];
+    char top_boundary_temp_type[16];
     char bottom_boundary_type[16];
+    char bottom_boundary_temp_type[16];
     double left_boundary_U;
     double left_boundary_V;
+    double left_boundary_T;
+    double left_boundary_qN;
+    double left_boundary_k;
     double right_boundary_U;
     double right_boundary_V;
+    double right_boundary_T;
+    double right_boundary_qN;
+    double right_boundary_k;
     double top_boundary_U;
     double top_boundary_V;
+    double top_boundary_T;
+    double top_boundary_qN;
+    double top_boundary_k;
     double bottom_boundary_U;
     double bottom_boundary_V;
+    double bottom_boundary_T;
+    double bottom_boundary_qN;
+    double bottom_boundary_k;
     
     char *boundaryTypeDefault = "NOSLIP";
+    char *boundaryTempTypeDefault = "NEUMANN";
+    
     READ_STRING(szFileName, left_boundary_type, OPTIONAL);
     setDefaultStringIfRequired(left_boundary_type, boundaryTypeDefault);
+    READ_STRING(szFileName, left_boundary_temp_type, OPTIONAL);
+    setDefaultStringIfRequired(left_boundary_temp_type, boundaryTempTypeDefault);
+    
     READ_STRING(szFileName, right_boundary_type, OPTIONAL);
     setDefaultStringIfRequired(right_boundary_type, boundaryTypeDefault);
+    READ_STRING(szFileName, right_boundary_temp_type, OPTIONAL);
+    setDefaultStringIfRequired(right_boundary_temp_type, boundaryTempTypeDefault);
+    
     READ_STRING(szFileName, top_boundary_type, OPTIONAL);
     setDefaultStringIfRequired(top_boundary_type, boundaryTypeDefault);
+    READ_STRING(szFileName, top_boundary_temp_type, OPTIONAL);
+    setDefaultStringIfRequired(top_boundary_temp_type, boundaryTempTypeDefault);
+    
     READ_STRING(szFileName, bottom_boundary_type, OPTIONAL);
     setDefaultStringIfRequired(bottom_boundary_type, boundaryTypeDefault);
-    
+    READ_STRING(szFileName, bottom_boundary_temp_type, OPTIONAL);
+    setDefaultStringIfRequired(bottom_boundary_temp_type, boundaryTempTypeDefault);
+        
     READ_DOUBLE(szFileName, left_boundary_U, OPTIONAL);
     READ_DOUBLE(szFileName, left_boundary_V, OPTIONAL);
+    READ_DOUBLE(szFileName, left_boundary_T, OPTIONAL);
+    READ_DOUBLE(szFileName, left_boundary_qN, OPTIONAL);
+    READ_DOUBLE(szFileName, left_boundary_k, OPTIONAL);
+    
     READ_DOUBLE(szFileName, right_boundary_U, OPTIONAL);
     READ_DOUBLE(szFileName, right_boundary_V, OPTIONAL);
+    READ_DOUBLE(szFileName, right_boundary_T, OPTIONAL);
+    READ_DOUBLE(szFileName, right_boundary_qN, OPTIONAL);
+    READ_DOUBLE(szFileName, right_boundary_k, OPTIONAL);
+    
     READ_DOUBLE(szFileName, top_boundary_U, OPTIONAL);
     READ_DOUBLE(szFileName, top_boundary_V, OPTIONAL);
+    READ_DOUBLE(szFileName, top_boundary_T, OPTIONAL);
+    READ_DOUBLE(szFileName, top_boundary_qN, OPTIONAL);
+    READ_DOUBLE(szFileName, top_boundary_k, OPTIONAL);
+    
     READ_DOUBLE(szFileName, bottom_boundary_U, OPTIONAL);
     READ_DOUBLE(szFileName, bottom_boundary_V, OPTIONAL);
+    READ_DOUBLE(szFileName, bottom_boundary_T, OPTIONAL);
+    READ_DOUBLE(szFileName, bottom_boundary_qN, OPTIONAL);
+    READ_DOUBLE(szFileName, bottom_boundary_k, OPTIONAL);
     
-    configureBoundary(boundaryInfo, LEFTBOUNDARY, left_boundary_type, left_boundary_U, left_boundary_V);
-    configureBoundary(boundaryInfo, RIGHTBOUNDARY, right_boundary_type, right_boundary_U, right_boundary_V);
-    configureBoundary(boundaryInfo, TOPBOUNDARY, top_boundary_type, top_boundary_U, top_boundary_V);
-    configureBoundary(boundaryInfo, BOTTOMBOUNDARY, bottom_boundary_type, bottom_boundary_U, bottom_boundary_V);
+    configureBoundary(boundaryInfo, LEFTBOUNDARY, left_boundary_type, left_boundary_temp_type, left_boundary_U, left_boundary_V,
+                      left_boundary_T, left_boundary_qN, left_boundary_k, *dx);
+    configureBoundary(boundaryInfo, RIGHTBOUNDARY, right_boundary_type, right_boundary_temp_type, right_boundary_U, right_boundary_V,
+                      right_boundary_T, right_boundary_qN, right_boundary_k, *dx);
+    configureBoundary(boundaryInfo, TOPBOUNDARY, top_boundary_type, top_boundary_temp_type, top_boundary_U, top_boundary_V,
+                      top_boundary_T, top_boundary_qN, top_boundary_k, *dx);
+    configureBoundary(boundaryInfo, BOTTOMBOUNDARY, bottom_boundary_type, bottom_boundary_temp_type, bottom_boundary_U, bottom_boundary_V,
+                      bottom_boundary_T, bottom_boundary_qN, bottom_boundary_k, *dx);
+   
     // TODO: add support for more complex profiles and/or autogeneration of parabolic one. Do this into the new boundary_configurator.c file
     
     return 1;

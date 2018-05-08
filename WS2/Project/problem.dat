@@ -1,14 +1,14 @@
 #--------------------------------------------
 #            size of the domain             
 #--------------------------------------------
-xlength		10.0
-ylength		4.0
+xlength		1.0
+ylength		1.0
 
 #--------------------------------------------
 #            number of cells
 #--------------------------------------------
-imax		100.0
-jmax		40.0
+imax		50.0
+jmax		50.0
 
 #--------------------------------------------
 #               time steps
@@ -68,7 +68,7 @@ VI		    0
 #       and path to geometry file
 #--------------------------------------------
 problem     testProblem
-geometry    testGeometry.pgm
+geometry    emptyCavity.pgm
 
 #--------------------------------------------
 #       boundary description
@@ -85,4 +85,11 @@ left_boundary_V         0
 right_boundary_type     OUTFLOW
 #bottom_boundary_type    OUTFLOW
 #top_boundary_type       OUTFLOW
+
+#TODO: Add Temp boundary settings
+#NOTE: the heat flux sign should be set positive along i and j.
+bottom_boundary_temp_type DIRICHLET
+bottom_boundary_T         10
+#left_boundary_qN        10
+#left_boundary_k         10
 

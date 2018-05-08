@@ -7,12 +7,10 @@
 #include "boundary_configurator.h"
 #include "helper.h"
 
-void configureBoundary(BoundaryInfo *boundaryInfo, BoundarySide boundarySide,
-                       const char *boundaryTypeStr, double u, double v);
-
-void configureBoundary(BoundaryInfo *boundaryInfo, BoundarySide boundarySide, const char *boundaryTypeStr, double u,
-                       double v)
+void configureBoundary(BoundaryInfo *boundaryInfo, BoundarySide boundarySide, const char *boundaryTypeStr,
+                       const char *boundaryTempTypeStr, double u, double v, double temp, double qN, double k, double h)
 {
+    // Velocity boundary values
     if (strcmp(boundaryTypeStr, "NOSLIP") == 0)
     {
         initBoundaryInfo(boundaryInfo + boundarySide, DIRICHLET, DIRICHLET, 1, 1);
@@ -60,6 +58,22 @@ void configureBoundary(BoundaryInfo *boundaryInfo, BoundarySide boundarySide, co
     }
     else
     {
-        ERROR("Invalid boundary type!");
+        ERROR("Invalid velocity boundary type!");
+    }
+    
+    // Temperature boundary values
+    if (strcmp(boundaryTempTypeStr, "DIRICHLET") == 0)
+    {
+        boundaryInfo[boundarySide].typeT = DIRICHLET;
+        *(boundaryInfo[boundarySide].valuesT) = temp;
+    }
+    else if (strcmp(boundaryTempTypeStr, "NEUMANN") == 0)
+    {
+        boundaryInfo[boundarySide].typeT = NEUMANN;
+        boundaryInfo[boundarySide].coeff = h*qN/k;
+    }
+    else
+    {
+        ERROR("Invalid temperature boundary type!");
     }
 }

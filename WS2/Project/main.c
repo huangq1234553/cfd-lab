@@ -131,10 +131,10 @@ int main(int argc, char** argv){
 		// ensure boundary conditions for velocity
         // Special boundary condition are addressed here by using the boundaryInfo data.
         // These special boundary values are configured at configuration time in read_parameters(). Still TODO !
-        boundaryvalues(imax, jmax, U, V, Flags, boundaryInfo);
+        boundaryval(imax, jmax, U, V, T, Flags, boundaryInfo);
 
 		// calculate T using energy equation in 2D with boussinesq approximation
-//        calculate_T(Re, Pr, dt, dx, dy, alpha, imax, jmax, T, U, V);
+        calculate_T(Re, Pr, dt, dx, dy, alpha, imax, jmax, T, U, V);
         
 		// momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
         calculate_fg(Re, GX, GY, alpha, beta, dt, dx, dy, imax, jmax, U, V, F, G, T, Flags);
