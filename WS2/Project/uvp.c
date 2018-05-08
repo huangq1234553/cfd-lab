@@ -82,7 +82,9 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double beta, do
     }
 }
 
-double computeF(double Re, double GX, double alpha, double beta, double dt, double dx, double dy, double **U, double **V, double **T, int i, int j)
+double
+computeF(double Re, double GX, double alpha, double beta, double dt, double dx, double dy, double **U, double **V,
+         double **T, int i, int j)
 {
     return U[i][j] // velocity u
            // diffusive term
@@ -94,24 +96,28 @@ double computeF(double Re, double GX, double alpha, double beta, double dt, doub
                      // convective term cont.
                      - productDerivativeDy(U, V, i, j, dy, alpha)
                      // volume force
-                     + (1 - beta * T[i][j]) * GX
-             );
+                     + GX
+           )
+           - beta * (dt / 2) * (T[i][j] + T[i + 1][j]) * GX;
 }
 
-double computeG(double Re, double GY, double alpha, double beta, double dt, double dx, double dy, double **U, double **V, double **T, int i, int j)
+double
+computeG(double Re, double GY, double alpha, double beta, double dt, double dx, double dy, double **U, double **V,
+         double **T, int i, int j)
 {
     return V[i][j] // velocity v
-    // diffusive term
-    + dt *
-      (
-              1 / Re * (secondDerivativeDx(V, i, j, dx) + secondDerivativeDy(V, i, j, dy))
-              // convective term
-              - productDerivativeDx(U, V, i, j, dx, alpha)
-              // convective term cont.
-              - squareDerivativeDy(V, i, j, dy, alpha)
-              // volume force
-              + (1 - beta * T[i][j]) * GY
-      );
+           // diffusive term
+           + dt *
+             (
+                     1 / Re * (secondDerivativeDx(V, i, j, dx) + secondDerivativeDy(V, i, j, dy))
+                     // convective term
+                     - productDerivativeDx(U, V, i, j, dx, alpha)
+                     // convective term cont.
+                     - squareDerivativeDy(V, i, j, dy, alpha)
+                     // volume force
+                     + GY
+           )
+             - beta * (dt / 2) * (T[i][j] + T[i][j+1]) * GY;
 }
 
 double secondDerivativeDx(double **A, int i, int j, double h)
@@ -262,8 +268,9 @@ void calculate_dt(
             }
         }
     }
-
-    double stabilityConditions = fmin((Re / 2 / (1 / pow(dx, 2) + 1 / pow(dy, 2))), (Re * Pr / 2 / (1 / pow(dx, 2) + 1 / pow(dy, 2))));
+    
+    double stabilityConditions = fmin((Re / 2 / (1 / pow(dx, 2) + 1 / pow(dy, 2))),
+                                      (Re * Pr / 2 / (1 / pow(dx, 2) + 1 / pow(dy, 2))));
     double cflConditions = fmin(dx / u_max, dy / v_max);
     *dt = tau * fmin(stabilityConditions, cflConditions);
 }
@@ -290,7 +297,7 @@ void calculate_uv(double dt, double dx, double dy, int imax, int jmax, double **
         for (int j = 1; j < jmax + 1; ++j)
         {
             int cell = Flags[i][j];
-            if (isFluid(cell) && isNeighbourFluid(cell,RIGHT))
+            if (isFluid(cell) && isNeighbourFluid(cell, RIGHT))
             {
                 // We need to compute velocity updates only on edges between 2 fluid cells (see p.6 WS2).
                 U[i][j] = F[i][j] - (dt / dx * (P[i + 1][j] - P[i][j]));
@@ -302,7 +309,7 @@ void calculate_uv(double dt, double dx, double dy, int imax, int jmax, double **
         for (int j = 1; j < jmax; ++j)
         {
             int cell = Flags[i][j];
-            if (isFluid(cell) && isNeighbourFluid(cell,TOP))
+            if (isFluid(cell) && isNeighbourFluid(cell, TOP))
             {
                 // We need to compute velocity updates only on edges between 2 fluid cells (see p.6 WS2).
                 V[i][j] = G[i][j] - (dt / dy * (P[i][j + 1] - P[i][j]));
@@ -313,37 +320,41 @@ void calculate_uv(double dt, double dx, double dy, int imax, int jmax, double **
 
 
 void calculate_T(double Re, double Pr, double dt, double dx, double dy, double alpha, int imax, int jmax,
-                 double **T, double **U, double **V){
+                 double **T, double **U, double **V)
+{
     double tmp;
-    for(int i=1; i < imax+1; ++i){
-        for(int j=1; j < jmax+1; ++j){
-            T[i][j] = T[i][j] + dt *
-                        (
-                                - 1/dx * (
-                                        U[i][j] * ( T[i][j] + T[i+1][j] ) / 2
-                                        - U[i-1][j] * ( T[i-1][j] + T[i][j] ) / 2
-                                          )
-                                - alpha * 1/dx * (
-                                        fabs(U[i][j]) * ( T[i][j] + T[i+1][j] ) / 2
-                                        - fabs(U[i-1][j]) * ( T[i-1][j] + T[i][j] ) / 2
-                                )
-
-                                - 1/dy * (
-                                        V[i][j] * ( T[i][j] + T[i][j+1] ) / 2
-                                        - V[i][j-1] * ( T[i][j-1] + T[i][j] ) / 2
-                                )
-                                - alpha * 1/dy * (
-                                        fabs(V[i][j]) * ( T[i][j] + T[i][j+1] ) / 2
-                                        - fabs(V[i][j-1]) * ( T[i][j-1] + T[i][j] ) / 2
-                                )
-
-                                + 1/(Re * Pr) *
+    for (int i = 1; i < imax + 1; ++i)
+    {
+        for (int j = 1; j < jmax + 1; ++j)
+        {
+            T[i][j] = T[i][j] +
+                      dt *
+                      (
+                              -1 / dx * (
+                                      U[i][j] * (T[i][j] + T[i + 1][j]) / 2
+                                      - U[i - 1][j] * (T[i - 1][j] + T[i][j]) / 2
+                              )
+                              - alpha * 1 / dx * (
+                                      fabs(U[i][j]) * (T[i][j] + T[i + 1][j]) / 2
+                                      - fabs(U[i - 1][j]) * (T[i - 1][j] + T[i][j]) / 2
+                              )
+                    
+                              - 1 / dy * (
+                                      V[i][j] * (T[i][j] + T[i][j + 1]) / 2
+                                      - V[i][j - 1] * (T[i][j - 1] + T[i][j]) / 2
+                              )
+                              - alpha * 1 / dy * (
+                                      fabs(V[i][j]) * (T[i][j] + T[i][j + 1]) / 2
+                                      - fabs(V[i][j - 1]) * (T[i][j - 1] + T[i][j]) / 2
+                              )
+                    
+                              + 1 / (Re * Pr) *
                                 (
-                                        ( T[i+1][j] - 2 * T[i][j] + T[i-1][j]) / (dx*dx)
-                                        + ( T[i][j+1] - 2 * T[i][j] + T[i][j-1]) / (dy*dy)
+                                        (T[i + 1][j] - 2 * T[i][j] + T[i - 1][j]) / (dx * dx)
+                                        + (T[i][j + 1] - 2 * T[i][j] + T[i][j - 1]) / (dy * dy)
                                 )
-                        );
+                      );
         }
     }
-
+    
 }
