@@ -263,9 +263,9 @@ void calculate_dt(
         }
     }
 
-    //printf("%f\n", dy / v_max); // todo: can this be removed?
-    double minimum = fmin((Re * Pr / 2 / (1 / pow(dx, 2) + 1 / pow(dy, 2))), fmin(dx / u_max, dy / v_max));
-    *dt = tau * minimum;
+    double stabilityConditions = fmin((Re / 2 / (1 / pow(dx, 2) + 1 / pow(dy, 2))), (Re * Pr / 2 / (1 / pow(dx, 2) + 1 / pow(dy, 2))));
+    double cflConditions = fmin(dx / u_max, dy / v_max);
+    *dt = tau * fmin(stabilityConditions, cflConditions);
 }
 
 /**
@@ -343,8 +343,6 @@ void calculate_T(double Re, double Pr, double dt, double dx, double dy, double a
                                         + ( T[i][j+1] - 2 * T[i][j] + T[i][j-1]) / (dy*dy)
                                 )
                         );
-            tmp = T[i][j-1];
-            int a = tmp;
         }
     }
 

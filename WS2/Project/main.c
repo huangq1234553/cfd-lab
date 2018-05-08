@@ -83,7 +83,7 @@ int main(int argc, char** argv){
 	double T_h; 				  /* hot surface boundary condition */
 	double T_c; 			      /* cold surface boundary condition */
 	double Pr; 				  /* Prandtl number */
-
+    
     BoundaryInfo boundaryInfo[4];
 
     openLogFile(); // Initialize the log file descriptor.
@@ -92,7 +92,8 @@ int main(int argc, char** argv){
                     &alpha, &omg,
                     &tau, &itermax, &eps, &dt_value, problem, geometry, boundaryInfo,
                     &beta, &TI, &T_h, &T_c, &Pr);
-
+    double dt_check = fmin(dt,dt_value);
+    
     int** Flags = imatrix(0, imax+1, 0, jmax+1);
     double** U = matrix(0, imax+1, 0, jmax+1);
     double** V = matrix(0, imax+1, 0, jmax+1);
@@ -122,7 +123,7 @@ int main(int argc, char** argv){
 		// NOTE: if tau<0, stepsize is not adaptively computed!
 		if(tau > 0){
 			calculate_dt(Re, Pr, tau, &dt, dx, dy, imax, jmax, U, V);
-            dt = fmin(dt, dt_value); // test, to avoid a dt bigger than visualization interval
+            dt = fmin(dt, dt_check); // test, to avoid a dt bigger than visualization interval
 			// Used to check the minimum time-step for convergence
 			if (dt < mindt)
 				mindt = dt;
