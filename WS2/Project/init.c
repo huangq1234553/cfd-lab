@@ -44,8 +44,8 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
     
     READ_DOUBLE(szFileName, *beta, OPTIONAL);
     READ_DOUBLE(szFileName, *TI, OPTIONAL);
-    READ_DOUBLE(szFileName, *T_h, OPTIONAL);
-    READ_DOUBLE(szFileName, *T_c, OPTIONAL);
+//    READ_DOUBLE(szFileName, *T_h, OPTIONAL);  // NOT REQUIRED
+//    READ_DOUBLE(szFileName, *T_c, OPTIONAL);  // NOT REQUIRED
     READ_DOUBLE(szFileName, *Pr, OPTIONAL);
     
     READ_STRING(szFileName, problem, REQUIRED);

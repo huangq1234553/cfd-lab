@@ -44,11 +44,28 @@
 // TODO: check if geometry is not forbidden!
 
 int main(int argc, char** argv){
-
+    
+    openLogFile(); // Initialize the log file descriptor.
+    
     // Handling the problem file name which is passed as 1st argument.
-	char szFileName[256]; // We assume name will not be longer than 256 chars...
-    strcpy(szFileName, argv[1]);
-    strcat(szFileName, ".dat");
+    char szFileName[256]; // We assume name will not be longer than 256 chars...
+    RUNNINGMODE runningMode = EXTENDED;
+    
+    int i = 1; // Arg counter
+    while (i < argc)
+    {
+        if (strcmp(argv[i],"--compactMode") == 0)
+        {
+            runningMode = NORMAL;
+            logMsg("Running in compact mode");
+        }
+        else
+        {
+            strcpy(szFileName, argv[i]);
+            strcat(szFileName, ".dat");
+        }
+        ++i;
+    }
     //
 	char problem[256];
     char geometry[1024]; // bigger since this can be a full path
@@ -85,8 +102,6 @@ int main(int argc, char** argv){
 	double Pr; 				  /* Prandtl number */
     
     BoundaryInfo boundaryInfo[4];
-
-    openLogFile(); // Initialize the log file descriptor.
     
     read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax, &jmax,
                     &alpha, &omg,

@@ -3,7 +3,7 @@
 
 #include "boundary_val.h"
 
-typedef enum RUNNIGMODE { NORMAL=0, EXTENDED=1 } RUNNINGMODE;
+typedef enum RunningMode { NORMAL=0, EXTENDED=1 } RUNNINGMODE;
 
 /**
  * This operation initializes all the local variables reading a configuration
