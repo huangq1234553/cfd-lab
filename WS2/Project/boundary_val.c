@@ -275,7 +275,7 @@ void initBoundaryInfo(BoundaryInfo *boundaryInfo, BoundaryType typeU, BoundaryTy
     }
     else
     {
-        boundaryInfo->valuesU = calloc(numValuesU, sizeof(double));
+        boundaryInfo->valuesU = calloc((size_t) numValuesU, sizeof(double));
         boundaryInfo->constU = (numValuesU == 1);
     }
     if (typeV == NEUMANN)
@@ -285,7 +285,7 @@ void initBoundaryInfo(BoundaryInfo *boundaryInfo, BoundaryType typeU, BoundaryTy
     }
     else
     {
-        boundaryInfo->valuesV = calloc(numValuesV, sizeof(double));
+        boundaryInfo->valuesV = calloc((size_t) numValuesV, sizeof(double));
         boundaryInfo->constV = (numValuesV == 1);
     }
     // Set sane defaults for T-related vars
