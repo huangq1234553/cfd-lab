@@ -348,7 +348,7 @@ void init_flag(
         int jmax,
         int **Flag,
         int *counter,
-        RUNNINGMODE runningmode
+        RunningMode runningmode
 )
 {
     int **pic = NULL;

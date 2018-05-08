@@ -15,6 +15,8 @@
  *   then optional args in prtf style can be passed.
  * 3) Make sure to call closeLogfile() before exiting the main (this closes the file at OS level).
  */
+
+// TODO: logfile location should be configurable to allow for easy running of tests in batches
 static char* LOG_FILE_NAME = "sim.log";
 static FILE* LOG_FILE;
 

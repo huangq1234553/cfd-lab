@@ -49,7 +49,7 @@ int main(int argc, char** argv){
     
     // Handling the problem file name which is passed as 1st argument.
     char szFileName[256]; // We assume name will not be longer than 256 chars...
-    RUNNINGMODE runningMode = EXTENDED;
+    RunningMode runningMode = EXTENDED;
     
     int i = 1; // Arg counter
     while (i < argc)
