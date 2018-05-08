@@ -117,10 +117,12 @@ int main(int argc, char** argv){
     double** RS = matrix(0, imax+1, 0, jmax+1);
     double** P = matrix(0, imax+1, 0, jmax+1);
     double** T = matrix(0, imax+1, 0, jmax+1);
-    
-    // create flag array to determine boundary connditions
-    init_flag(problem, geometry, imax, jmax, Flags, &noFluidCells);
-    
+
+    // create flag array to determine boundary conditions
+    read_boundary_parameters(szFileName, boundaryInfo, dx, dy);
+
+    init_flag(problem, geometry, imax, jmax, Flags, &noFluidCells, runningMode);
+
     // initialise velocities and pressure
     init_uvpt(UI, VI, PI, TI, imax, jmax, U, V, P, T, Flags);
     

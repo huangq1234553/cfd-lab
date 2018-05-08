@@ -335,8 +335,8 @@ void calculate_T(double Re, double Pr, double dt, double dx, double dy, double a
                                       - U[i - 1][j] * (T[i - 1][j] + T[i][j]) / 2
                               )
                               - alpha * 1 / dx * (
-                                      fabs(U[i][j]) * (T[i][j] + T[i + 1][j]) / 2
-                                      - fabs(U[i - 1][j]) * (T[i - 1][j] + T[i][j]) / 2
+                                      fabs(U[i][j]) * (T[i][j] - T[i + 1][j]) / 2
+                                      - fabs(U[i - 1][j]) * (T[i - 1][j] - T[i][j]) / 2
                               )
                     
                               - 1 / dy * (
@@ -344,8 +344,8 @@ void calculate_T(double Re, double Pr, double dt, double dx, double dy, double a
                                       - V[i][j - 1] * (T[i][j - 1] + T[i][j]) / 2
                               )
                               - alpha * 1 / dy * (
-                                      fabs(V[i][j]) * (T[i][j] + T[i][j + 1]) / 2
-                                      - fabs(V[i][j - 1]) * (T[i][j - 1] + T[i][j]) / 2
+                                      fabs(V[i][j]) * (T[i][j] - T[i][j + 1]) / 2
+                                      - fabs(V[i][j - 1]) * (T[i][j - 1] - T[i][j]) / 2
                               )
                     
                               + 1 / (Re * Pr) *
