@@ -6,10 +6,10 @@ void boundaryval(int imax, int jmax, double **U, double **V, double **T, int **F
                  BoundaryInfo *boundaryInfo)
 {
     // Setting boundary conditions on the outer boundary
-    setLeftBoundaryVelocities(imax, jmax, U, V, T, Flags, boundaryInfo);
-    setRightBoundaryVelocities(imax, jmax, U, V, T, Flags, boundaryInfo);
-    setTopBoundaryVelocities(imax, jmax, U, V, T, Flags, boundaryInfo);
-    setBottomBoundaryVelocities(imax, jmax, U, V, T, Flags, boundaryInfo);
+    setLeftBoundaryValues(imax, jmax, U, V, T, Flags, boundaryInfo);
+    setRightBoundaryValues(imax, jmax, U, V, T, Flags, boundaryInfo);
+    setTopBoundaryValues(imax, jmax, U, V, T, Flags, boundaryInfo);
+    setBottomBoundaryValues(imax, jmax, U, V, T, Flags, boundaryInfo);
     
     // Boundary values at geometries in the internal part of the domain
     for (int i = 1; i <= imax; ++i)
@@ -22,8 +22,8 @@ void boundaryval(int imax, int jmax, double **U, double **V, double **T, int **F
     }
 }
 
-void setLeftBoundaryVelocities(int imax, int jmax, double **U, double **V, double **T, int **Flags,
-                               BoundaryInfo *boundaryInfo)
+void setLeftBoundaryValues(int imax, int jmax, double **U, double **V, double **T, int **Flags,
+                           BoundaryInfo *boundaryInfo)
 {
     for (int j = 1; j <= jmax; j++)
     {
@@ -83,8 +83,8 @@ void setLeftBoundaryVelocities(int imax, int jmax, double **U, double **V, doubl
     }
 }
 
-void setRightBoundaryVelocities(int imax, int jmax, double **U, double **V, double **T, int **Flags,
-                                BoundaryInfo *boundaryInfo)
+void setRightBoundaryValues(int imax, int jmax, double **U, double **V, double **T, int **Flags,
+                            BoundaryInfo *boundaryInfo)
 {
     for (int j = 1; j <= jmax; j++)
     {
@@ -143,8 +143,8 @@ void setRightBoundaryVelocities(int imax, int jmax, double **U, double **V, doub
     }
 }
 
-void setTopBoundaryVelocities(int imax, int jmax, double **U, double **V, double **T, int **Flags,
-                              BoundaryInfo *boundaryInfo)
+void setTopBoundaryValues(int imax, int jmax, double **U, double **V, double **T, int **Flags,
+                          BoundaryInfo *boundaryInfo)
 {
     for (int i = 1; i <= imax; i++)
     {
@@ -203,8 +203,8 @@ void setTopBoundaryVelocities(int imax, int jmax, double **U, double **V, double
     }
 }
 
-void setBottomBoundaryVelocities(int imax, int jmax, double **U, double **V, double **T, int **Flags,
-                                 BoundaryInfo *boundaryInfo)
+void setBottomBoundaryValues(int imax, int jmax, double **U, double **V, double **T, int **Flags,
+                             BoundaryInfo *boundaryInfo)
 {
     for (int i = 1; i <= imax; i++)
     {
@@ -258,7 +258,8 @@ void setBottomBoundaryVelocities(int imax, int jmax, double **U, double **V, dou
         }
         else
         {
-            T[i][0] = T[i][1] + boundaryInfo[BOTTOMBOUNDARY].coeff;
+            double tmp = T[i][1] + boundaryInfo[BOTTOMBOUNDARY].coeff;
+            T[i][0] = tmp;
         }
     }
 }

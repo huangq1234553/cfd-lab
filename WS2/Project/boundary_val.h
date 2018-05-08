@@ -43,17 +43,17 @@ void initBoundaryInfo(BoundaryInfo *boundaryInfo, BoundaryType typeU, BoundaryTy
 void boundaryval(int imax, int jmax, double **U, double **V, double **T, int **Flags,
                  BoundaryInfo *boundaryInfo);
 
-void setLeftBoundaryVelocities(int imax, int jmax, double **U, double **V, double **T, int **Flags,
-                               BoundaryInfo *boundaryInfo);
+void setLeftBoundaryValues(int imax, int jmax, double **U, double **V, double **T, int **Flags,
+                           BoundaryInfo *boundaryInfo);
 
-void setRightBoundaryVelocities(int imax, int jmax, double **U, double **V, double **T, int **Flags,
-                                BoundaryInfo *boundaryInfo);
+void setRightBoundaryValues(int imax, int jmax, double **U, double **V, double **T, int **Flags,
+                            BoundaryInfo *boundaryInfo);
 
-void setTopBoundaryVelocities(int imax, int jmax, double **U, double **V, double **T, int **Flags,
-                              BoundaryInfo *boundaryInfo);
+void setTopBoundaryValues(int imax, int jmax, double **U, double **V, double **T, int **Flags,
+                          BoundaryInfo *boundaryInfo);
 
-void setBottomBoundaryVelocities(int imax, int jmax, double **U, double **V, double **T, int **Flags,
-                                 BoundaryInfo *boundaryInfo);
+void setBottomBoundaryValues(int imax, int jmax, double **U, double **V, double **T, int **Flags,
+                             BoundaryInfo *boundaryInfo);
 
 void setEdgeBoundaryValues(int imax, int jmax, double *const *U, double *const *V, int *const *Flags, int i, int j);
 

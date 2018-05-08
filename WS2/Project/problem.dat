@@ -15,14 +15,14 @@ jmax		50.0
 #--------------------------------------------
 dt		    0.5
 #t_end		50.0
-t_end		50.0
+t_end		100.0
 tau	 	    0.5
 
 #--------------------------------------------
 #               output
 #--------------------------------------------
 #dt_value    0.5
-dt_value    0.5
+dt_value    1
 
 #--------------------------------------------
 #               pressure
@@ -60,7 +60,7 @@ PI		    0
 #--------------------------------------------
 #       initialization velocity
 #--------------------------------------------
-UI		    1
+UI		    0
 VI		    0
 
 #--------------------------------------------
@@ -79,10 +79,10 @@ geometry    emptyCavity.pgm
 #--------------------------------------------
 #top_boundary_type       MOVINGWALL
 #top_boundary_U          -1
-left_boundary_type      INFLOW
-left_boundary_U         1
-left_boundary_V         0
-right_boundary_type     OUTFLOW
+#left_boundary_type      INFLOW
+#left_boundary_U         1
+#left_boundary_V         0
+#right_boundary_type     OUTFLOW
 #bottom_boundary_type    OUTFLOW
 #top_boundary_type       OUTFLOW
 

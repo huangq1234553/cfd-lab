@@ -343,7 +343,8 @@ void calculate_T(double Re, double Pr, double dt, double dx, double dy, double a
                                         + ( T[i][j+1] - 2 * T[i][j] + T[i][j-1]) / (dy*dy)
                                 )
                         );
-            tmp = T[i-1][j];
+            tmp = T[i][j-1];
+            int a = tmp;
         }
     }
 
