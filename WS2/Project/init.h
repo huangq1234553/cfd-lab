@@ -3,6 +3,8 @@
 
 #include "boundary_val.h"
 
+typedef enum RUNNIGMODE { NORMAL=0, EXTENDED=1 } RUNNINGMODE;
+
 /**
  * This operation initializes all the local variables reading a configuration
  * file. For every variable a macro like READ_INT() is called passing it the
@@ -62,6 +64,15 @@ void init_flag(
   int jmax,
   int** Flag,
   int* counter
+);
+
+void init_flag_normal(
+        char* problem,
+        char* geometry,
+        int imax,
+        int jmax,
+        int** Flags,
+        int* counter
 );
 
 #endif
