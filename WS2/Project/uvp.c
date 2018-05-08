@@ -314,8 +314,9 @@ void calculate_uv(double dt, double dx, double dy, int imax, int jmax, double **
 
 void calculate_T(double Re, double Pr, double dt, double dx, double dy, double alpha, int imax, int jmax,
                  double **T, double **U, double **V){
-    for(int i=0; i < imax+1; ++i){
-        for(int j=0; j < jmax+1; ++j){
+    double tmp;
+    for(int i=1; i < imax+1; ++i){
+        for(int j=1; j < jmax+1; ++j){
             T[i][j] = T[i][j] + dt *
                         (
                                 - 1/dx * (
@@ -342,6 +343,8 @@ void calculate_T(double Re, double Pr, double dt, double dx, double dy, double a
                                         + ( T[i][j+1] - 2 * T[i][j] + T[i][j-1]) / (dy*dy)
                                 )
                         );
+            tmp = T[i-1][j];
         }
     }
+
 }

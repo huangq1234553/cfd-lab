@@ -152,9 +152,9 @@ void init_uvpt(double UI, double VI, double PI, double TI, int imax, int jmax, d
     init_matrix(V, 0, imax + 1, 0, jmax + 1, VI);
     init_matrix(P, 0, imax + 1, 0, jmax + 1, PI);
     init_matrix(T, 0, imax + 1, 0, jmax + 1, TI);
-    for (int i = 0; i <= imax + 1; ++i)
+    for (int i = 1; i <= imax; ++i)
     {
-        for (int j = 0; j <= jmax + 1; ++j)
+        for (int j = 1; j <= jmax; ++j)
         {
             if (isObstacle(Flags[i][j]))
             {
@@ -234,10 +234,8 @@ void init_flag(
                           + (1 << BOT) * isObstacle(Flag[i][j - 1])
                           + (1 << LEFT) * isObstacle(Flag[i - 1][j])
                           + (1 << RIGHT) * isObstacle(Flag[i + 1][j]);
-            logRawString("%d ", isObstacle(Flag[i][j]));
             (*counter) += isFluid(Flag[i][j]);
         }
-        logRawString("\n");
     }
     logMsg("Total fluid cells in domain: %d", (*counter));
     geometryCheck(Flag, imax, jmax);

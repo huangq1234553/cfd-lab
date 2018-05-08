@@ -291,7 +291,7 @@ void initBoundaryInfo(BoundaryInfo *boundaryInfo, BoundaryType typeU, BoundaryTy
     // Set sane defaults for T-related vars
     boundaryInfo->typeT = NEUMANN;
     boundaryInfo->constT = 1;
-    boundaryInfo->valuesT = NULL;
+    boundaryInfo->valuesT = calloc(1, sizeof(double));
     boundaryInfo->coeff = 0;
 }
 
