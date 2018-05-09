@@ -54,9 +54,9 @@ int main(int argc, char** argv){
     int i = 1; // Arg counter
     while (i < argc)
     {
-        if (strcmp(argv[i],"--compactMode") == 0)
+        if (strcmp(argv[i],"--compact") == 0)
         {
-            runningMode = NORMAL;
+            runningMode = COMPACT;
             logMsg("Running in compact mode");
         }
         else
@@ -119,7 +119,14 @@ int main(int argc, char** argv){
     double** T = matrix(0, imax+1, 0, jmax+1);
 
     // create flag array to determine boundary conditions
-    read_boundary_parameters(szFileName, boundaryInfo, dx, dy);
+    if (runningMode == COMPACT)
+    {
+        read_boundary_parameters_compact_mode(szFileName, boundaryInfo, dx, dy);
+    }
+    else
+    {
+        read_boundary_parameters_extended_mode(szFileName, boundaryInfo, dx, dy, imax, jmax, geometry);
+    }
 
     init_flag(problem, geometry, imax, jmax, Flags, &noFluidCells, runningMode);
 

@@ -3,7 +3,7 @@
 
 #include "boundary_val.h"
 
-typedef enum RunningMode { NORMAL=0, EXTENDED=1 } RunningMode;
+typedef enum RunningMode { COMPACT=0, EXTENDED=1 } RunningMode;
 
 /**
  * This operation initializes all the local variables reading a configuration
@@ -50,9 +50,10 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
                     char *problem, char *geometry, BoundaryInfo boundaryInfo[4], 
                     double *beta, double *TI, double *T_h, double *T_c, double* Pr);
 
-void read_boundary_parameters(const char *szFileName, BoundaryInfo boundaryInfo[4], int dx, int dy);
-void read_normal_boundary_parameters(const char *szFileName, BoundaryInfo boundaryInfo[4], int dx, int dy, int imax,
-                                     int jmax, char* geometry);
+void read_boundary_parameters_compact_mode(const char *szFileName, BoundaryInfo *boundaryInfo, double dx, double dy);
+void read_boundary_parameters_extended_mode(const char *szFileName, BoundaryInfo *boundaryInfo, double dx, double dy,
+                                            int imax,
+                                            int jmax, char *geometryFileName);
 
 /**
  * The arrays U,V and P are initialized to the constant values UI, VI and PI on
@@ -68,7 +69,7 @@ void init_flag(
   int jmax,
   int** Flag,
   int* counter,
-  RunningMode runningmode
+  RunningMode runningMode
 );
 
 

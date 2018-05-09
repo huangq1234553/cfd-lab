@@ -58,7 +58,7 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
     return 1;
 }
 
-void read_boundary_parameters(const char *szFileName, BoundaryInfo boundaryInfo[4], int dx, int dy){
+void read_boundary_parameters_compact_mode(const char *szFileName, BoundaryInfo *boundaryInfo, double dx, double dy){
     // Now read boundary-related variables
     char left_boundary_type[16];
     char left_boundary_temp_type[16];
@@ -143,22 +143,26 @@ void read_boundary_parameters(const char *szFileName, BoundaryInfo boundaryInfo[
     READ_DOUBLE(szFileName, bottom_boundary_k, OPTIONAL);
     if (bottom_boundary_k == 0.0)
         bottom_boundary_k = 1;
-
-    configureBoundary(boundaryInfo, LEFTBOUNDARY, left_boundary_type, left_boundary_temp_type, left_boundary_U, left_boundary_V,
+    
+    configureBoundary(boundaryInfo, LEFTBOUNDARY, left_boundary_type, left_boundary_temp_type, left_boundary_U,
+                      left_boundary_V,
                       left_boundary_T, left_boundary_qN, left_boundary_k, dx);
-    configureBoundary(boundaryInfo, RIGHTBOUNDARY, right_boundary_type, right_boundary_temp_type, right_boundary_U, right_boundary_V,
+    configureBoundary(boundaryInfo, RIGHTBOUNDARY, right_boundary_type, right_boundary_temp_type,
+                      right_boundary_U, right_boundary_V,
                       right_boundary_T, right_boundary_qN, right_boundary_k, dy);
-    configureBoundary(boundaryInfo, TOPBOUNDARY, top_boundary_type, top_boundary_temp_type, top_boundary_U, top_boundary_V,
+    configureBoundary(boundaryInfo, TOPBOUNDARY, top_boundary_type, top_boundary_temp_type, top_boundary_U,
+                      top_boundary_V,
                       top_boundary_T, top_boundary_qN, top_boundary_k, dx);
-    configureBoundary(boundaryInfo, BOTTOMBOUNDARY, bottom_boundary_type, bottom_boundary_temp_type, bottom_boundary_U, bottom_boundary_V,
+    configureBoundary(boundaryInfo, BOTTOMBOUNDARY, bottom_boundary_type, bottom_boundary_temp_type,
+                      bottom_boundary_U, bottom_boundary_V,
                       bottom_boundary_T, bottom_boundary_qN, bottom_boundary_k, dy);
 
     // TODO: add support for more complex profiles and/or autogeneration of parabolic one. Do this into the new boundary_configurator.c file
 
 }
 
-void read_normal_boundary_parameters(const char *szFileName, BoundaryInfo boundaryInfo[4], int dx, int dy,
-                                        int imax, int jmax, char* geometry){
+void read_boundary_parameters_extended_mode(const char *szFileName, BoundaryInfo *boundaryInfo, double dx, double dy,
+                                            int imax, int jmax, char *geometryFileName){
     // Now read boundary-related variables
     char left_boundary_type[16];
     char left_boundary_temp_type[16];
@@ -190,75 +194,13 @@ void read_normal_boundary_parameters(const char *szFileName, BoundaryInfo bounda
     double bottom_boundary_k;
 
     int** pic = NULL;
-    pic = read_pgm(geometry);
+    pic = read_pgm(geometryFileName);
 
-
-    *bottom_boundary_type = "NOSLIP";
-    *top_boundary_type = "NOSLIP";
-    *left_boundary_type = "NOSLIP";
-    *right_boundary_type = "NOSLIP";
-
-    for (int i = 0; i < imax + 1; ++i)
-    {
-        // Outer boundary
-        switch(pic[i][0]){
-            case 0:
-                break;
-            case 1:
-                *bottom_boundary_type = "FREESLIP";
-                break;
-            case 2:
-                *bottom_boundary_type = "OUTFLOW";
-                break;
-            case 3:
-                *bottom_boundary_type = "INFLOW";
-                break;
-        }
-        switch(pic[i][jmax+1]){
-            case 0:
-                break;
-            case 1:
-                *top_boundary_type = "FREESLIP";
-                break;
-            case 2:
-                *top_boundary_type = "OUTFLOW";
-                break;
-            case 3:
-                *top_boundary_type = "INFLOW";
-                break;
-        }
-    }
-    for (int j = 0; j < jmax + 1; ++j)
-    {
-        // Outer boundary
-        switch(pic[0][j]){
-            case 0:
-                break;
-            case 1:
-                *left_boundary_type = "FREESLIP";
-                break;
-            case 2:
-                *left_boundary_type = "OUTFLOW";
-                break;
-            case 3:
-                *left_boundary_type = "INFLOW";
-                break;
-        }
-
-        switch(pic[imax+1][j]){
-            case 0:
-                break;
-            case 1:
-                *right_boundary_type = "FREESLIP";
-                break;
-            case 2:
-                *right_boundary_type = "OUTFLOW";
-                break;
-            case 3:
-                *right_boundary_type = "INFLOW";
-                break;
-        }
-    }
+    getVelocityBoundaryTypesFromExtendedGeometryFile(pic, imax, jmax,
+                                                     left_boundary_type,
+                                                     right_boundary_type,
+                                                     top_boundary_type,
+                                                     bottom_boundary_type);
 
     char *boundaryTempTypeDefault = "NEUMANN";
 
@@ -341,21 +283,8 @@ void init_uvpt(double UI, double VI, double PI, double TI, int imax, int jmax, d
     }
 }
 
-void init_flag(
-        char *problem,
-        char *geometry,
-        int imax,
-        int jmax,
-        int **Flag,
-        int *counter,
-        RunningMode runningmode
-)
-{
-    int **pic = NULL;
-    
-    pic = read_pgm(geometry); // NOTE: this is covering just the inner part of the image, so it is imax*jmax
-    
-    // Set the outer boundary + the first inner layers
+void setGeometry(int imax, int jmax, int **Flag, RunningMode *runningMode, int **pic)
+{// Set the outer boundaries
     for (int i = 0; i < imax + 1; ++i)
     {
         // Outer boundary
@@ -369,15 +298,31 @@ void init_flag(
         Flag[imax + 1][j] = 1;
     }
     // Set the inner domain geometry
-    for (int i = 1; i < imax + 1; i++)
+    if ((*runningMode) == COMPACT)
     {
-        for (int j = 1; j < jmax + 1; j++)
+        for (int i = 1; i < imax + 1; i++)
         {
-            Flag[i][j] = pic[i - 1 + runningmode][j - 1 + runningmode];
+            for (int j = 1; j < jmax + 1; j++)
+            {
+                Flag[i][j] = pic[i - 1][j - 1];
+            }
         }
     }
-    *counter = 0;
-    // Set the boundary domain flags
+    else // running in EXTENDED mode
+    {
+        for (int i = 1; i < imax + 1; i++)
+        {
+            for (int j = 1; j < jmax + 1; j++)
+            {
+                Flag[i][j] = (pic[i][j] != 4); // NOTE: here we just want the cell not to be fluid, we don't care about the actual declared boundary type.
+            }
+        }
+    }
+}
+
+void setFlagsOnBoundary(int imax, int jmax, int **Flag)
+{
+    // Set the outer boundary flags
     for (int j = 1; j < jmax + 1; ++j)
     {
         Flag[0][j] += (1 << TOP) * 1
@@ -400,7 +345,11 @@ void init_flag(
                              + (1 << LEFT) * 1
                              + (1 << RIGHT) * 1;
     }
-    // Set the inner domain flags
+}
+
+void setFlagsOnDomain(int imax, int jmax, int **Flag, int *counter)
+{
+    *counter = 0;
     for (int j = jmax; j > 0; j--)
     {
         for (int i = 1; i < imax + 1; i++)
@@ -412,6 +361,28 @@ void init_flag(
             (*counter) += isFluid(Flag[i][j]);
         }
     }
+}
+
+void init_flag(
+        char *problem,
+        char *geometry,
+        int imax,
+        int jmax,
+        int **Flag,
+        int *counter,
+        RunningMode runningMode
+)
+{
+    int **pic = NULL;
+    
+    pic = read_pgm(geometry); // NOTE: when running in compact mode this is covering just the inner part of the image, so it is imax*jmax
+    setGeometry(imax, jmax, Flag, &runningMode, pic);
+    
+    //
+    setFlagsOnBoundary(imax, jmax, Flag);
+    // Set the inner domain flags
+    setFlagsOnDomain(imax, jmax, Flag, counter);
+    
     logMsg("Total fluid cells in domain: %d", (*counter));
     geometryCheck(Flag, imax, jmax);
     free_imatrix(pic, 0, imax + 1, 0, jmax + 1);
