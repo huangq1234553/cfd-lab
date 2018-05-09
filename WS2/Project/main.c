@@ -49,7 +49,7 @@ double performSimulation(const char *outputFolder, const char *problem, double R
                          double xlength, double ylength, double *dt, double dx, double dy, int imax, int jmax,
                          double alpha, double omg, double tau, int itermax, double eps, double dt_value, int n,
                          double *res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
-                         const BoundaryInfo *boundaryInfo, double dt_check, int *const *Flags, double **U, double **V,
+                         BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V,
                          double **F, double **G, double **RS, double **P, double **T);
 
 int main(int argc, char** argv){
@@ -138,7 +138,7 @@ int main(int argc, char** argv){
 	int n = 0;				  /* timestep iteration counter */
 	double res = 10;		  /* residual */
 	double t = 0;			  /* initial time */
-	int it;					  /* sor iteration counter */
+	int it = 0;					  /* sor iteration counter */
 	double mindt=10000;       /* arbitrary counter that keeps track of minimum dt value in calculation */
 	int noFluidCells;		  /* number of fluid cells in simulation */
 	double beta; 			  /* coefficient of thermal expansion */
@@ -157,7 +157,7 @@ int main(int argc, char** argv){
     // In case geometry was given as a filename only, prepend it with inputFolder path, just in case it is not CWD.
     if (strstr(geometry, "/") == NULL)
     {
-        char* buf[512];
+        char buf[512];
         sprintf((char *) buf, "%s/%s", inputFolder, geometry);
         strcpy(geometry, buf);
         logMsg("Using geometry file: %s", geometry);
@@ -225,7 +225,7 @@ double performSimulation(const char *outputFolder, const char *problem, double R
                          double xlength, double ylength, double *dt, double dx, double dy, int imax, int jmax,
                          double alpha, double omg, double tau, int itermax, double eps, double dt_value, int n,
                          double *res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
-                         const BoundaryInfo *boundaryInfo, double dt_check, int *const *Flags, double **U, double **V,
+                         BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V,
                          double **F, double **G, double **RS, double **P, double **T)
 {
     double currentOutputTime = 0; // For chosing when to output

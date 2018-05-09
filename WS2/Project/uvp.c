@@ -322,7 +322,6 @@ void calculate_uv(double dt, double dx, double dy, int imax, int jmax, double **
 void calculate_T(double Re, double Pr, double dt, double dx, double dy, double alpha, int imax, int jmax,
                  double **T, double **U, double **V)
 {
-    double tmp;
     for (int i = 1; i < imax + 1; ++i)
     {
         for (int j = 1; j < jmax + 1; ++j)

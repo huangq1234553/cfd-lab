@@ -96,7 +96,8 @@ void mapVelocityPixelValueToBoundaryTypeStr(GeometryPixelValue pixel, char* boun
         case OUTFLOW_PIXEL:
             strcpy(boundaryTypeStr, "OUTFLOW");
             break;
-            // Other cases can be skipped
+        default:
+        {} // Else skip
     }
 }
 
