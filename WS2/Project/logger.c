@@ -5,6 +5,7 @@
 #include "logger.h"
 #include <stdio.h>
 #include <stdarg.h>
+#include <memory.h>
 
 /*
  * Logging machinery - how to:
@@ -17,12 +18,24 @@
  */
 
 // TODO: logfile location should be configurable to allow for easy running of tests in batches
+static char LOG_FILE_FOLDER[512] = "./";
 static char* LOG_FILE_NAME = "sim.log";
+static char LOG_FILE_FULL_PATH[512] = "";
 static FILE* LOG_FILE;
+
+void setLoggerOutputFolder(const char *outputFolder)
+{
+    strcpy(LOG_FILE_FOLDER, outputFolder);
+    sprintf(LOG_FILE_FULL_PATH, "%s/%s", LOG_FILE_FOLDER, LOG_FILE_NAME);
+}
 
 void openLogFile()
 {
-    LOG_FILE = fopen(LOG_FILE_NAME, "w");
+    if (strlen(LOG_FILE_FULL_PATH) == 0)
+    {
+        sprintf(LOG_FILE_FULL_PATH, "%s/%s", LOG_FILE_FOLDER, LOG_FILE_NAME);
+    }
+    LOG_FILE = fopen(LOG_FILE_FULL_PATH, "w");
 }
 
 void logRawString(char *fmt, ...)

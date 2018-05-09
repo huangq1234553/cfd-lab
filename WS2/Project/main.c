@@ -45,11 +45,11 @@
 
 int main(int argc, char** argv){
     
-    openLogFile(); // Initialize the log file descriptor.
-    
     // Handling the problem file name which is passed as 1st argument.
     char szFileName[256]; // We assume name will not be longer than 256 chars...
     RunningMode runningMode = EXTENDED;
+    char outputFolder[512]; // Please don't use superlong paths here, 512 should be more than enough :P
+    strcpy(outputFolder, "./"); // Default is CWD
     
     int i = 1; // Arg counter
     while (i < argc)
@@ -57,7 +57,15 @@ int main(int argc, char** argv){
         if (strcmp(argv[i],"--compact") == 0)
         {
             runningMode = COMPACT;
-            logMsg("Running in compact mode");
+        }
+        else if (strcmp(argv[i],"-o") == 0)
+        {
+            // Setting the output folder -- Here reading the following arg (so format is -o /path/to/folder )
+            strcpy(outputFolder, argv[i+1]);
+            // Remove trailing slash if present
+            if (outputFolder[strlen(outputFolder) - 1] == '/')
+                outputFolder[strlen(outputFolder) - 1] = 0;
+            ++i; // Extra increment since we read 2 arguments here
         }
         else
         {
@@ -66,6 +74,9 @@ int main(int argc, char** argv){
         }
         ++i;
     }
+    //
+    setLoggerOutputFolder(outputFolder);
+    openLogFile(); // Initialize the log file descriptor.
     //
 	char problem[256];
     char geometry[1024]; // bigger since this can be a full path
@@ -121,10 +132,12 @@ int main(int argc, char** argv){
     // create flag array to determine boundary conditions
     if (runningMode == COMPACT)
     {
+        logMsg("Running in compact mode");
         read_boundary_parameters_compact_mode(szFileName, boundaryInfo, dx, dy);
     }
     else
     {
+        logMsg("Running in extended mode");
         read_boundary_parameters_extended_mode(szFileName, boundaryInfo, dx, dy, imax, jmax, geometry);
     }
 
@@ -135,7 +148,7 @@ int main(int argc, char** argv){
     
 //    // Debug
 //    logEvent(t, "INFO: Writing visualization file n=%d", n);
-//    write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T);
+//    write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T);
 //    n++;
 //
 	// simulation interval 0 to t_end
@@ -185,7 +198,7 @@ int main(int argc, char** argv){
 		if (t >= currentOutputTime)
 		{
             logEvent(t, "INFO: Writing visualization file n=%d", n);
-            write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
+            write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
 			currentOutputTime += dt_value;
 			// update output timestep iteration counter
 			n++;
@@ -198,7 +211,7 @@ int main(int argc, char** argv){
 
 	// write visualisation file for the last iteration
     logEvent(t, "INFO: Writing visualization file n=%d", n);
-    write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
+    write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
 
 	// Check value of U[imax/2][7*jmax/8] (task6)
     logMsg("Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);

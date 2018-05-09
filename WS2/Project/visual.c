@@ -1,21 +1,26 @@
 #include "helper.h"
 #include "visual.h"
+#include "logger.h"
 #include <stdio.h>
 
 
 void
-write_vtkFile(const char *szProblem, int timeStepNumber, double xlength, double ylength, int imax, int jmax, double dx,
-              double dy, double **U, double **V, double **P, double **T, int **Flags)
+write_vtkFile(const char *outputFolder, const char *szProblem, int timeStepNumber, double xlength, double ylength,
+              int imax, int jmax, double dx, double dy, double **U, double **V, double **P, double **T,
+              int **Flags)
 {
     
     int i, j;
     char szFileName[80];
+    char szFileFullPath[512];
     FILE *fp = NULL;
     sprintf(szFileName, "%s.%i.vtk", szProblem, timeStepNumber);
-    fp = fopen(szFileName, "w");
+    sprintf(szFileFullPath, "%s/%s", outputFolder, szFileName);
+    fp = fopen(szFileFullPath, "w");
     if (fp == NULL)
     {
         char szBuff[80];
+        logMsg("Failed to open %s", szFileFullPath);
         sprintf(szBuff, "Failed to open %s", szFileName);
         ERROR(szBuff);
         return;
