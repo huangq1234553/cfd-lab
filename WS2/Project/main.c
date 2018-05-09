@@ -1,3 +1,5 @@
+#include <libgen.h>
+#include <sys/stat.h>
 #include "helper.h"
 #include "visual.h"
 #include "init.h"
@@ -43,14 +45,23 @@
 
 // TODO: check if geometry is not forbidden!
 
+double performSimulation(const char *outputFolder, const char *problem, double Re, double GX, double GY, double t_end,
+                         double xlength, double ylength, double *dt, double dx, double dy, int imax, int jmax,
+                         double alpha, double omg, double tau, int itermax, double eps, double dt_value, int n,
+                         double *res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
+                         const BoundaryInfo *boundaryInfo, double dt_check, int *const *Flags, double **U, double **V,
+                         double **F, double **G, double **RS, double **P, double **T);
+
 int main(int argc, char** argv){
     
     // Handling the problem file name which is passed as 1st argument.
-    char szFileName[256]; // We assume name will not be longer than 256 chars...
+    char szFileName[256] = ""; // We assume name will not be longer than 256 chars...
     RunningMode runningMode = EXTENDED;
-    char outputFolder[512]; // Please don't use superlong paths here, 512 should be more than enough :P
-    strcpy(outputFolder, "./"); // Default is CWD
-    
+    char inputFolder[512] = "";
+    char outputFolder[512] = ""; // Please don't use superlong paths here, 512 should be more than enough :P
+//    strcpy(outputFolder, "./"); // Default is CWD
+
+    int requiredArgCount = 0;
     int i = 1; // Arg counter
     while (i < argc)
     {
@@ -70,16 +81,40 @@ int main(int argc, char** argv){
         else
         {
             strcpy(szFileName, argv[i]);
-            strcat(szFileName, ".dat");
+            // Now if argument doesn't end with ".dat", append extension to it
+            size_t fnamelen = strlen(szFileName);
+            if (fnamelen > 4 && strcmp(szFileName+fnamelen-4,".dat") != 0)
+            {
+                strcat(szFileName, ".dat");
+            }
+            // Extract folder to be used as input folder
+            strcpy(inputFolder, szFileName);
+            dirname(inputFolder);
+            ++requiredArgCount;
         }
         ++i;
+    }
+    //
+    if (requiredArgCount == 0)
+    {
+        ERROR("\nNo arguments passed!\nUSAGE:\t./sim configuration.dat");
+    }
+    // In case no outputFolder is passed, default to inputFolder/Out...
+    if (strlen(outputFolder) == 0)
+    {
+        sprintf(outputFolder, "%s/Out", inputFolder);
+        // ...and create it if not on filesystem
+        struct stat st = {0};
+        if (stat(outputFolder, &st) == -1) {
+            mkdir(outputFolder, 0700);
+        }
     }
     //
     setLoggerOutputFolder(outputFolder);
     openLogFile(); // Initialize the log file descriptor.
     //
 	char problem[256];
-    char geometry[1024]; // bigger since this can be a full path
+    char geometry[512]; // bigger since this can be a full path
 	double Re;                /* reynolds number   */
     double UI;                /* velocity x-direction */
     double VI;                /* velocity y-direction */
@@ -118,6 +153,16 @@ int main(int argc, char** argv){
                     &alpha, &omg,
                     &tau, &itermax, &eps, &dt_value, problem, geometry, boundaryInfo,
                     &beta, &TI, &T_h, &T_c, &Pr);
+    
+    // In case geometry was given as a filename only, prepend it with inputFolder path, just in case it is not CWD.
+    if (strstr(geometry, "/") == NULL)
+    {
+        char* buf[512];
+        sprintf((char *) buf, "%s/%s", inputFolder, geometry);
+        strcpy(geometry, buf);
+        logMsg("Using geometry file: %s", geometry);
+    }
+    
     double dt_check = fmin(dt,dt_value);
     
     int** Flags = imatrix(0, imax+1, 0, jmax+1);
@@ -152,68 +197,12 @@ int main(int argc, char** argv){
 //    n++;
 //
 	// simulation interval 0 to t_end
-	double currentOutputTime = 0; // For chosing when to output
-	while(t < t_end){
-		
-		// adaptive stepsize control based on stability conditions ensures stability of the method!
-		// dt = tau * min(cond1, cond2, cond3) where tau is a safety factor
-		// NOTE: if tau<0, stepsize is not adaptively computed!
-		if(tau > 0){
-			calculate_dt(Re, Pr, tau, &dt, dx, dy, imax, jmax, U, V);
-            dt = fmin(dt, dt_check); // test, to avoid a dt bigger than visualization interval
-			// Used to check the minimum time-step for convergence
-			if (dt < mindt)
-				mindt = dt;
-		}
-		
-		// ensure boundary conditions for velocity
-        // Special boundary condition are addressed here by using the boundaryInfo data.
-        // These special boundary values are configured at configuration time in read_parameters(). Still TODO !
-        boundaryval(imax, jmax, U, V, T, Flags, boundaryInfo);
-
-		// calculate T using energy equation in 2D with boussinesq approximation
-        calculate_T(Re, Pr, dt, dx, dy, alpha, imax, jmax, T, U, V);
-        
-		// momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
-        calculate_fg(Re, GX, GY, alpha, beta, dt, dx, dy, imax, jmax, U, V, F, G, T, Flags);
-		
-		// momentum equations M1 and M2 are plugged into continuity equation C to produce PPE - depends on F and G - RS is the rhs of the implicit pressure update scheme
-        calculate_rs(dt, dx, dy, imax, jmax, F, G, RS, Flags);
-		
-		// solve the system of eqs arising from implicit pressure uptate scheme using succesive overrelaxation solver
-		it = 0;
-        res = 1e9;
-        while(it < itermax && res > eps){
-            sor(omg, dx, dy, imax, jmax, P, RS, Flags, &res, noFluidCells);
-			it++;
-		}
-        if (it == itermax)
-        {
-            logEvent(t, "WARNING: max number of iterations reached on SOR. Probably it did not converge!");
-        }
-		// calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
-        calculate_uv(dt, dx, dy, imax, jmax, U, V, F, G, P, Flags);
-		
-		// write visualization file for current iteration (only every dt_value step)
-		if (t >= currentOutputTime)
-		{
-            logEvent(t, "INFO: Writing visualization file n=%d", n);
-            write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
-			currentOutputTime += dt_value;
-			// update output timestep iteration counter
-			n++;
-		}
-        // Recap shell output
-        logEvent(t, "INFO: dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res);
-		// advance in time
-		t += dt;
-	}
-
-	// write visualisation file for the last iteration
-    logEvent(t, "INFO: Writing visualization file n=%d", n);
-    write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
-
-	// Check value of U[imax/2][7*jmax/8] (task6)
+    mindt = performSimulation(outputFolder, problem, Re, GX, GY, t_end, xlength, ylength, &dt, dx, dy, imax, jmax,
+                              alpha, omg, tau, itermax, eps, dt_value, n, &res, t, it, mindt, noFluidCells, beta, Pr,
+                              boundaryInfo, dt_check,
+                              Flags, U, V, F, G, RS, P, T);
+    
+    // Check value of U[imax/2][7*jmax/8] (task6)
     logMsg("Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
 
     free_imatrix( Flags, 0, imax+1, 0, jmax+1);
@@ -232,3 +221,78 @@ int main(int argc, char** argv){
 	return 0;
 }
 
+double performSimulation(const char *outputFolder, const char *problem, double Re, double GX, double GY, double t_end,
+                         double xlength, double ylength, double *dt, double dx, double dy, int imax, int jmax,
+                         double alpha, double omg, double tau, int itermax, double eps, double dt_value, int n,
+                         double *res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
+                         const BoundaryInfo *boundaryInfo, double dt_check, int *const *Flags, double **U, double **V,
+                         double **F, double **G, double **RS, double **P, double **T)
+{
+    double currentOutputTime = 0; // For chosing when to output
+    while(t < t_end){
+    
+        // adaptive stepsize control based on stability conditions ensures stability of the method!
+        // dt = tau * min(cond1, cond2, cond3) where tau is a safety factor
+        // NOTE: if tau<0, stepsize is not adaptively computed!
+        if (tau > 0)
+        {
+            calculate_dt(Re, Pr, tau, dt, dx, dy, imax, jmax, U, V);
+            (*dt) = fmin((*dt), dt_check); // test, to avoid a dt bigger than visualization interval
+            // Used to check the minimum time-step for convergence
+            if ((*dt) < mindt)
+            {
+                mindt = (*dt);
+            }
+        }
+    
+        // ensure boundary conditions for velocity
+        // Special boundary condition are addressed here by using the boundaryInfo data.
+        // These special boundary values are configured at configuration time in read_parameters(). Still TODO !
+        boundaryval(imax, jmax, U, V, T, Flags, boundaryInfo);
+    
+        // calculate T using energy equation in 2D with boussinesq approximation
+        calculate_T(Re, Pr, (*dt), dx, dy, alpha, imax, jmax, T, U, V);
+    
+        // momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
+        calculate_fg(Re, GX, GY, alpha, beta, (*dt), dx, dy, imax, jmax, U, V, F, G, T, Flags);
+    
+        // momentum equations M1 and M2 are plugged into continuity equation C to produce PPE - depends on F and G - RS is the rhs of the implicit pressure update scheme
+        calculate_rs((*dt), dx, dy, imax, jmax, F, G, RS, Flags);
+    
+        // solve the system of eqs arising from implicit pressure uptate scheme using succesive overrelaxation solver
+        it = 0;
+        (*res) = 1e9;
+        while (it < itermax && (*res) > eps)
+        {
+            sor(omg, dx, dy, imax, jmax, P, RS, Flags, res, noFluidCells);
+            it++;
+        }
+        if (it == itermax)
+        {
+            logEvent(t, "WARNING: max number of iterations reached on SOR. Probably it did not converge!");
+        }
+        // calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
+        calculate_uv((*dt), dx, dy, imax, jmax, U, V, F, G, P, Flags);
+    
+        // write visualization file for current iteration (only every dt_value step)
+        if (t >= currentOutputTime)
+        {
+            logEvent(t, "INFO: Writing visualization file n=%d", n);
+            write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
+            currentOutputTime += dt_value;
+            // update output timestep iteration counter
+            n++;
+        }
+        // Recap shell output
+        logEvent(t, "INFO: dt=%f, numSorIterations=%d, sorResidual=%f", (*dt), it, (*res));
+        // advance in time
+        t += (*dt);
+    }
+    
+    // write visualisation file for the last iteration
+    logEvent(t, "INFO: Writing visualization file n=%d", n);
+    write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
+    return mindt;
+}
+
+//eof
