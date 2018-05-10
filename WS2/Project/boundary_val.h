@@ -36,6 +36,8 @@ typedef struct BoundaryInfo
 void initBoundaryInfo(BoundaryInfo *boundaryInfo, BoundaryType typeU, BoundaryType typeV,
                       int numValuesU, int numValuesV);
 
+void freeAllBoundaryInfo(BoundaryInfo boundaryInfo[4]);
+
 /**
  * The boundary values of the problem are set.
  */

@@ -366,4 +366,14 @@ void setCenterBoundaryValues(int imax, int jmax, double **Q, int **Flags, int i,
     }
 }
 
+void freeAllBoundaryInfo(BoundaryInfo boundaryInfo[4])
+{
+    for (int i=0; i<4; ++i)
+    {
+        free(boundaryInfo[i].valuesU);
+        free(boundaryInfo[i].valuesV);
+        free(boundaryInfo[i].valuesT);
+    }
+}
+
 //eof

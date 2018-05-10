@@ -230,6 +230,7 @@ int main(int argc, char** argv){
 	free_matrix( RS, 0, imax+1, 0, jmax+1);
 	free_matrix( P, 0, imax+1, 0, jmax+1);
 	free_matrix( T, 0, imax+1, 0, jmax+1);
+    freeAllBoundaryInfo(boundaryInfo);
     
     closeLogFile(); // Properly close the log file
 
