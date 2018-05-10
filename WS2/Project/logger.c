@@ -4,6 +4,7 @@
 
 #include "logger.h"
 #include "timing.h"
+#include "helper.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <memory.h>
@@ -43,6 +44,12 @@ void openLogFile()
         sprintf(LOG_FILE_FULL_PATH, "%s/%s", LOG_FILE_FOLDER, LOG_FILE_NAME);
     }
     LOG_FILE = fopen(LOG_FILE_FULL_PATH, "w");
+    if (LOG_FILE == NULL)
+    {
+        char buf[512];
+        sprintf(buf, "Cannot open file %s", LOG_FILE_FULL_PATH);
+        ERROR(buf);
+    }
 }
 
 void logRawString(char *fmt, ...)
