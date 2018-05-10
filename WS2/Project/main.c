@@ -4,9 +4,9 @@
 #include "visual.h"
 #include "init.h"
 #include "sor.h"
-#include "boundary_val.h"
 #include "uvp.h"
 #include "logger.h"
+#include "timing.h"
 
 
 /**
@@ -53,6 +53,8 @@ double performSimulation(const char *outputFolder, const char *problem, double R
                          double **F, double **G, double **RS, double **P, double **T);
 
 int main(int argc, char** argv){
+    // As first thing, initialize logger start time
+    setLoggerStartTime();
     
     // Handling the problem file name which is passed as 1st argument.
     char szFileName[256] = ""; // We assume name will not be longer than 256 chars...
@@ -77,6 +79,18 @@ int main(int argc, char** argv){
             if (outputFolder[strlen(outputFolder) - 1] == '/')
                 outputFolder[strlen(outputFolder) - 1] = 0;
             ++i; // Extra increment since we read 2 arguments here
+        }
+        else if (argv[i][0] == '-')
+        {
+            char buf[128];
+            sprintf(buf, "Unrecognized option: %s", argv[i]);
+            ERROR(buf);
+        }
+        else if (strlen(szFileName)!=0)
+        {
+            char buf[128];
+            sprintf(buf, "Unrecognized argument: %s", argv[i]);
+            ERROR(buf);
         }
         else
         {
@@ -197,14 +211,17 @@ int main(int argc, char** argv){
 //    n++;
 //
 	// simulation interval 0 to t_end
+    long simulationStartTime = getCurrentTimeMillis();
     mindt = performSimulation(outputFolder, problem, Re, GX, GY, t_end, xlength, ylength, &dt, dx, dy, imax, jmax,
                               alpha, omg, tau, itermax, eps, dt_value, n, &res, t, it, mindt, noFluidCells, beta, Pr,
                               boundaryInfo, dt_check,
                               Flags, U, V, F, G, RS, P, T);
-    
+    long simulationEndTime = getCurrentTimeMillis();
     // Check value of U[imax/2][7*jmax/8] (task6)
     logMsg("Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
-
+    logMsg("Min dt value used: %16e", mindt);
+    logMsg("Total time spent in simulation: %.3f s", getTimeSpentSeconds(simulationStartTime, simulationEndTime));
+    
     free_imatrix( Flags, 0, imax+1, 0, jmax+1);
     free_matrix( U, 0, imax+1, 0, jmax+1);
 	free_matrix( V, 0, imax+1, 0, jmax+1);
@@ -213,8 +230,6 @@ int main(int argc, char** argv){
 	free_matrix( RS, 0, imax+1, 0, jmax+1);
 	free_matrix( P, 0, imax+1, 0, jmax+1);
 	free_matrix( T, 0, imax+1, 0, jmax+1);
-    
-    logMsg("Min dt value used: %16e", mindt);
     
     closeLogFile(); // Properly close the log file
 

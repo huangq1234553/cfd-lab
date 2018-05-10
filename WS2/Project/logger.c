@@ -3,6 +3,7 @@
 //
 
 #include "logger.h"
+#include "timing.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <memory.h>
@@ -18,10 +19,16 @@
  */
 
 // TODO: logfile location should be configurable to allow for easy running of tests in batches
+static long LOGGER_START_TIME = 0;
 static char LOG_FILE_FOLDER[512] = "./";
 static char* LOG_FILE_NAME = "sim.log";
 static char LOG_FILE_FULL_PATH[512] = "";
 static FILE* LOG_FILE;
+
+void setLoggerStartTime()
+{
+    LOGGER_START_TIME = getCurrentTimeMillis();
+}
 
 void setLoggerOutputFolder(const char *outputFolder)
 {
@@ -41,11 +48,14 @@ void openLogFile()
 void logRawString(char *fmt, ...)
 {
     // Newline at the end of the message is included.
+    double timestamp = getTimeSpentSeconds(LOGGER_START_TIME, getCurrentTimeMillis());
     va_list args;
     va_start(args,fmt);
+    printf("[%06.3f] ", timestamp);
     vprintf(fmt, args);
     va_end(args);
     va_start(args,fmt);
+    fprintf(LOG_FILE, "[%06.3f] ", timestamp);
     vfprintf(LOG_FILE, fmt, args);
     va_end(args);
 }
@@ -53,14 +63,17 @@ void logRawString(char *fmt, ...)
 void logEvent(double t, char *fmt, ...)
 {
     // Newline at the end of the message is included.
+    double timestamp = getTimeSpentSeconds(LOGGER_START_TIME, getCurrentTimeMillis());
     va_list args;
     va_start(args,fmt);
-    printf("[%12.9f] ", t);
+    printf("[%06.3f] ", timestamp);
+    printf("[%012.9f] ", t);
     vprintf(fmt, args);
     printf("\n");
     va_end(args);
     va_start(args,fmt);
-    fprintf(LOG_FILE, "[%12.9f] ", t);
+    fprintf(LOG_FILE, "[%06.3f] ", timestamp);
+    fprintf(LOG_FILE, "[%012.9f] ", t);
     vfprintf(LOG_FILE, fmt, args);
     fprintf(LOG_FILE, "\n");
     va_end(args);
@@ -69,13 +82,16 @@ void logEvent(double t, char *fmt, ...)
 void logMsg(char *fmt, ...)
 {
     // Newline at the end of the message is included.
+    double timestamp = getTimeSpentSeconds(LOGGER_START_TIME, getCurrentTimeMillis());
     va_list args;
     va_start(args,fmt);
+    printf("[%06.3f] ", timestamp);
     printf("---> ");
     vprintf(fmt, args);
     printf("\n");
     va_end(args);
     va_start(args,fmt);
+    fprintf(LOG_FILE, "[%06.3f] ", timestamp);
     fprintf(LOG_FILE, "---> ");
     vfprintf(LOG_FILE, fmt, args);
     fprintf(LOG_FILE, "\n");
@@ -86,3 +102,5 @@ void closeLogFile()
 {
     fclose(LOG_FILE);
 }
+
+//eof
