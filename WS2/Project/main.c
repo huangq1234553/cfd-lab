@@ -74,12 +74,18 @@ int main(int argc, char** argv){
         else if (strcmp(argv[i],"-o") == 0)
         {
             // Setting the output folder -- Here reading the following arg (so format is -o /path/to/folder )
-            strcpy(outputFolder, argv[i+1]);
+            strcpy(outputFolder, argv[i + 1]);
             // Remove trailing slash if present
             if (outputFolder[strlen(outputFolder) - 1] == '/')
                 outputFolder[strlen(outputFolder) - 1] = 0;
             ++i; // Extra increment since we read 2 arguments here
         }
+        else if (strcmp(argv[i],"-q") == 0)
+        {
+            // Set quiet mode: DebugLevel -> PRODUCTION
+            setLoggerDebugLevel(PRODUCTION);
+        }
+        // All the below is just error catching... (new options must be set above here!)
         else if (argv[i][0] == '-')
         {
             char buf[128];
@@ -206,7 +212,7 @@ int main(int argc, char** argv){
     init_uvpt(UI, VI, PI, TI, imax, jmax, U, V, P, T, Flags);
     
 //    // Debug
-//    logEvent(t, "INFO: Writing visualization file n=%d", n);
+//    logEvent(INFO, t, "Writing visualization file n=%d", n);
 //    write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T);
 //    n++;
 //
@@ -283,30 +289,35 @@ double performSimulation(const char *outputFolder, const char *problem, double R
             sor(omg, dx, dy, imax, jmax, P, RS, Flags, res, noFluidCells);
             it++;
         }
-        if (it == itermax)
-        {
-            logEvent(t, "WARNING: max number of iterations reached on SOR. Probably it did not converge!");
-        }
         // calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
         calculate_uv((*dt), dx, dy, imax, jmax, U, V, F, G, P, Flags);
     
         // write visualization file for current iteration (only every dt_value step)
         if (t >= currentOutputTime)
         {
-            logEvent(t, "INFO: Writing visualization file n=%d", n);
+            logEvent(PRODUCTION, t, "Writing visualization file n=%d", n);
             write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
             currentOutputTime += dt_value;
             // update output timestep iteration counter
             n++;
         }
         // Recap shell output
-        logEvent(t, "INFO: dt=%f, numSorIterations=%d, sorResidual=%f", (*dt), it, (*res));
+        if (it == itermax)
+        {
+            logEvent(WARNING, t, "Max number of iterations reached on SOR. Probably it did not converge!");
+            logEvent(WARNING, t, "dt=%f, numSorIterations=%d, sorResidual=%f", (*dt), it, (*res));
+    
+        }
+        else
+        {
+            logEvent(INFO, t, "dt=%f, numSorIterations=%d, sorResidual=%f", (*dt), it, (*res));
+        }
         // advance in time
         t += (*dt);
     }
     
     // write visualisation file for the last iteration
-    logEvent(t, "INFO: Writing visualization file n=%d", n);
+    logEvent(PRODUCTION, t, "Writing visualization file n=%d", n);
     write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
     return mindt;
 }
