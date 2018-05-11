@@ -224,7 +224,7 @@ int main(int argc, char** argv){
     init_uvpt(UI, VI, PI, TI, imax, jmax, U, V, P, T, Flags);
     
 //    // Debug
-//    logEvent(INFO, t, "Writing visualization file n=%d", n);
+//    logEvent(PRODUCTION, t, "Writing visualization file n=%d", n);
 //    write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T);
 //    n++;
 //
@@ -263,6 +263,7 @@ double performSimulation(const char *outputFolder, const char *problem, double R
                          double **G, double **RS, double **P, double **T, bool computeTemperatureSwitch)
 {
     double currentOutputTime = 0; // For chosing when to output
+    long interVisualizationExecTimeStart = getCurrentTimeMillis();
     while(t < t_end){
     
         // adaptive stepsize control based on stability conditions ensures stability of the method!
@@ -308,11 +309,15 @@ double performSimulation(const char *outputFolder, const char *problem, double R
         // write visualization file for current iteration (only every dt_value step)
         if (t >= currentOutputTime)
         {
-            logEvent(PRODUCTION, t, "Writing visualization file n=%d", n);
+            logEvent(PRODUCTION, t, "Writing visualization file n=%d, executionTime=%.3fs",
+                     n,
+                     getTimeSpentSeconds(interVisualizationExecTimeStart, getCurrentTimeMillis())
+            );
             write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
             currentOutputTime += dt_value;
             // update output timestep iteration counter
             n++;
+            interVisualizationExecTimeStart = getCurrentTimeMillis();
         }
         // Recap shell output
         if (it == itermax)
@@ -330,7 +335,10 @@ double performSimulation(const char *outputFolder, const char *problem, double R
     }
     
     // write visualisation file for the last iteration
-    logEvent(PRODUCTION, t, "Writing visualization file n=%d", n);
+    logEvent(PRODUCTION, t, "Writing visualization file n=%d, executionTime=%.3fs",
+             n,
+             getTimeSpentSeconds(interVisualizationExecTimeStart, getCurrentTimeMillis())
+    );
     write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
     return mindt;
 }
