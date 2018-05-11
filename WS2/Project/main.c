@@ -211,6 +211,12 @@ int main(int argc, char** argv){
         logMsg("Running in extended mode");
         read_boundary_parameters_extended_mode(szFileName, boundaryInfo, dx, dy, imax, jmax, geometry);
     }
+    
+    // Log if temperature is being computed or not
+    if (!computeTemperatureSwitch)
+    {
+        logMsg("NoTemp mode: Temperature is not computed");
+    }
 
     init_flag(problem, geometry, imax, jmax, Flags, &noFluidCells, runningMode);
 

@@ -22,7 +22,7 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
     READ_DOUBLE(szFileName, *ylength, REQUIRED);
     
     READ_DOUBLE(szFileName, *Re, REQUIRED);
-    if (*Re == 0) // Re cannot be 0, setting a sane default
+    if (*Re == 0.0) // Re cannot be 0, setting a sane default
         *Re = 1.0;
     READ_DOUBLE(szFileName, *t_end, REQUIRED);
     READ_DOUBLE(szFileName, *dt, REQUIRED);
@@ -33,6 +33,8 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
     READ_DOUBLE(szFileName, *omg, REQUIRED);
     READ_DOUBLE(szFileName, *eps, REQUIRED);
     READ_DOUBLE(szFileName, *tau, REQUIRED);
+    if (*tau == 0.0)
+        *tau = 1.0;
     READ_DOUBLE(szFileName, *alpha, REQUIRED);
     
     READ_INT   (szFileName, *itermax, REQUIRED);
@@ -49,7 +51,7 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
 //    READ_DOUBLE(szFileName, *T_h, OPTIONAL);  // NOT REQUIRED
 //    READ_DOUBLE(szFileName, *T_c, OPTIONAL);  // NOT REQUIRED
     READ_DOUBLE(szFileName, *Pr, OPTIONAL);
-    if (*Pr == 0) // Pr cannot be 0, setting a sane default
+    if (*Pr == 0.0) // Pr cannot be 0, setting a sane default
         *Pr = 1.0;
     
     READ_STRING(szFileName, problem, REQUIRED);
