@@ -1,5 +1,6 @@
 #include <libgen.h>
 #include <sys/stat.h>
+#include <stdbool.h>
 #include "helper.h"
 #include "visual.h"
 #include "init.h"
@@ -49,8 +50,8 @@ double performSimulation(const char *outputFolder, const char *problem, double R
                          double xlength, double ylength, double *dt, double dx, double dy, int imax, int jmax,
                          double alpha, double omg, double tau, int itermax, double eps, double dt_value, int n,
                          double *res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
-                         BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V,
-                         double **F, double **G, double **RS, double **P, double **T);
+                         BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V, double **F,
+                         double **G, double **RS, double **P, double **T, bool computeTemperatureSwitch);
 
 int main(int argc, char** argv){
     // As first thing, initialize logger start time
@@ -59,6 +60,7 @@ int main(int argc, char** argv){
     // Handling the problem file name which is passed as 1st argument.
     char szFileName[256] = ""; // We assume name will not be longer than 256 chars...
     RunningMode runningMode = EXTENDED;
+    char computeTemperatureSwitch = 1;
     char inputFolder[512] = "";
     char outputFolder[512] = ""; // Please don't use superlong paths here, 512 should be more than enough :P
 //    strcpy(outputFolder, "./"); // Default is CWD
@@ -70,6 +72,10 @@ int main(int argc, char** argv){
         if (strcmp(argv[i],"--compact") == 0)
         {
             runningMode = COMPACT;
+        }
+        else if (strcmp(argv[i],"--notemp") == 0)
+        {
+            computeTemperatureSwitch = 0;
         }
         else if (strcmp(argv[i],"-o") == 0)
         {
@@ -221,7 +227,7 @@ int main(int argc, char** argv){
     mindt = performSimulation(outputFolder, problem, Re, GX, GY, t_end, xlength, ylength, &dt, dx, dy, imax, jmax,
                               alpha, omg, tau, itermax, eps, dt_value, n, &res, t, it, mindt, noFluidCells, beta, Pr,
                               boundaryInfo, dt_check,
-                              Flags, U, V, F, G, RS, P, T);
+                              Flags, U, V, F, G, RS, P, T, computeTemperatureSwitch);
     long simulationEndTime = getCurrentTimeMillis();
     // Check value of U[imax/2][7*jmax/8] (task6)
     logMsg("Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
@@ -247,8 +253,8 @@ double performSimulation(const char *outputFolder, const char *problem, double R
                          double xlength, double ylength, double *dt, double dx, double dy, int imax, int jmax,
                          double alpha, double omg, double tau, int itermax, double eps, double dt_value, int n,
                          double *res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
-                         BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V,
-                         double **F, double **G, double **RS, double **P, double **T)
+                         BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V, double **F,
+                         double **G, double **RS, double **P, double **T, bool computeTemperatureSwitch)
 {
     double currentOutputTime = 0; // For chosing when to output
     while(t < t_end){
@@ -273,7 +279,8 @@ double performSimulation(const char *outputFolder, const char *problem, double R
         boundaryval(imax, jmax, U, V, T, Flags, boundaryInfo);
     
         // calculate T using energy equation in 2D with boussinesq approximation
-        calculate_T(Re, Pr, (*dt), dx, dy, alpha, imax, jmax, T, U, V);
+        if (beta != 0 && computeTemperatureSwitch) // If beta==0 we won't add the temperature term in F and G, so we don't need to compute it!
+            calculate_T(Re, Pr, (*dt), dx, dy, alpha, imax, jmax, T, U, V);
     
         // momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
         calculate_fg(Re, GX, GY, alpha, beta, (*dt), dx, dy, imax, jmax, U, V, F, G, T, Flags);
