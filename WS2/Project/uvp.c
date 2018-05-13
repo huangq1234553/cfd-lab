@@ -320,13 +320,12 @@ void calculate_uv(double dt, double dx, double dy, int imax, int jmax, double **
 
 
 void calculate_T(double Re, double Pr, double dt, double dx, double dy, double alpha, int imax, int jmax,
-                 double **T, double **U, double **V)
-{
-    for (int i = 1; i < imax + 1; ++i)
-    {
-        for (int j = 1; j < jmax + 1; ++j)
-        {
-            T[i][j] = T[i][j] +
+                 double **T, double **U, double **V) {
+    double **T_temp = matrix(0, imax+1, 0, jmax+1);
+    init_matrix(T_temp, 0, imax + 1, 0, jmax + 1, 0);
+    for (int i = 1; i < imax + 1; ++i) {
+        for (int j = 1; j < jmax + 1; ++j) {
+            T_temp[i][j] =
                       dt *
                       (
                               -1 / dx * (
@@ -355,5 +354,10 @@ void calculate_T(double Re, double Pr, double dt, double dx, double dy, double a
                       );
         }
     }
-    
+    for(int i=0; i<imax+1; ++i){
+        for(int j=0; j<jmax+1; ++j){
+            T[i][j] += T_temp[i][j];
+        }
+    }
+    free_matrix( T_temp, 0, imax+1, 0, jmax+1);
 }
