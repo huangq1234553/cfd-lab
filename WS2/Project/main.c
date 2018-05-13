@@ -47,9 +47,9 @@
 // TODO: check if geometry is not forbidden!
 
 double performSimulation(const char *outputFolder, const char *problem, double Re, double GX, double GY, double t_end,
-                         double xlength, double ylength, double *dt, double dx, double dy, int imax, int jmax,
+                         double xlength, double ylength, double dt, double dx, double dy, int imax, int jmax,
                          double alpha, double omg, double tau, int itermax, double eps, double dt_value, int n,
-                         double *res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
+                         double res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
                          BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V, double **F,
                          double **G, double **RS, double **P, double **T, bool computeTemperatureSwitch);
 
@@ -230,8 +230,8 @@ int main(int argc, char** argv){
 //
 	// simulation interval 0 to t_end
     long simulationStartTime = getCurrentTimeMillis();
-    mindt = performSimulation(outputFolder, problem, Re, GX, GY, t_end, xlength, ylength, &dt, dx, dy, imax, jmax,
-                              alpha, omg, tau, itermax, eps, dt_value, n, &res, t, it, mindt, noFluidCells, beta, Pr,
+    mindt = performSimulation(outputFolder, problem, Re, GX, GY, t_end, xlength, ylength, dt, dx, dy, imax, jmax,
+                              alpha, omg, tau, itermax, eps, dt_value, n, res, t, it, mindt, noFluidCells, beta, Pr,
                               boundaryInfo, dt_check,
                               Flags, U, V, F, G, RS, P, T, computeTemperatureSwitch);
     long simulationEndTime = getCurrentTimeMillis();
@@ -256,9 +256,9 @@ int main(int argc, char** argv){
 }
 
 double performSimulation(const char *outputFolder, const char *problem, double Re, double GX, double GY, double t_end,
-                         double xlength, double ylength, double *dt, double dx, double dy, int imax, int jmax,
+                         double xlength, double ylength, double dt, double dx, double dy, int imax, int jmax,
                          double alpha, double omg, double tau, int itermax, double eps, double dt_value, int n,
-                         double *res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
+                         double res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
                          BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V, double **F,
                          double **G, double **RS, double **P, double **T, bool computeTemperatureSwitch)
 {
@@ -271,12 +271,12 @@ double performSimulation(const char *outputFolder, const char *problem, double R
         // NOTE: if tau<0, stepsize is not adaptively computed!
         if (tau > 0)
         {
-            calculate_dt(Re, Pr, tau, dt, dx, dy, imax, jmax, U, V);
-            (*dt) = fmin((*dt), dt_check); // test, to avoid a dt bigger than visualization interval
+            calculate_dt(Re, Pr, tau, &dt, dx, dy, imax, jmax, U, V);
+            dt = fmin(dt, dt_check); // test, to avoid a dt bigger than visualization interval
             // Used to check the minimum time-step for convergence
-            if ((*dt) < mindt)
+            if (dt < mindt)
             {
-                mindt = (*dt);
+                mindt = dt;
             }
         }
     
@@ -287,24 +287,24 @@ double performSimulation(const char *outputFolder, const char *problem, double R
     
         // calculate T using energy equation in 2D with boussinesq approximation
         if (beta != 0 && computeTemperatureSwitch) // If beta==0 we won't add the temperature term in F and G, so we don't need to compute it!
-            calculate_T(Re, Pr, (*dt), dx, dy, alpha, imax, jmax, T, U, V);
+            calculate_T(Re, Pr, dt, dx, dy, alpha, imax, jmax, T, U, V);
     
         // momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
-        calculate_fg(Re, GX, GY, alpha, beta, (*dt), dx, dy, imax, jmax, U, V, F, G, T, Flags);
+        calculate_fg(Re, GX, GY, alpha, beta, dt, dx, dy, imax, jmax, U, V, F, G, T, Flags);
     
         // momentum equations M1 and M2 are plugged into continuity equation C to produce PPE - depends on F and G - RS is the rhs of the implicit pressure update scheme
-        calculate_rs((*dt), dx, dy, imax, jmax, F, G, RS, Flags);
+        calculate_rs(dt, dx, dy, imax, jmax, F, G, RS, Flags);
     
         // solve the system of eqs arising from implicit pressure uptate scheme using succesive overrelaxation solver
         it = 0;
-        (*res) = 1e9;
-        while (it < itermax && (*res) > eps)
+        res = 1e9;
+        while (it < itermax && res > eps)
         {
-            sor(omg, dx, dy, imax, jmax, P, RS, Flags, res, noFluidCells);
+            sor(omg, dx, dy, imax, jmax, P, RS, Flags, &res, noFluidCells);
             it++;
         }
         // calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
-        calculate_uv((*dt), dx, dy, imax, jmax, U, V, F, G, P, Flags);
+        calculate_uv(dt, dx, dy, imax, jmax, U, V, F, G, P, Flags);
     
         // write visualization file for current iteration (only every dt_value step)
         if (t >= currentOutputTime)
@@ -323,15 +323,15 @@ double performSimulation(const char *outputFolder, const char *problem, double R
         if (it == itermax)
         {
             logEvent(WARNING, t, "Max number of iterations reached on SOR. Probably it did not converge!");
-            logEvent(WARNING, t, "dt=%f, numSorIterations=%d, sorResidual=%f", (*dt), it, (*res));
+            logEvent(WARNING, t, "dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res);
     
         }
         else
         {
-            logEvent(INFO, t, "dt=%f, numSorIterations=%d, sorResidual=%f", (*dt), it, (*res));
+            logEvent(INFO, t, "dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res);
         }
         // advance in time
-        t += (*dt);
+        t += dt;
     }
     
     // write visualisation file for the last iteration
