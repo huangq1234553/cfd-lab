@@ -18,8 +18,18 @@ typedef enum BoundaryType
     NEUMANN
 } BoundaryType;
 
+typedef enum HLBoundaryType
+{
+    NOSLIP,
+    FREESLIP,
+    MOVINGWALL,
+    INFLOW,
+    OUTFLOW
+} HLBoundaryType;
+
 typedef struct BoundaryInfo
 {
+    HLBoundaryType hlBoundaryType;
     BoundaryType typeU;
     BoundaryType typeV;
     BoundaryType typeT;
@@ -33,7 +43,7 @@ typedef struct BoundaryInfo
 } BoundaryInfo;
 
 // Initialize a BoundaryInfo object
-void initBoundaryInfo(BoundaryInfo *boundaryInfo, BoundaryType typeU, BoundaryType typeV,
+void initBoundaryInfo(BoundaryInfo *boundaryInfo, HLBoundaryType hlBoundaryType, BoundaryType typeU, BoundaryType typeV,
                       int numValuesU, int numValuesV);
 
 void freeAllBoundaryInfo(BoundaryInfo boundaryInfo[4]);

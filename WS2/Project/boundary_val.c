@@ -264,8 +264,8 @@ void setBottomBoundaryValues(int imax, int jmax, double **U, double **V, double 
     }
 }
 
-void initBoundaryInfo(BoundaryInfo *boundaryInfo, BoundaryType typeU, BoundaryType typeV,
-                 int numValuesU, int numValuesV)
+void initBoundaryInfo(BoundaryInfo *boundaryInfo, HLBoundaryType hlBoundaryType, BoundaryType typeU, BoundaryType typeV,
+                      int numValuesU, int numValuesV)
 {
     boundaryInfo->typeU = typeU;
     boundaryInfo->typeV = typeV;

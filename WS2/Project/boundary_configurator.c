@@ -14,13 +14,13 @@ configureVelocityBoundary(BoundaryInfo *boundaryInfo, const BoundarySide boundar
     // Velocity boundary values
     if (strcmp(boundaryTypeStr, "NOSLIP") == 0)
     {
-        initBoundaryInfo(boundaryInfo + boundarySide, DIRICHLET, DIRICHLET, 1, 1);
+        initBoundaryInfo(boundaryInfo + boundarySide, NOSLIP, DIRICHLET, DIRICHLET, 1, 1);
         *(boundaryInfo[boundarySide].valuesU) = 0;
         *(boundaryInfo[boundarySide].valuesV) = 0;
     }
     else if (strcmp(boundaryTypeStr, "MOVINGWALL") == 0)
     {
-        initBoundaryInfo(boundaryInfo + boundarySide, DIRICHLET, DIRICHLET, 1, 1);
+        initBoundaryInfo(boundaryInfo + boundarySide, MOVINGWALL, DIRICHLET, DIRICHLET, 1, 1);
         switch (boundarySide)
         {
             case LEFTBOUNDARY:
@@ -39,23 +39,23 @@ configureVelocityBoundary(BoundaryInfo *boundaryInfo, const BoundarySide boundar
         {
             case LEFTBOUNDARY:
             case RIGHTBOUNDARY:
-                initBoundaryInfo(boundaryInfo + boundarySide, DIRICHLET, NEUMANN, 1, 1);
+                initBoundaryInfo(boundaryInfo + boundarySide, FREESLIP, DIRICHLET, NEUMANN, 1, 1);
                 *(boundaryInfo[boundarySide].valuesU) = 0;
             case TOPBOUNDARY:
             case BOTTOMBOUNDARY:
-                initBoundaryInfo(boundaryInfo + boundarySide, NEUMANN, DIRICHLET, 1, 1);
+                initBoundaryInfo(boundaryInfo + boundarySide, FREESLIP, NEUMANN, DIRICHLET, 1, 1);
                 *(boundaryInfo[boundarySide].valuesV) = 0;
         }
     }
     else if (strcmp(boundaryTypeStr, "INFLOW") == 0)
     {
-        initBoundaryInfo(boundaryInfo + boundarySide, DIRICHLET, DIRICHLET, 1, 1);
+        initBoundaryInfo(boundaryInfo + boundarySide, INFLOW, DIRICHLET, DIRICHLET, 1, 1);
         *(boundaryInfo[boundarySide].valuesU) = u;
         *(boundaryInfo[boundarySide].valuesV) = v;
     }
     else if (strcmp(boundaryTypeStr, "OUTFLOW") == 0)
     {
-        initBoundaryInfo(boundaryInfo + boundarySide, NEUMANN, NEUMANN, 1, 1);
+        initBoundaryInfo(boundaryInfo + boundarySide, OUTFLOW, NEUMANN, NEUMANN, 1, 1);
     }
     else
     {
