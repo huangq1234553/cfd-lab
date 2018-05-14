@@ -65,12 +65,14 @@ int isCorner(int flag){
 
 // Computes skip condition for u-boundary value determination (if top, right and bottom cells are obstacles)
 int skipU(int flag){
-    return (flag&(1<<TOP)) && (flag&(1<<RIGHT)) && (flag&(1<<BOT));
+//    return (flag&(1<<TOP)) && (flag&(1<<RIGHT)) && (flag&(1<<BOT));
+    return ((flag>>TOP)&1) && ((flag>>RIGHT)&1) && ((flag>>BOT)&1);
 }
 
 // Computes skip condition for v-boundary value determination (if left, top and right cells are obstacles)
 int skipV(int flag){
-    return (flag&(1<<LEFT)) && (flag&(1<<TOP)) && (flag&(1<<RIGHT));
+//    return (flag&(1<<LEFT)) && (flag&(1<<TOP)) && (flag&(1<<RIGHT));
+    return ((flag>>LEFT)&1) && ((flag>>TOP)&1) && ((flag>>RIGHT)&1);
 }
 
 // Function that checks geometry for forbidden cases

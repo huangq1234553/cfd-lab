@@ -57,7 +57,7 @@ void setTopBoundaryValues(int imax, int jmax, double **U, double **V, double **T
 void setBottomBoundaryValues(int imax, int jmax, double **U, double **V, double **T, int **Flags,
                              BoundaryInfo *boundaryInfo);
 
-void setEdgeBoundaryValues(int imax, int jmax, double *const *U, double *const *V, int *const *Flags, int i, int j);
+void setEdgeBoundaryValues(int imax, int jmax, double **U, double **V, int **Flags, int i, int j);
 
 void setCenterBoundaryValues(int imax, int jmax, double **Q, int **Flags, int i, int j);
 

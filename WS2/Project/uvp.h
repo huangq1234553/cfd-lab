@@ -87,7 +87,7 @@ void calculate_uv(double dt, double dx, double dy, int imax, int jmax, double **
                   double **P, int **Flags);
 
 
-void calculate_T(double Re, double Pr, double dt, double dx, double dy, double alpha, int imax, int jmax,
-                 double **T, double **U, double **V);
+void calculate_T(double Re, double Pr, double dt, double dx, double dy, double alpha, int imax, int jmax, double **T,
+                 double **U, double **V, int **Flags);
 
 #endif

@@ -296,7 +296,7 @@ void initBoundaryInfo(BoundaryInfo *boundaryInfo, BoundaryType typeU, BoundaryTy
     boundaryInfo->coeff = 0;
 }
 
-void setEdgeBoundaryValues(int imax, int jmax, double *const *U, double *const *V, int *const *Flags, int i, int j)
+void setEdgeBoundaryValues(int imax, int jmax, double **U, double **V, int  **Flags, int i, int j)
 {
     int cell = Flags[i][j];
     if (isObstacle(cell))

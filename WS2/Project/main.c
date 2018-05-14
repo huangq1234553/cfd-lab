@@ -287,7 +287,7 @@ double performSimulation(const char *outputFolder, const char *problem, double R
     
         // calculate T using energy equation in 2D with boussinesq approximation
         if (beta != 0 && computeTemperatureSwitch) // If beta==0 we won't add the temperature term in F and G, so we don't need to compute it!
-            calculate_T(Re, Pr, dt, dx, dy, alpha, imax, jmax, T, U, V);
+            calculate_T(Re, Pr, dt, dx, dy, alpha, imax, jmax, T, U, V, Flags);
     
         // momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
         calculate_fg(Re, GX, GY, alpha, beta, dt, dx, dy, imax, jmax, U, V, F, G, T, Flags);

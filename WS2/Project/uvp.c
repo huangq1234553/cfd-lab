@@ -319,39 +319,43 @@ void calculate_uv(double dt, double dx, double dy, int imax, int jmax, double **
 }
 
 
-void calculate_T(double Re, double Pr, double dt, double dx, double dy, double alpha, int imax, int jmax,
-                 double **T, double **U, double **V) {
+void calculate_T(double Re, double Pr, double dt, double dx, double dy, double alpha, int imax, int jmax, double **T,
+                 double **U, double **V, int **Flags)
+{
     double **T_temp = matrix(0, imax+1, 0, jmax+1);
     init_matrix(T_temp, 0, imax + 1, 0, jmax + 1, 0);
     for (int i = 1; i < imax + 1; ++i) {
         for (int j = 1; j < jmax + 1; ++j) {
-            T_temp[i][j] =
-                      dt *
-                      (
-                              -1 / dx * (
-                                      U[i][j] * (T[i][j] + T[i + 1][j]) / 2
-                                      - U[i - 1][j] * (T[i - 1][j] + T[i][j]) / 2
-                              )
-                              - alpha * 1 / dx * (
-                                      fabs(U[i][j]) * (T[i][j] - T[i + 1][j]) / 2
-                                      - fabs(U[i - 1][j]) * (T[i - 1][j] - T[i][j]) / 2
-                              )
-                    
-                              - 1 / dy * (
-                                      V[i][j] * (T[i][j] + T[i][j + 1]) / 2
-                                      - V[i][j - 1] * (T[i][j - 1] + T[i][j]) / 2
-                              )
-                              - alpha * 1 / dy * (
-                                      fabs(V[i][j]) * (T[i][j] - T[i][j + 1]) / 2
-                                      - fabs(V[i][j - 1]) * (T[i][j - 1] - T[i][j]) / 2
-                              )
-                    
-                              + 1 / (Re * Pr) *
-                                (
-                                        (T[i + 1][j] - 2 * T[i][j] + T[i - 1][j]) / (dx * dx)
-                                        + (T[i][j + 1] - 2 * T[i][j] + T[i][j - 1]) / (dy * dy)
+            if (isFluid(Flags[i][j]))
+            {
+                T_temp[i][j] =
+                        dt *
+                        (
+                                -1 / dx * (
+                                        U[i][j] * (T[i][j] + T[i + 1][j]) / 2
+                                        - U[i - 1][j] * (T[i - 1][j] + T[i][j]) / 2
                                 )
-                      );
+                                - alpha * 1 / dx * (
+                                        fabs(U[i][j]) * (T[i][j] - T[i + 1][j]) / 2
+                                        - fabs(U[i - 1][j]) * (T[i - 1][j] - T[i][j]) / 2
+                                )
+                    
+                                - 1 / dy * (
+                                        V[i][j] * (T[i][j] + T[i][j + 1]) / 2
+                                        - V[i][j - 1] * (T[i][j - 1] + T[i][j]) / 2
+                                )
+                                - alpha * 1 / dy * (
+                                        fabs(V[i][j]) * (T[i][j] - T[i][j + 1]) / 2
+                                        - fabs(V[i][j - 1]) * (T[i][j - 1] - T[i][j]) / 2
+                                )
+                    
+                                + 1 / (Re * Pr) *
+                                  (
+                                          (T[i + 1][j] - 2 * T[i][j] + T[i - 1][j]) / (dx * dx)
+                                          + (T[i][j + 1] - 2 * T[i][j] + T[i][j - 1]) / (dy * dy)
+                                  )
+                        );
+            }
         }
     }
     for(int i=0; i<imax+1; ++i){
