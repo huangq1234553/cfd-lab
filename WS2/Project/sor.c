@@ -5,7 +5,6 @@
 void sor(double omg, double dx, double dy, int imax, int jmax, double **P, double **RS, int **Flags, double *res, int noFluidCells)
 {
     double rloc;
-    double coeff = omg / (2.0 * (1.0 / (dx * dx) + 1.0 / (dy * dy)));
     
     /* SOR iteration */
     for (int i = 1; i <= imax; i++)
@@ -16,10 +15,20 @@ void sor(double omg, double dx, double dy, int imax, int jmax, double **P, doubl
             // proceed if fluid
             if (isFluid(cell))
             {
+                int isRightFluid = isNeighbourFluid(cell, RIGHT);
+                int isLeftFluid = isNeighbourFluid(cell, LEFT);
+                int isTopFluid = isNeighbourFluid(cell, TOP);
+                int isBottomFluid = isNeighbourFluid(cell, BOT);
+                double coeff = omg / (
+                                             (isRightFluid + isLeftFluid) / (dx * dx)
+                                             + (isTopFluid + isBottomFluid) / (dy * dy)
+                                     );
                 P[i][j] = (1.0 - omg) * P[i][j]
                           + coeff *
-                            ((P[i + 1][j] + P[i - 1][j]) / (dx * dx) + (P[i][j + 1] + P[i][j - 1]) / (dy * dy) -
-                             RS[i][j]);
+                            (
+                                    (isRightFluid*P[i + 1][j] + isLeftFluid*P[i - 1][j]) / (dx * dx)
+                                    + (isTopFluid*P[i][j + 1] + isBottomFluid*P[i][j - 1]) / (dy * dy)
+                                    - RS[i][j]);
             }
         }
     }
@@ -35,10 +44,16 @@ void sor(double omg, double dx, double dy, int imax, int jmax, double **P, doubl
             // proceed if fluid
             if (isFluid(cell))
             {
-                rloc += ((P[i + 1][j] - 2.0 * P[i][j] + P[i - 1][j]) / (dx * dx) +
-                         (P[i][j + 1] - 2.0 * P[i][j] + P[i][j - 1]) / (dy * dy) - RS[i][j]) *
-                        ((P[i + 1][j] - 2.0 * P[i][j] + P[i - 1][j]) / (dx * dx) +
-                         (P[i][j + 1] - 2.0 * P[i][j] + P[i][j - 1]) / (dy * dy) - RS[i][j]);
+                int isRightFluid = isNeighbourFluid(cell, RIGHT);
+                int isLeftFluid = isNeighbourFluid(cell, LEFT);
+                int isTopFluid = isNeighbourFluid(cell, TOP);
+                int isBottomFluid = isNeighbourFluid(cell, BOT);
+                
+                double term = (isRightFluid*(P[i + 1][j] - P[i][j]) - isLeftFluid*(P[i][j] - P[i - 1][j])) / (dx * dx)
+                              + (isTopFluid*(P[i][j + 1] - P[i][j]) - isBottomFluid*(P[i][j] - P[i][j - 1])) / (dy * dy)
+                              - RS[i][j];
+                rloc += term *
+                        term;
             }
         }
     }
