@@ -33,7 +33,7 @@ List of supported arguments:
         "Quiet" mode: reduces the verbosity of output/log by disabling INFO level traces (it still retains PRODUCTION,
         WARNING, ERROR level traces).
 
-    -o
+    -o path/to/out/folder/
         Output directory path. In case this is not set, an "Out" subfolder will be created inside the folder containing
         the configuration .dat file.
 
