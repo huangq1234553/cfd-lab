@@ -7,39 +7,39 @@ Enjoy! :)
 
 1) Easy way to get started: execute the pre-defined test cases!
 
-    `$ make`
+    `$ make`  
     `$ make tests`
 
 2) Configuring and executing your own scenario:
 
-    `$ mkdir Scenario`
+    `$ mkdir Scenario`  
     `$ touch Scenario/scenario.dat`
 
-    Now edit the scenario.dat file to contain all the configuration for the scenario (more details below).
+    Now edit the scenario.dat file to contain all the configuration for the scenario (more details below).  
     Then create a geometry .pgm file (below instruction for the ./create-geometry.sh script) and refer to it in the scenario.dat.
 
     (Don't forget to build:
         `$ make`
     )
 
-    Then the scenario can be executed with:
+    Then the scenario can be executed with:  
     `$ ./sim Scenario/scenario.dat [OPTIONS]`
 
 ## Supported command line arguments (OPTIONS)
 List of supported arguments:
 
-    `--compact`
+    --compact
         This is required in order to use "compact" PGM geometry files (more info on this below).
         If not set, the program will assume an "extended" PGM file.
 
-    `--notemp`
+    --notemp
         This disables the temperature computations, in case they are not required.
 
-    `-q`
-        "Quiet" mode: reduces the verbosity of output/log by disabling INFO level traces (it still retains PRODUCTION,
-        WARNING, ERROR level traces).
+    -q
+        "Quiet" mode: reduces the verbosity of output/log by disabling INFO level traces 
+        (it still retains PRODUCTION, WARNING, ERROR level traces).
 
-    `-o path/to/out/folder/`
+    -o path/to/out/folder/
         Output directory path. In case this is not set, an "Out" subfolder will be created inside the folder containing
         the configuration .dat file.
 
