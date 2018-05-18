@@ -5,6 +5,7 @@
 #include "boundary_val.h"
 #include "uvp.h"
 #include "logger.h"
+#include <mpi.h>
 
 
 /**
@@ -74,22 +75,45 @@ int main(int argc, char** argv){
 	double res = 10;		  /* residual */
 	double t = 0;			  /* initial time */
 	int it;					  /* sor iteration counter */
+    int iproc;                  /* number of processes in i direction*/
+    int jproc;                  /* number of processes in j direction*/
 	double mindt=10000;
     
     openLogFile(); // Initialize the log file descriptor.
     read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax, &jmax,
-                    &alpha, &omg, &tau, &itermax, &eps, &dt_value, problem, geometry);
+                    &alpha, &omg,
+                    &tau, &itermax, &eps, &dt_value, problem, geometry, &iproc, &jproc);
 
-    double** U = matrix(0, imax+1, 0, jmax+1);
-    double** V = matrix(0, imax+1, 0, jmax+1);
-    double** F = matrix(0, imax+1, 0, jmax+1);
-    double** G = matrix(0, imax+1, 0, jmax+1);
-    double** RS = matrix(0, imax+1, 0, jmax+1);
-    double** P = matrix(0, imax+1, 0, jmax+1);
+//    double** U = matrix(0, imax+1, 0, jmax+1);
+//    double** V = matrix(0, imax+1, 0, jmax+1);
+//    double** F = matrix(0, imax+1, 0, jmax+1);
+//    double** G = matrix(0, imax+1, 0, jmax+1);
+//    double** RS = matrix(0, imax+1, 0, jmax+1);
+//    double** P = matrix(0, imax+1, 0, jmax+1);
+
 
     // initialise velocities and pressure
-	init_uvp(UI,VI,PI,imax,jmax,U,V,P);
-	
+//	init_uvp(UI,VI,PI,imax,jmax,U,V,P);
+
+   MPI_Status status;
+   
+   int myrank, p;
+   MPI_Init(&argc, &argv);
+   MPI_Comm_size(MPI_COMM_WORLD, &p);
+   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);   
+   int il, ir, jb, jt;
+   int rank_l, rank_r, rank_b, rank_t;
+   int omg_i, int omg_j;
+
+   init_parallel ( iproc, jproc, imax, jmax, myrank, &il, &ir, &jb, &jt, &rank_l, &rank_r, &rank_b, &rank_t,
+				&omg_i, &omg_j, num_proc)
+
+   double** U = matrix(0, imax+1, 0, jmax+1);
+   double** V = matrix(0, imax+1, 0, jmax+1);
+   double** F = matrix(0, imax+1, 0, jmax+1);
+   double** G = matrix(0, imax+1, 0, jmax+1);
+   double** RS = matrix(0, imax+1, 0, jmax+1);
+   double** P = matrix(0, imax+1, 0, jmax+1);
 	// TODO: Check if this visualization output can be removed!
 //	write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
 //	n++;

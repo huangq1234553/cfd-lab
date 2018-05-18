@@ -1,29 +1,10 @@
 #include "helper.h"
 #include "init.h"
 
-int read_parameters( const char *szFileName,    /* name of the file */
-                     double *Re,                 /* reynolds number   */
-                     double *UI,                 /* velocity x-direction */
-                     double *VI,                 /* velocity y-direction */
-                     double *PI,                 /* pressure */
-                     double *GX,                 /* gravitation x-direction */
-                     double *GY,                 /* gravitation y-direction */
-                     double *t_end,              /* end time */
-                     double *xlength,            /* length of the domain x-dir.*/
-                     double *ylength,            /* length of the domain y-dir.*/
-                     double *dt,                 /* time step */
-                     double *dx,                 /* length of a cell x-dir. */
-                     double *dy,                 /* length of a cell y-dir. */
-                     int  *imax,                 /* number of cells x-direction*/
-                     int  *jmax,                 /* number of cells y-direction*/
-                     double *alpha,              /* uppwind differencing factor*/
-                     double *omg,                /* relaxation factor */
-                     double *tau,                /* safety factor for time step*/
-                     int  *itermax,              /* max. number of iterations  */
-                     double *eps,                /* accuracy bound for pressure*/
-                     double *dt_value,           /* time for output */
-                     char* problem,       /* problem string */
-                     char* geometry)    /* path/filename to geometry file */
+int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, double *PI, double *GX, double *GY,
+                    double *t_end, double *xlength, double *ylength, double *dt, double *dx, double *dy, int *imax,
+                    int *jmax, double *alpha, double *omg, double *tau, int *itermax, double *eps, double *dt_value,
+                    char *problem, char *geometry, int *iproc, int *jproc)    /* path/filename to geometry file */
 {
     READ_DOUBLE( szFileName, *xlength );
     READ_DOUBLE( szFileName, *ylength );
@@ -71,5 +52,60 @@ void init_uvp(
   init_matrix( U, 0, imax+1, 0, jmax+1, UI);
   init_matrix( V, 0, imax+1, 0, jmax+1, VI);
   init_matrix( P, 0, imax+1, 0, jmax+1, PI);
+}
+
+
+
+void init_parallel (
+int iproc,int jproc,int imax,int jmax,
+int myrank,int *il,int *ir,int *jb,int *jt,
+int *rank_l,int *rank_r,int *rank_b,int *rank_t,
+int *omg_i,int *omg_j,int num_proc){
+
+  int imax_local, jmax_local;
+  // Starting (omg_i,omg_j) indices form (0,0)
+
+  *omg_i = myrank%iproc;
+  *omg_j = myrank/iproc; 
+
+  if((*omg_i != 0)){
+    (*rank_l) = (*omg_i-1) + (*omg_j)*iproc;
+  }
+  else{
+    (*rank_l) = MPI_PROC_NULL;
+  }
+
+
+  if((*omg_i != iproc-1)){
+    (*rank_r) = (*omg_i+1) + (*omg_j)*iproc;
+  }
+  else{
+    (*rank_r) = MPI_PROC_NULL;
+  }
+  
+  if((*omg_j != 0)){
+    (*rank_b) = (*omg_i) + (*omg_j-1)*iproc;
+  }
+  else{
+    (*rank_b) = MPI_PROC_NULL;
+  }
+
+
+  if((*omg_j != jproc-1)){
+    (*rank_t) = (*omg_i) + (*omg_j+1)*iproc;
+  }
+  else{
+    (*rank_t) = MPI_PROC_NULL;
+  }
+
+  // Assume that imax%iproc == 0 && jmax%jproc == 0
+  imax_local = imax/iproc;
+  jmax_local = jmax/jproc;
+
+  (*il) = imax_local*(omg_i);
+  (*ir) = imax_local*(omg_i+1) - 1;
+  (*jb) = jmax_local*(omg_j);
+  (*jt) = jmax_local*(omg_j+1) - 1;
+
 }
 

@@ -1,4 +1,4 @@
-CC = gcc
+CC = mpicxx
 CFLAGS = -Wall -pedantic -Werror
 .c.o:  ; $(CC) -c $(CFLAGS) $<
 

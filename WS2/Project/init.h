@@ -40,31 +40,10 @@
  * @param problem    the problem short string (no spaces please!)
  * @param geometry   /path/to/geometry.pgm file
  */
-int read_parameters( 
-  const char *szFileName,
-  double *Re,
-  double *UI,
-  double *VI,
-  double *PI,
-  double *GX,
-  double *GY,
-  double *t_end,
-  double *xlength,
-  double *ylength,
-  double *dt,
-  double *dx,
-  double *dy,
-  int  *imax,
-  int  *jmax,
-  double *alpha,
-  double *omg,
-  double *tau,
-  int  *itermax,
-  double *eps,
-  double *dt_value,
-  char* problem,
-  char* geometry
-);
+int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, double *PI, double *GX, double *GY,
+                    double *t_end, double *xlength, double *ylength, double *dt, double *dx, double *dy, int *imax,
+                    int *jmax, double *alpha, double *omg, double *tau, int *itermax, double *eps, double *dt_value,
+                    char *problem, char *geometry, int *iproc, int *jproc);
 
 /**
  * The arrays U,V and P are initialized to the constant values UI, VI and PI on
@@ -80,6 +59,12 @@ void init_uvp(
   double **V,
   double **P
 );
+
+void init_parallel (
+  int iproc,int jproc,int imax,int jmax,
+int myrank,int *il,int *ir,int *jb,int *jt,
+int *rank_l,int *rank_r,int *rank_b,int *rank_t,
+int *omg_i,int *omg_j,int num_proc);
 
 #endif
 
