@@ -1,5 +1,6 @@
 #include "helper.h"
 #include "init.h"
+#include "mpi.h"
 
 int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, double *PI, double *GX, double *GY,
                     double *t_end, double *xlength, double *ylength, double *dt, double *dx, double *dy, int *imax,
@@ -102,10 +103,10 @@ int *omg_i,int *omg_j,int num_proc){
   imax_local = imax/iproc;
   jmax_local = jmax/jproc;
 
-  (*il) = imax_local*(omg_i);
-  (*ir) = imax_local*(omg_i+1) - 1;
-  (*jb) = jmax_local*(omg_j);
-  (*jt) = jmax_local*(omg_j+1) - 1;
+  (*il) = imax_local*(*omg_i);
+  (*ir) = imax_local*(*omg_i+1) - 1;
+  (*jb) = jmax_local*(*omg_j);
+  (*jt) = jmax_local*(*omg_j+1) - 1;
 
 }
 

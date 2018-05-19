@@ -71,7 +71,7 @@ int main(int argc, char** argv){
 	int  itermax;			  /* max. number of iterations  */
     double eps;               /* accuracy bound for pressure*/
     double dt_value;          /* time for output */
-	int n = 0;				  /* timestep iteration counter */
+	// int n = 0;				  /* timestep iteration counter */
 	double res = 10;		  /* residual */
 	double t = 0;			  /* initial time */
 	int it;					  /* sor iteration counter */
@@ -97,101 +97,108 @@ int main(int argc, char** argv){
 
    MPI_Status status;
    
-   int myrank, p;
+   int my_rank, p;
    MPI_Init(&argc, &argv);
    MPI_Comm_size(MPI_COMM_WORLD, &p);
    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);   
    int il, ir, jb, jt;
+   // int imax_local, jmax_local;
    int rank_l, rank_r, rank_b, rank_t;
    int omg_i, int omg_j;
 
-   init_parallel ( iproc, jproc, imax, jmax, myrank, &il, &ir, &jb, &jt, &rank_l, &rank_r, &rank_b, &rank_t,
+   init_parallel ( iproc, jproc, imax, jmax, my_rank, &il, &ir, &jb, &jt, &rank_l, &rank_r, &rank_b, &rank_t,
 				&omg_i, &omg_j, num_proc)
 
-   double** U = matrix(0, imax+1, 0, jmax+1);
-   double** V = matrix(0, imax+1, 0, jmax+1);
-   double** F = matrix(0, imax+1, 0, jmax+1);
-   double** G = matrix(0, imax+1, 0, jmax+1);
-   double** RS = matrix(0, imax+1, 0, jmax+1);
-   double** P = matrix(0, imax+1, 0, jmax+1);
-	// TODO: Check if this visualization output can be removed!
-//	write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
-//	n++;
-	// simulation interval 0 to t_end
-	double currentOutputTime = 0; // For chosing when to output
-	while(t < t_end){
-		
-		// adaptive stepsize control based on stability conditions ensures stability of the method!
-		// dt = tau * min(cond1, cond2, cond3) where tau is a safety factor
-		// NOTE: if tau<0, stepsize is not adaptively computed!
-		if(tau > 0){
-			calculate_dt(Re, tau, &dt, dx, dy, imax, jmax, U, V);
-            dt = fmin(dt, dt_value); // test, to avoid a dt bigger than visualization interval
-			// Used to check the minimum time-step for convergence
-			if (dt < mindt)
-				mindt = dt;
-		}
-		
-		// ensure boundary conditions for velocity
-		boundaryvalues(imax, jmax, U, V);
-//		if(t == 0){
-//			write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
-//			n++;
-//		}
-		// momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
-		calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax, jmax, U, V, F, G);
-		
-		// momentum equations M1 and M2 are plugged into continuity equation C to produce PPE - depends on F and G - RS is the rhs of the implicit pressure update scheme
-		calculate_rs(dt, dx, dy, imax, jmax, F, G, RS);
-		
-		// solve the system of eqs arising from implicit pressure uptate scheme using succesive overrelaxation solver
-		it = 0;
-        res = 1e9;
-        while(it < itermax && res > eps){
-			sor(omg, dx, dy, imax, jmax, P, RS, &res);
-			it++;
-		}
-        if (it == itermax)
-        {
-//            printf("[%12.9f] WARNING: max number of iterations reached on SOR. Probably it did not converge!\n", t);
-            logEvent(t, "WARNING: max number of iterations reached on SOR. Probably it did not converge!");
-        }
-		// calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
-		calculate_uv(dt, dx, dy, imax, jmax, U, V, F, G, P);
-		
-		// write visualization file for current iteration (only every dt_value step)
-		if (t >= currentOutputTime)
-		{
-            logEvent(t, "INFO: Writing visualization file n=%d", n);
-			write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
-			currentOutputTime += dt_value;
-			// update output timestep iteration counter
-			n++;
-		}
-        // Recap shell output
-//        printf("[%12.9f] INFO: dt=%f, numSorIterations=%d, sorResidual=%f\n", t, dt, it, res);
-        logEvent(t, "INFO: dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res);
-		// advance in time
-		t += dt;
-	}
+   double** P = matrix(il-1, ir+1, jb-1, jt+1);
+   double** U = matrix(il-2, ir+1, jb-1, jt+1);
+   double** V = matrix(il-1, ir+1, jb-2, jt+1);
+   double** F = matrix(il-2, ir+1, jb-1, jt+1);
+   double** G = matrix(il-1, ir+1, jb-2, jt+1);
+   double** RS = matrix(il, ir, jb, jt);
 
-	// write visualisation file for the last iteration
-    logEvent(t, "INFO: Writing visualization file n=%d", n);
-    write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+   printf("This is process %d, my boundaries are (%d, %d) (%d, %d)", my_rank, il, ir, jb, jt);
 
-	// Check value of U[imax/2][7*jmax/8] (task6)
-    logMsg("Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
+//    init_uvp(UI, VI, PI, imax, jmax, U, V, P);
+// 	// TODO: Check if this visualization output can be removed!
+// //	write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+// //	n++;
+// 	// simulation interval 0 to t_end
+// 	double currentOutputTime = 0; // For chosing when to output
+// 	while(t < t_end){
+		
+// 		// adaptive stepsize control based on stability conditions ensures stability of the method!
+// 		// dt = tau * min(cond1, cond2, cond3) where tau is a safety factor
+// 		// NOTE: if tau<0, stepsize is not adaptively computed!
+// 		if(tau > 0){
+// 			calculate_dt(Re, tau, &dt, dx, dy, imax, jmax, U, V);
+//             dt = fmin(dt, dt_value); // test, to avoid a dt bigger than visualization interval
+// 			// Used to check the minimum time-step for convergence
+// 			if (dt < mindt)
+// 				mindt = dt;
+// 		}
+		
+// 		// ensure boundary conditions for velocity
+// 		boundaryvalues(imax, jmax, U, V);
+// //		if(t == 0){
+// //			write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+// //			n++;
+// //		}
+// 		// momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
+// 		calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax, jmax, U, V, F, G);
+		
+// 		// momentum equations M1 and M2 are plugged into continuity equation C to produce PPE - depends on F and G - RS is the rhs of the implicit pressure update scheme
+// 		calculate_rs(dt, dx, dy, imax, jmax, F, G, RS);
+		
+// 		// solve the system of eqs arising from implicit pressure uptate scheme using succesive overrelaxation solver
+// 		it = 0;
+//         res = 1e9;
+//         while(it < itermax && res > eps){
+// 			sor(omg, dx, dy, imax, jmax, P, RS, &res);
+// 			it++;
+// 		}
+//         if (it == itermax)
+//         {
+// //            printf("[%12.9f] WARNING: max number of iterations reached on SOR. Probably it did not converge!\n", t);
+//             logEvent(t, "WARNING: max number of iterations reached on SOR. Probably it did not converge!");
+//         }
+// 		// calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
+// 		calculate_uv(dt, dx, dy, imax, jmax, U, V, F, G, P);
+		
+// 		// write visualization file for current iteration (only every dt_value step)
+// 		if (t >= currentOutputTime)
+// 		{
+//             logEvent(t, "INFO: Writing visualization file n=%d", n);
+// 			write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+// 			currentOutputTime += dt_value;
+// 			// update output timestep iteration counter
+// 			n++;
+// 		}
+//         // Recap shell output
+// //        printf("[%12.9f] INFO: dt=%f, numSorIterations=%d, sorResidual=%f\n", t, dt, it, res);
+//         logEvent(t, "INFO: dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res);
+// 		// advance in time
+// 		t += dt;
+// 	}
 
-	free_matrix( U, 0, imax+1, 0, jmax+1);
-	free_matrix( V, 0, imax+1, 0, jmax+1);
-	free_matrix( F, 0, imax+1, 0, jmax+1);
-	free_matrix( G, 0, imax+1, 0, jmax+1);
-	free_matrix( RS, 0, imax+1, 0, jmax+1);
-	free_matrix( P, 0, imax+1, 0, jmax+1);
+// 	// write visualisation file for the last iteration
+//     logEvent(t, "INFO: Writing visualization file n=%d", n);
+//     write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+
+// 	// Check value of U[imax/2][7*jmax/8] (task6)
+//     logMsg("Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
+
+	free_matrix(U, il-1, ir+1, jb-1, jt+1);
+   	free_matrix(V, il-2, ir+1, jb-1, jt+1);
+   	free_matrix(F, il-1, ir+1, jb-2, jt+1);
+   	free_matrix(G, il-2, ir+1, jb-1, jt+1);
+   	free_matrix(RS, il-1, ir+1, jb-2, jt+1);
+   	free_matrix(P, il, ir, jb, jt);
+
     
-    logMsg("Min dt value used: %16e", mindt);
+    MPI_Finalize();
+    // logMsg("Min dt value used: %16e", mindt);
     
-    closeLogFile(); // Properly close the log file
+    // closeLogFile(); // Properly close the log file
 
 	return 0;
 }
