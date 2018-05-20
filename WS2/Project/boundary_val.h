@@ -5,6 +5,6 @@
 /**
  * The boundary values of the problem are set.
  */
-void boundaryvalues(int imax, int jmax, double **U, double **V);
+void boundaryvalues(int omg_i, int omg_j, int imax_local, int jmax_local, double **U, double **V);
 
 #endif
