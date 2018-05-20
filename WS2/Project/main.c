@@ -97,17 +97,16 @@ int main(int argc, char** argv){
 
    MPI_Status status;
    
-   int my_rank, p;
+   int my_rank, num_proc;
    MPI_Init(&argc, &argv);
-   MPI_Comm_size(MPI_COMM_WORLD, &p);
+   MPI_Comm_size(MPI_COMM_WORLD, &num_proc);
    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);   
    int il, ir, jb, jt;
-   // int imax_local, jmax_local;
    int rank_l, rank_r, rank_b, rank_t;
-   int omg_i, int omg_j;
+   int omg_i, omg_j;
 
    init_parallel ( iproc, jproc, imax, jmax, my_rank, &il, &ir, &jb, &jt, &rank_l, &rank_r, &rank_b, &rank_t,
-				&omg_i, &omg_j, num_proc)
+				&omg_i, &omg_j, num_proc);
 
    double** P = matrix(il-1, ir+1, jb-1, jt+1);
    double** U = matrix(il-2, ir+1, jb-1, jt+1);
@@ -138,7 +137,15 @@ int main(int argc, char** argv){
 // 		}
 		
 // 		// ensure boundary conditions for velocity
-// 		boundaryvalues(imax, jmax, U, V);
+        int imax_local =  ir - il;
+        int jmax_local = jt - jb;
+
+        // here we only need to set boundary values if local boundaries coincide with global boundaries
+        if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc -1)
+        {
+            boundaryvalues(omg_i, omg_j, imax_local, jmax_local, U, V);
+        }
+
 // //		if(t == 0){
 // //			write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
 // //			n++;

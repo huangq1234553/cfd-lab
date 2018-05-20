@@ -16,6 +16,9 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
     
     READ_INT   ( szFileName, *imax );
     READ_INT   ( szFileName, *jmax );
+
+    READ_INT   ( szFileName, *iproc );
+    READ_INT   ( szFileName, *jproc );
     
     READ_DOUBLE( szFileName, *omg   );
     READ_DOUBLE( szFileName, *eps   );
