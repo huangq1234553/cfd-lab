@@ -169,7 +169,7 @@ int main(int argc, char** argv){
 //             logEvent(t, "WARNING: max number of iterations reached on SOR. Probably it did not converge!");
 //         }
 // 		// calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
-// 		calculate_uv(dt, dx, dy, imax, jmax, U, V, F, G, P);
+        calculate_uv(dt, dx, dy, imax_local, jmax_local, omg_i, omg_j, iproc, jproc, U, V, F, G, P);
 		
 // 		// write visualization file for current iteration (only every dt_value step)
 // 		if (t >= currentOutputTime)

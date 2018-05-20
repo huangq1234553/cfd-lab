@@ -99,17 +99,8 @@ void calculate_dt(
  *
  * @image html calculate_uv.jpg
  */
-void calculate_uv(
-  double dt,
-  double dx,
-  double dy,
-  int imax,
-  int jmax,
-  double **U,
-  double **V,
-  double **F,
-  double **G,
-  double **P
-);
+
+void calculate_uv(double dt, double dx, double dy, int imax_local, int jmax_local, int omg_i, int omg_j, int iproc,
+                  int jproc, double **U, double **V, double **F, double **G, double **P);
 
 #endif
