@@ -71,15 +71,15 @@ void pressure_comm(
    
    MPI_Sendrecv(
     bufSend,                                      // send buffer
-    jmax,               // number of records
+    jmax,                           // number of records
     MPI_FLOAT,                                   // datatype
-    // destination process
+                                    // destination process
     rank_r,
     1,                                           // message tag
     bufRecv,                                  // receive buffer
-    jmax,               // number of records
+    jmax,                               // number of records
     MPI_FLOAT,                                   // datatype
-    // source process
+                                              // source process
     rank_l,
     1,                                           // message tag
     MPI_COMM_WORLD,                              // communicator
@@ -155,12 +155,12 @@ void pressure_comm(
 
    MPI_Sendrecv(
     bufSend,                                      // send buffer
-    (ir - il) - 1,               // number of records
+    imax,               // number of records
     MPI_FLOAT,                                   // datatype
     rank_t,                                 // destination process
     4,                                           // message tag
     bufRecv,                                  // receive buffer
-    (ir - il) - 1,               // number of records
+    imax,               // number of records
     MPI_FLOAT,                                   // datatype
     rank_b,                                      // source process
     4,                                           // message tag

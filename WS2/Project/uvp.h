@@ -41,8 +41,8 @@ void calculate_fg(
 // Helper functions for calculate_fg
 double secondDerivativeDx(double** A, int i, int j, double h);
 double secondDerivativeDy(double** A, int i, int j, double h);
-double productDerivativeDx(double** A, double** B, int i, int j, double h, double alpha);
-double productDerivativeDy(double** A, double** B, int i, int j, double h, double alpha);
+double productDerivativeDx(double** A, double** B, int Ai, int Aj, int Bi, int Bj, double h, double alpha);
+double productDerivativeDy(double** A, double** B, int Ai, int Aj, int Bi, int Bj, double h, double alpha);
 double squareDerivativeDx(double **A, int i, int j, double h, double alpha);
 double squareDerivativeDy(double **A, int i, int j, double h, double alpha);
 

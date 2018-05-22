@@ -99,17 +99,23 @@ int main(int argc, char** argv){
 
    int imax_local = ir - il, jmax_local = jt - jb;
 
-   double** P = matrix( 0	, imax_local + 1,  0, jmax_local + 1);
-   double** U = matrix(	0 	, imax_local + 2,  0, jmax_local + 1);
-   double** V = matrix( 0 	, imax_local + 1,  0, jmax_local + 2);
-   double** F = matrix(	0	, imax_local + 2,  0, jmax_local + 1);
-   double** G = matrix(	0	, imax_local + 1,  0, jmax_local + 2);
-   double** RS = matrix(1	, imax_local,  1, jmax_local);
+   
+
+   double** P = matrix( 0	, imax_local + 2,  0, jmax_local + 2);
+   double** U = matrix(	0 	, imax_local + 3,  0, jmax_local + 2);
+   double** V = matrix( 0 	, imax_local + 2,  0, jmax_local + 3);
+   double** F = matrix(	0	, imax_local + 3,  0, jmax_local + 2);
+   double** G = matrix(	0	, imax_local + 2,  0, jmax_local + 3);
+   double** RS = matrix(1	, imax_local + 1,  1, jmax_local + 1);
    double* bufSend = (double*) malloc( (size_t)( 3 * (ir - il + 3) * sizeof(double*)) );
    double* bufRecv = (double*) malloc( (size_t)( 3 * (ir - il + 3) * sizeof(double*)) );
 
-   init_uvp(UI, VI, PI, imax_local + 1, jmax_local + 1, U, V, P);
+   init_uvp(UI, VI, PI, imax_local, jmax_local, U, V, P);
+   
+
 // 	// TODO: Check if this visualization output can be removed!
+
+
 	// write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
 	// n++;
 // 	// simulation interval 0 to t_end
@@ -127,30 +133,37 @@ int main(int argc, char** argv){
 			// 	mindt = dt;
 		// }
 		
-// 		// ensure boundary conditions for velocity
+		// ensure boundary conditions for velocity
 
         // here we only need to set boundary values if local boundaries coincide with global boundaries
-        if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc -1)
-        {
-            boundaryvalues(omg_i, omg_j, imax_local, jmax_local, U, V);
-        }
+    if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc -1)
+    {
+        boundaryvalues(omg_i, omg_j, imax_local, jmax_local, U, V);
+    }
 
-// //		if(t == 0){
-// //			write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
-// //			n++;
-// //		}
-// 		// momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
-		calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax_local + 1, jmax_local + 1, U, V, F, G);
-		
+//		if(t == 0){
+//			write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+//			n++;
+//		}
+		// momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
+    printf("Before FG\n");
+		calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax_local, jmax_local, U, V, F, G);
+    // if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc -1)
+    // {
+    //     boundaryvalues_FG(omg_i, omg_j, imax_local, jmax_local, F, G);
+    // }		
 
 // 		// momentum equations M1 and M2 are plugged into continuity equation C to produce PPE - depends on F and G - RS is the rhs of the implicit pressure update scheme
+    printf("Before RS\n");
 		calculate_rs(dt, dx, dy, imax_local + 1, jmax_local + 1, F, G, RS);
 		
 // 		// solve the system of eqs arising from implicit pressure uptate scheme using succesive overrelaxation solver
 		it = 0;
         res = 1e9;
         // while(it < itermax && res > eps){
+        printf("Before pressure comm\n");
         	pressure_comm(P, il, ir, jb, jt, rank_l, rank_r, rank_b, rank_t, bufSend, bufRecv, &status, imax_local + 1, jmax_local + 1);
+        printf("Before SOR\n");
 			sor(omg, dx, dy, imax_local + 1, jmax_local + 1, P, RS, &res);
 			it++;
 			MPI_Barrier(MPI_COMM_WORLD);
@@ -161,6 +174,7 @@ int main(int argc, char** argv){
 //             logEvent(t, "WARNING: max number of iterations reached on SOR. Probably it did not converge!");
 //         }
 // 		// calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
+      printf("This is before uv\n");
         calculate_uv(dt, dx, dy, imax_local, jmax_local, omg_i, omg_j, iproc, jproc, U, V, F, G, P);
 		
 // 		// write visualization file for current iteration (only every dt_value step)

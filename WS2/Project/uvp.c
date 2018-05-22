@@ -28,23 +28,11 @@ const short YDIR = 1;
  */
 
 void calculate_fg(double Re, double GX, double GY, double alpha, double dt, double dx, double dy, int imax, int jmax, double **U, double **V, double **F, double **G) {
-  // set boundary conditions for G - see discrete momentum equations - apply Neumann BC - first derivative of pressure must be "zero" - dp/dy = 0
-  for (int i = 1; i <= imax; i++) {
-    G[i][1] = V[i][1];
-    G[i][jmax+2] = V[i][jmax+2];
-  }
-
-
-  // // set boundary conditions for F - see discrete momentum equations - apply Neumann BC - first derivative of pressure must be "zero" - dp/dx = 0
-  for (int j = 1; j <= jmax; j++) {
-    F[1][j] = U[1][j];
-    F[imax+2][j] = U[imax+2][j];
-  }
-
-	
+  printf("Before F\n");
   // calculate F in the domain
-	for (int i = 2; i < imax+1; i++) {
-		for (int j = 1; j <= jmax; j++) {
+	for (int i = 2; i <= imax+2; i++) {
+		for (int j = 1; j <= jmax+1; j++) {
+      printf("(%d,%d) ", i,j);
 			F[i][j] = 
 				// velocity u
 				U[i][j] 
@@ -55,15 +43,16 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double dt, doub
 						// convective term
             - squareDerivativeDx(U, i, j, dx, alpha)
 						// convective term cont.
-            - productDerivativeDy(U, V, i, j, dy, alpha)
+            - productDerivativeDy(U, V, i, j, i-1, j+1, dy, alpha)
 						// volume force
 						+ GX
 		    );
 		}
 	}
+  printf("Before G\n");
 	// calculate G in the domain
-	for (int i = 1; i <= imax; i++) {
-		for (int j = 2; j < jmax+1; j++) {
+	for (int i = 1; i <= imax+1; i++) {
+		for (int j = 2; j <= jmax+2; j++) {
 			G[i][j] = 
 				// velocity v
 				V[i][j] 
@@ -72,7 +61,7 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double dt, doub
         (
             1 / Re * ( secondDerivativeDx(V, i, j, dx) + secondDerivativeDy(V, i, j, dy) )
             // convective term
-            - productDerivativeDx(U, V, i, j, dx, alpha)
+            - productDerivativeDx(U, V, i+1, j-1, i, j, dx, alpha)
             // convective term cont.
             - squareDerivativeDy(V, i, j, dy, alpha)
             // volume force
@@ -80,6 +69,19 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double dt, doub
         );
 		}
 	}
+
+  // set boundary conditions for F - see discrete momentum equations - apply Neumann BC - first derivative of pressure must be "zero" - dp/dx = 0
+  for (int j = 1; j <= jmax + 1; j++) {
+    F[1][j] = U[1][j];
+    F[imax+3][j] = U[imax+3][j];
+  }
+
+
+  // set boundary conditions for G - see discrete momentum equations - apply Neumann BC - first derivative of pressure must be "zero" - dp/dy = 0
+  for (int i = 1; i <= imax + 1; i++) {
+    G[i][1] = V[i][1];
+    G[i][jmax+3] = V[i][jmax+3];
+  }
 }
 
 double secondDerivativeDx(double** A, int i, int j, double h)
@@ -99,7 +101,7 @@ double secondDerivativeDy(double** A, int i, int j, double h)
     return (A[i][j-1] -2*A[i][j] + A[i][j+1]) / (h*h);
 }
 
-double productDerivativeDx(double** A, double** B, int i, int j, double h, double alpha)
+double productDerivativeDx(double** A, double** B, int Ai, int Aj, int Bi, int Bj, double h, double alpha)
 {
   // Approximate the derivative of the AB product as per formula in the worksheet.
   // A,B are the matrices of values. (Their order is important: A is along x, B along y)
@@ -107,16 +109,16 @@ double productDerivativeDx(double** A, double** B, int i, int j, double h, doubl
   // h is the discretization step for the chosen direction
   return 1/h *
             (
-              (A[i][j] + A[i][j+1]) / 2 * (B[i][j] + B[i+1][j]) / 2 
-              - (A[i-1][j] + A[i-1][j+1]) / 2 * (B[i-1][j] + B[i][j]) / 2
+              (A[Ai][Aj] + A[Ai][Aj+1]) / 2 * (B[Bi][Bj] + B[Bi+1][Bj]) / 2 
+              - (A[Ai-1][Aj] + A[Ai-1][Aj+1]) / 2 * (B[Bi-1][Bj] + B[Bi][Bj]) / 2
             ) 
           + alpha / h * 
             (
-              fabs(A[i][j] + A[i][j+1]) / 2 * (B[i][j] - B[i+1][j]) / 2 
-              - fabs(A[i-1][j] + A[i-1][j+1]) / 2 * (B[i-1][j] - B[i][j]) / 2
+              fabs(A[Ai][Aj] + A[Ai][Aj+1]) / 2 * (B[Bi][Bj] - B[Bi+1][Bj]) / 2 
+              - fabs(A[Ai-1][Aj] + A[Ai-1][Aj+1]) / 2 * (B[Bi-1][Bj] - B[Bi][Bj]) / 2
             );
 }
-double productDerivativeDy(double** A, double** B, int i, int j, double h, double alpha)
+double productDerivativeDy(double** A, double** B, int Ai, int Aj, int Bi, int Bj, double h, double alpha)
 {
     // Approximate the derivative of the AB product as per formula in the worksheet.
     // A,B are the matrices of values. (Their order is important: A is along x, B along y)
@@ -124,13 +126,13 @@ double productDerivativeDy(double** A, double** B, int i, int j, double h, doubl
     // h is the discretization step for the chosen direction
     return 1/h *
                (
-                       (B[i][j] + B[i+1][j]) / 2 * (A[i][j] + A[i][j+1]) / 2
-                       - (B[i][j-1] + B[i+1][j-1]) / 2 * (A[i][j-1] + A[i][j]) / 2
+                       (B[Bi][Bj] + B[Bi+1][Bj]) / 2 * (A[Ai][Aj] + A[Ai][Aj+1]) / 2
+                       - (B[Bi][Bj-1] + B[Bi+1][Bj-1]) / 2 * (A[Ai][Aj-1] + A[Ai][Aj]) / 2
                )
                + alpha / h *
                  (
-                         fabs(B[i][j]+B[i+1][j]) / 2 * (A[i][j] - A[i][j+1]) / 2
-                         - fabs(B[i][j-1]+B[i+1][j-1]) / 2 * (A[i][j-1] - A[i][j]) / 2
+                         fabs(B[Bi][Bj]+B[Bi+1][Bj]) / 2 * (A[Ai][Aj] - A[Ai][Aj+1]) / 2
+                         - fabs(B[Bi][Bj-1]+B[Bi+1][Bj-1]) / 2 * (A[Ai][Aj-1] - A[Ai][Aj]) / 2
                  );
 }
 
