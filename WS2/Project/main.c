@@ -146,7 +146,6 @@ int main(int argc, char** argv){
 //			n++;
 //		}
 		// momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
-    printf("Before FG\n");
 		calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax_local, jmax_local, U, V, F, G);
     // if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc -1)
     // {
@@ -154,16 +153,13 @@ int main(int argc, char** argv){
     // }		
 
 // 		// momentum equations M1 and M2 are plugged into continuity equation C to produce PPE - depends on F and G - RS is the rhs of the implicit pressure update scheme
-    printf("Before RS\n");
 		calculate_rs(dt, dx, dy, imax_local, jmax_local, F, G, RS);
 		
 // 		// solve the system of eqs arising from implicit pressure uptate scheme using succesive overrelaxation solver
 		it = 0;
         res = 1e9;
         // while(it < itermax && res > eps){
-        printf("Before pressure comm\n");
         	pressure_comm(P, il, ir, jb, jt, rank_l, rank_r, rank_b, rank_t, bufSend, bufRecv, &status, imax_local + 1, jmax_local + 1);
-        printf("Before SOR\n");
 			sor(omg, dx, dy, imax_local + 1, jmax_local + 1, P, RS, &res);
 			it++;
 			MPI_Barrier(MPI_COMM_WORLD);
@@ -174,7 +170,6 @@ int main(int argc, char** argv){
 //             logEvent(t, "WARNING: max number of iterations reached on SOR. Probably it did not converge!");
 //         }
 // 		// calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
-      printf("This is before uv\n");
         calculate_uv(dt, dx, dy, imax_local, jmax_local, omg_i, omg_j, iproc, jproc, U, V, F, G, P);
 		
 // 		// write visualization file for current iteration (only every dt_value step)
