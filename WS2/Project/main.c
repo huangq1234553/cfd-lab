@@ -100,10 +100,6 @@ int main(int argc, char** argv){
 //	init_uvp(UI,VI,PI,imax,jmax,U,V,P);
 
    MPI_Status status;
-<<<<<<< HEAD
-=======
-   
->>>>>>> a177696dcf3fe6d896a18cd96e2e8c291c4b86dc
    int my_rank, num_proc;
    MPI_Init(&argc, &argv);
    MPI_Comm_size(MPI_COMM_WORLD, &num_proc);
@@ -147,8 +143,8 @@ int main(int argc, char** argv){
 		
 // 		// ensure boundary conditions for velocity
 
-        int imax_local =  ir - il;
-        int jmax_local = jt - jb;
+        imax_local =  ir - il;
+        jmax_local = jt - jb;
 
         // here we only need to set boundary values if local boundaries coincide with global boundaries
         if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc -1)
