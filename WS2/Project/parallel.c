@@ -175,6 +175,168 @@ void pressure_comm(
 
 }
 
+
+
+void uv_comm( double**U,double**V, int rank_l,int rank_r,int rank_b,int rank_t,
+        double *bufSend,double *bufRecv, MPI_Status *status, int imax, int jmax){
+
+    // Send right || Receive left
+
+    int count = 0;
+    // Fill bufSend with third-rightmost column of U
+    for(int j = 1; j < jmax + 2; ++j){
+        bufSend[j - 1] = U[imax + 3 - 2][j];
+        count++;
+    }
+    // Fill bufSend with second-rightmost column of V
+    for(int j = 1; j < jmax + 3; ++j){
+        bufSend[(j - 1) + (jmax + 1)] = V[imax + 2 - 1][j];
+        count++;
+    }
+
+
+    MPI_Sendrecv(
+            bufSend,                                      // send buffer
+            count,               // number of records
+            MPI_FLOAT,                                   // datatype
+            // destination process
+            rank_r,
+            1,                                           // message tag
+            bufRecv,                                  // receive buffer
+            count,               // number of records
+            MPI_FLOAT,                                   // datatype
+            // source process
+            rank_l,
+            1,                                           // message tag
+            MPI_COMM_WORLD,                              // communicator
+            status                                      // status of communication
+    );
+
+    // Fill first-leftmost column of U
+    for(int j = 1; j < jmax + 2; ++j){
+        U[0][j] = bufRecv[j-1];
+    }
+    // Fill first-leftmost column of V
+    for(int j = 1; j < jmax + 3; ++j){
+        V[0][j] = bufRecv[(j - 1) + (jmax + 1)];
+    }
+
+    // Send left || Receive right
+
+    count = 0;
+    // Fill bufSend with third-leftmost column of U
+    for(int j = 1; j < jmax + 2; ++j){
+        bufSend[j - 1] = U[2][j];
+        count++;
+    }
+    // Fill bufSend with second-leftmost column of V
+    for(int j = 1; j < jmax + 3; ++j){
+        bufSend[(j - 1) + (jmax + 1)] = V[1][j];
+        count++;
+    }
+
+    MPI_Sendrecv(
+            bufSend,                                      // send buffer
+            count,               // number of records
+            MPI_FLOAT,                                   // datatype
+            rank_l,                                         // destination process
+            2,                                           // message tag
+            bufRecv,                                  // receive buffer
+            count,               // number of records
+            MPI_FLOAT,                                   // datatype
+            rank_r,                                 // source process
+            2,                                           // message tag
+            MPI_COMM_WORLD,                              // communicator
+            status                                      // status of communication
+    );
+
+    // Fill first-rightmost column of U
+    for(int j = 1; j < jmax + 2; ++j){
+        U[imax + 3][j] = bufRecv[j-1];
+    }
+    // Fill first-rightmost column of V
+    for(int j = 1; j < jmax + 3; ++j){
+        V[imax + 2][j] = bufRecv[(j - 1) + (jmax + 1)];
+    }
+
+    // Send bottom || Receive top
+
+    count = 0;
+    // Fill bufSend with second-bottommost row of U
+    for(int i = 1; i < imax + 3; ++i){
+        bufSend[i - 1] = U[i][1];
+        count++;
+    }
+    // Fill bufSend with third-bottommost row of V
+    for(int i = 1; i < imax + 2; ++i){
+        bufSend[(i - 1) + (imax + 2)] = V[i][2];
+        count++;
+    }
+
+    MPI_Sendrecv(
+            bufSend,                                      // send buffer
+            count,               // number of records
+            MPI_FLOAT,                                   // datatype
+            rank_b,                                 // destination process
+            3,                                           // message tag
+            bufRecv,                                  // receive buffer
+            count,               // number of records
+            MPI_FLOAT,                                   // datatype
+            rank_t,                                     // source process
+            3,                                           // message tag
+            MPI_COMM_WORLD,                              // communicator
+            status                                      // status of communication
+    );
+
+    // Fill first-topmost row of U
+    for(int i = 1; i < imax + 3; ++i){
+        U[i][jmax + 2] = bufRecv[i-1];
+    }
+    // Fill first-topmost row of V
+    for(int i = 1; i < imax + 2; ++i){
+        V[i][imax + 3]= bufRecv[(i-1) + (imax + 2)];
+    }
+
+    // Send top || Receive bottom
+
+    count = 0;
+    // Fill bufSend with second-topmost row of U
+    for(int i = 1; i < imax + 3; ++i){
+        bufSend[i - 1] = U[i][jmax + 2 - 1];
+        count++;
+    }
+    // Fill bufSend with third-topmost row of V
+    for(int i = 1; i < imax + 2; ++i){
+        bufSend[(i - 1) + (imax + 2)] = V[i][jmax + 3 - 2];
+        count++;
+    }
+
+    MPI_Sendrecv(
+            bufSend,                                      // send buffer
+            count,               // number of records
+            MPI_FLOAT,                                   // datatype
+            rank_t,                                 // destination process
+            4,                                           // message tag
+            bufRecv,                                  // receive buffer
+            count,               // number of records
+            MPI_FLOAT,                                   // datatype
+            rank_b,                                      // source process
+            4,                                           // message tag
+            MPI_COMM_WORLD,                              // communicator
+            status                                      // status of communication
+    );
+
+    // Fill first-bottommost row of U
+    for(int i = 1; i < imax + 3; ++i){
+        U[i][0] = bufRecv[i-1];
+    }
+    // Fill first-bottommost row of V
+    for(int i = 1; i < imax + 2; ++i){
+        V[i][0]= bufRecv[(i-1) + (imax + 2)];
+    }
+
+}
+
 void init_parallel (
 int iproc,int jproc,int imax,int jmax,
 int myrank,int *il,int *ir,int *jb,int *jt,
