@@ -57,4 +57,12 @@ VI		    0
 #       and path to geometry file
 #--------------------------------------------
 problem     testProblem
-geometry    testGeometry.pgm
+
+
+#--------------------------------------------
+#       parallel variables
+#       
+#--------------------------------------------
+
+iproc 2
+jproc 2

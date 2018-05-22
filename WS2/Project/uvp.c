@@ -29,24 +29,18 @@ const short YDIR = 1;
 
 void calculate_fg(double Re, double GX, double GY, double alpha, double dt, double dx, double dy, int imax, int jmax, double **U, double **V, double **F, double **G) {
   // set boundary conditions for G - see discrete momentum equations - apply Neumann BC - first derivative of pressure must be "zero" - dp/dy = 0
-  printf("%d\n", imax);
-  printf("This is before boundary conditions\n");
   for (int i = 1; i <= imax; i++) {
-    printf("%d ", i);
     G[i][1] = V[i][1];
     G[i][jmax+2] = V[i][jmax+2];
   }
 
-  printf("\n%d\n", jmax);
-  printf("This is before boundary conditions\n");
 
   // // set boundary conditions for F - see discrete momentum equations - apply Neumann BC - first derivative of pressure must be "zero" - dp/dx = 0
   for (int j = 1; j <= jmax; j++) {
-    printf("%d\n", j);
     F[1][j] = U[1][j];
     F[imax+2][j] = U[imax+2][j];
   }
-  printf("This is before calculating F\n");
+
 	
   // calculate F in the domain
 	for (int i = 2; i < imax+1; i++) {
@@ -67,7 +61,6 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double dt, doub
 		    );
 		}
 	}
-  printf("This is before calculating G\n");
 	// calculate G in the domain
 	for (int i = 1; i <= imax; i++) {
 		for (int j = 2; j < jmax+1; j++) {

@@ -33,8 +33,8 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
     READ_DOUBLE( szFileName, *GY );
     READ_DOUBLE( szFileName, *PI );
     
-    READ_STRING( szFileName, problem);
-    READ_STRING( szFileName, geometry);
+    // READ_STRING( szFileName, problem);
+    // READ_STRING( szFileName, geometry);
 
     READ_INT   ( szFileName, *iproc );
     READ_INT   ( szFileName, *jproc );

@@ -45,9 +45,6 @@
 
 int main(int argc, char** argv){
 	
-	printf("Argc: %d\n", argc);
-	printf("Argv: %s\n", argv[2]);
-	// printf("%c", *argv[2]);
     // Handling the problem file name which is passed as 1st argument.
 	char szFileName[256]; // We assume name will not be longer than 256 chars...
     strcpy(szFileName, argv[1]);
@@ -88,17 +85,6 @@ int main(int argc, char** argv){
                     &alpha, &omg,
                     &tau, &itermax, &eps, &dt_value, problem, geometry, &iproc, &jproc);
 
-//    double** U = matrix(0, imax+1, 0, jmax+1);
-//    double** V = matrix(0, imax+1, 0, jmax+1);
-//    double** F = matrix(0, imax+1, 0, jmax+1);
-//    double** G = matrix(0, imax+1, 0, jmax+1);
-//    double** RS = matrix(0, imax+1, 0, jmax+1);
-//    double** P = matrix(0, imax+1, 0, jmax+1);
-
-
-    // initialise velocities and pressure
-//	init_uvp(UI,VI,PI,imax,jmax,U,V,P);
-
    MPI_Status status;
    int my_rank, num_proc;
    MPI_Init(&argc, &argv);
@@ -111,7 +97,7 @@ int main(int argc, char** argv){
    init_parallel ( iproc, jproc, imax, jmax, my_rank, &il, &ir, &jb, &jt, &rank_l, &rank_r, &rank_b, &rank_t,
 				&omg_i, &omg_j, num_proc);
 
-   int imax_local = ir-il + 1, jmax_local = jt - jb + 1 ;
+   int imax_local = ir - il, jmax_local = jt - jb;
 
    double** P = matrix( 0	, imax_local + 1,  0, jmax_local + 1);
    double** U = matrix(	0 	, imax_local + 2,  0, jmax_local + 1);
@@ -119,10 +105,10 @@ int main(int argc, char** argv){
    double** F = matrix(	0	, imax_local + 2,  0, jmax_local + 1);
    double** G = matrix(	0	, imax_local + 1,  0, jmax_local + 2);
    double** RS = matrix(1	, imax_local,  1, jmax_local);
-   double* bufSend = (double*) malloc( (size_t)( 2 * (ir - il + 3) * sizeof(double*)) );
-   double* bufRecv = (double*) malloc( (size_t)( 2 * (ir - il + 3) * sizeof(double*)) );
+   double* bufSend = (double*) malloc( (size_t)( 3 * (ir - il + 3) * sizeof(double*)) );
+   double* bufRecv = (double*) malloc( (size_t)( 3 * (ir - il + 3) * sizeof(double*)) );
 
-   init_uvp(UI, VI, PI, imax_local, jmax_local, U, V, P);
+   init_uvp(UI, VI, PI, imax_local + 1, jmax_local + 1, U, V, P);
 // 	// TODO: Check if this visualization output can be removed!
 	// write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
 	// n++;
@@ -143,9 +129,6 @@ int main(int argc, char** argv){
 		
 // 		// ensure boundary conditions for velocity
 
-        imax_local =  ir - il;
-        jmax_local = jt - jb;
-
         // here we only need to set boundary values if local boundaries coincide with global boundaries
         if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc -1)
         {
@@ -157,19 +140,18 @@ int main(int argc, char** argv){
 // //			n++;
 // //		}
 // 		// momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
-		calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax_local, jmax_local, U, V, F, G);
+		calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax_local + 1, jmax_local + 1, U, V, F, G);
 		
 
 // 		// momentum equations M1 and M2 are plugged into continuity equation C to produce PPE - depends on F and G - RS is the rhs of the implicit pressure update scheme
-		calculate_rs(dt, dx, dy, imax_local, jmax_local, F, G, RS);
+		calculate_rs(dt, dx, dy, imax_local + 1, jmax_local + 1, F, G, RS);
 		
 // 		// solve the system of eqs arising from implicit pressure uptate scheme using succesive overrelaxation solver
 		it = 0;
         res = 1e9;
         // while(it < itermax && res > eps){
-        	pressure_comm(P, il, ir, jb, jt, rank_l, rank_r, rank_b, rank_t, bufSend, bufRecv, &status, imax_local, jmax_local);
-        	printf("This is before SOR\n");
-			sor(omg, dx, dy, imax_local, jmax_local, P, RS, &res);
+        	pressure_comm(P, il, ir, jb, jt, rank_l, rank_r, rank_b, rank_t, bufSend, bufRecv, &status, imax_local + 1, jmax_local + 1);
+			sor(omg, dx, dy, imax_local + 1, jmax_local + 1, P, RS, &res);
 			it++;
 			MPI_Barrier(MPI_COMM_WORLD);
 		// }
