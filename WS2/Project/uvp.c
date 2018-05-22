@@ -248,31 +248,61 @@ void calculate_dt(
  * @image html calculate_uv.jpg
  */
 
-void calculate_uv(
-  double dt,
-  double dx,
-  double dy,
-  int imax,
-  int jmax,
-  double **U,
-  double **V,
-  double **F,
-  double **G,
-  double **P
- )
+
+void calculate_uv(double dt, double dx, double dy, int imax_local, int jmax_local, int omg_i, int omg_j, int iproc,
+                  int jproc, double **U, double **V, double **F, double **G, double **P)
 {
-  for (int i=1; i<imax; ++i)
-  {
-    for (int j=1; j<jmax+1; ++j)
+    // internal u-points calculated for all subdomains independent of global location
+    for (int i=2; i < imax_local + 3 - 1; ++i)
     {
-      U[i][j] = F[i][j] - ( dt/dx*(P[i+1][j] - P[i][j]) );
+        for (int j=1; j < jmax_local + 2; ++j)
+        {
+            // U and P have different sizes hence shift in indecies along i
+            U[i][j] = F[i][j] - ( dt/dx*(P[(i - 1) + 1][j] - P[(i - 1)][j]) );
+        }
     }
-  }
-  for (int i=1; i<imax+1; ++i)
-  {
-    for (int j=1; j<jmax; ++j)
+
+    // internal v-points calculated for all subdomains independent of global location
+    for (int i=1; i < imax_local + 2; ++i)
     {
-      V[i][j] = G[i][j] - ( dt/dy*(P[i][j+1] - P[i][j]) );
+        for (int j=2; j < jmax_local + 3 -1; ++j)
+        {
+            // V and P have different sizes hence shift in indecies along j
+            V[i][j] = G[i][j] - ( dt/dy*(P[i][(j - 1) + 1] - P[i][(j - 1)]) );
+        }
     }
-  }
+
+    if(omg_i != iproc - 1) {
+        // calculate u-values on local right boundary
+        for (int j = 1; j < jmax_local + 2; ++j) {
+            // U and P have different sizes hence shift in indecies along i
+            U[imax_local + 3 - 1][j] = F[imax_local + 3 - 1][j] - ( dt/dx*(P[(imax_local + 3 - 1 - 1) + 1][j] - P[(imax_local + 3 - 1 - 1)][j]) );
+        }
+    }
+
+    if(omg_i != 0) {
+        // calculate u-values on local left boundary
+        for (int j = 1; j < jmax_local + 2; ++j) {
+            // U and P have different sizes hence shift in indecies along i
+            U[1][j] = F[1][j] - ( dt/dx*(P[(1 - 1) + 1][j] - P[(1 - 1)][j]) );
+        }
+    }
+
+    if(omg_j != jproc - 1) {
+        // calculate v-values on local upper boundary
+        for (int i = 1; i < imax_local + 2; ++i) {
+            // V and P have different sizes hence shift in indecies along j
+            V[i][jmax_local + 3 - 1] =
+                    G[i][jmax_local + 3 - 1] - (dt / dy * (P[i][(jmax_local + 3 - 1 - 1) + 1] - P[i][(jmax_local + 3 - 1 - 1)]));
+        }
+    }
+
+    if(omg_j != 0) {
+        // calculate v-values on local lower boundary
+        for (int i = 1; i < imax_local + 2; ++i) {
+            // V and P have different sizes hence shift in indecies along j
+            V[i][1] =
+                    G[i][1] - (dt / dy * (P[i][(1 - 1) + 1] - P[i][(1 - 1)]));
+        }
+    }
 }
