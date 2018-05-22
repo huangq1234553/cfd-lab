@@ -115,7 +115,8 @@ int main(int argc, char **argv)
     
     init_uvp(UI, VI, PI, imax_local, jmax_local, U, V, P);
 
-
+    // Perform one dt calculation prior to parallelized dt calculation in while loop.
+    dt = fmin(fmin((Re/2/(1/pow(dx,2) + 1/pow(dy,2))), fmin(dx/UI, dy/VI)), dt_value);
 // 	// TODO: Check if this visualization output can be removed!
     
     printf("[R%d] Right before writing the viz...\n", my_rank); //debug
