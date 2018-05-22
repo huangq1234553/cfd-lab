@@ -76,6 +76,7 @@ int main(int argc, char **argv)
     double dt_value;          /* time for output */
     int n = 0;                  /* timestep iteration counter */
     double res = 10;          /* residual */
+    double res_glob;            /* used to store global residual*/
     // double t = 0;              /* initial time */
     int it;                      /* sor iteration counter */
     int iproc;                  /* number of processes in i direction*/
@@ -96,7 +97,7 @@ int main(int argc, char **argv)
     int il, ir, jb, jt;
     int rank_l, rank_r, rank_b, rank_t;
     int omg_i, omg_j;
-    
+        
     init_parallel(iproc, jproc, imax, jmax, my_rank, &il, &ir, &jb, &jt, &rank_l, &rank_r, &rank_b, &rank_t,
                   &omg_i, &omg_j, num_proc);
     
@@ -167,11 +168,13 @@ int main(int argc, char **argv)
 // 		// solve the system of eqs arising from implicit pressure uptate scheme using succesive overrelaxation solver
 		it = 0;
         res = 1e9;
-        // while(it < itermax && res > eps){
+        // while(it < itermax && res_global > eps){
         	pressure_comm(P, il, ir, jb, jt, rank_l, rank_r, rank_b, rank_t, bufSend, bufRecv, &status, imax_local + 1, jmax_local + 1);
 			sor(omg, dx, dy, imax_local + 1, jmax_local + 1, P, RS, &res);
 			it++;
 			MPI_Barrier(MPI_COMM_WORLD);
+            MPI_Allreduce(&res, &res_glob, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
 		// }
 //         if (it == itermax)
 //         {
