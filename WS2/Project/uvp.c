@@ -28,11 +28,9 @@ const short YDIR = 1;
  */
 
 void calculate_fg(double Re, double GX, double GY, double alpha, double dt, double dx, double dy, int imax, int jmax, double **U, double **V, double **F, double **G) {
-  printf("Before F\n");
   // calculate F in the domain
 	for (int i = 2; i <= imax+2; i++) {
 		for (int j = 1; j <= jmax+1; j++) {
-      printf("(%d,%d) ", i,j);
 			F[i][j] = 
 				// velocity u
 				U[i][j] 
@@ -49,7 +47,6 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double dt, doub
 		    );
 		}
 	}
-  printf("Before G\n");
 	// calculate G in the domain
 	for (int i = 1; i <= imax+1; i++) {
 		for (int j = 2; j <= jmax+2; j++) {
