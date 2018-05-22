@@ -76,7 +76,7 @@ int main(int argc, char **argv)
     double dt_value;          /* time for output */
     int n = 0;                  /* timestep iteration counter */
     double res = 10;          /* residual */
-    double t = 0;              /* initial time */
+    // double t = 0;              /* initial time */
     int it;                      /* sor iteration counter */
     int iproc;                  /* number of processes in i direction*/
     int jproc;                  /* number of processes in j direction*/
@@ -180,7 +180,7 @@ int main(int argc, char **argv)
 //         }
 // 		// calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
         calculate_uv(dt, dx, dy, imax_local, jmax_local, omg_i, omg_j, iproc, jproc, U, V, F, G, P);
-        uv_comm(U,V,rank_l,rank_r,rank_b,rank_t,bufSend,bufRecv, &status, imax, jmax);
+        uv_comm(U,V,rank_l,rank_r,rank_b,rank_t,bufSend,bufRecv, &status, imax_local, jmax_local);
 		
 // 		// write visualization file for current iteration (only every dt_value step)
 // 		if (t >= currentOutputTime)
@@ -199,11 +199,11 @@ int main(int argc, char **argv)
 // 	}
     
     // write visualisation file for the last iteration
-    logEvent(t, (char*)"INFO: Writing visualization file n=%d", n);
-    write_vtkFile(problem, n, 0, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+    // logEvent(t, (char*)"INFO: Writing visualization file n=%d", n);
+    write_vtkFile(problem, n, my_rank, xlength, ylength, imax_local, jmax_local, dx, dy, U, V, P);
 
-// 	// Check value of U[imax/2][7*jmax/8] (task6)
-//     logMsg("Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
+	// Check value of U[imax/2][7*jmax/8] (task6)
+    // logMsg("Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
     free_matrix(P, 0, imax_local + 1, 0, jmax_local + 1);
     free_matrix(U, 0, imax_local + 2, 0, jmax_local + 1);
     free_matrix(V, 0, imax_local + 1, 0, jmax_local + 2);
