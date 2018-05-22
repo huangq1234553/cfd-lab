@@ -147,6 +147,11 @@ int main(int argc, char** argv){
 //		}
 		// momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
 		calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax_local, jmax_local, U, V, F, G);
+
+    if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc -1)
+    {
+        boundaryvalues_FG(omg_i, omg_j, imax_local, jmax_local, F, G);
+    }
     // if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc -1)
     // {
     //     boundaryvalues_FG(omg_i, omg_j, imax_local, jmax_local, F, G);
