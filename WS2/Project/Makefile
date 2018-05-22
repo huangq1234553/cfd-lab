@@ -9,7 +9,8 @@ OBJ = 	helper.o\
       	sor.o\
       	main.o\
       	visual.o\
-      	logger.o
+      	logger.o\
+            parallel.o
 
 
 all:  $(OBJ)
@@ -27,4 +28,4 @@ boundary_val.o: helper.h boundary_val.h
 uvp.o         : helper.h uvp.h
 visual.o      : helper.h
 
-main.o        : helper.h init.h boundary_val.h uvp.h visual.h sor.h logger.h
+main.o        : helper.h init.h boundary_val.h uvp.h visual.h sor.h logger.h parallel.h

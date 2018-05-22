@@ -5,7 +5,7 @@
 #include "boundary_val.h"
 #include "uvp.h"
 // #include "logger.h"
-#include <mpi/mpi.h>
+#include <mpi.h>
 #include "parallel.h"
 
 
