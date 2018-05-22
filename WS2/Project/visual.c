@@ -3,17 +3,17 @@
 #include <stdio.h>
 
 
-void write_vtkFile(const char *szProblem, int timeStepNumber, int mpiRank, double xlength, double ylength, int imax,
-                   int jmax, double dx, double dy, double **U, double **V, double **P)
+void write_vtkFile(const char *szProblem, int timeStepNumber, int mpiRank, double xlength, double ylength, int xStart,
+                   int yStart, int imax, int jmax, double dx, double dy, double **U, double **V, double **P)
 {
-    printf("[DEBUG][R%d] Step into write_vtkFile(imax=%d,jmax=%d)\n", mpiRank,imax,jmax); //debug
+//printf("[DEBUG][R%d] Step into write_vtkFile(imax=%d,jmax=%d)\n", mpiRank,imax,jmax); //debug
     int i, j;
     char szFileName[80];
     FILE *fp = NULL;
     sprintf(szFileName, "%s.R%i.%i.vtk", szProblem, mpiRank, timeStepNumber);
-    printf("[DEBUG][R%d] Right before opening file %s\n", mpiRank, szFileName); //debug
+//printf("[DEBUG][R%d] Right before opening file %s\n", mpiRank, szFileName); //debug
     fp = fopen(szFileName, "w");
-    printf("[DEBUG][R%d] Right after opening file\n", mpiRank); //debug
+//printf("[DEBUG][R%d] Right after opening file\n", mpiRank); //debug
     if (fp == NULL)
     {
         char szBuff[80];
@@ -23,30 +23,30 @@ void write_vtkFile(const char *szProblem, int timeStepNumber, int mpiRank, doubl
     }
     
     write_vtkHeader(fp, imax, jmax, dx, dy);
-    write_vtkPointCoordinates(fp, imax, jmax, dx, dy);
+    write_vtkPointCoordinates(fp, xStart, yStart, imax, jmax, dx, dy);
     
     fprintf(fp, "POINT_DATA %i \n", (imax + 1) * (jmax + 1));
     
     fprintf(fp, "\n");
     fprintf(fp, "VECTORS velocity float\n");
-    for (j = 1; j < jmax + 2; j++)
+    for (j = 0; j < jmax + 1; j++)
     {
-        for (i = 1; i < imax + 2; i++)
+        for (i = 0; i < imax + 1; i++)
         {
-            printf("[DEBUG][R%d] Viz[U,V](%d,%d)\n", mpiRank,i,j); //debug
+//printf("[DEBUG][R%d] Viz[U,V](%d,%d)\n", mpiRank,i,j); //debug
             fprintf(fp, "%f %f 0\n", (U[i + 1][j] + U[i + 1][j + 1]) * 0.5, (V[i][j + 1] + V[i + 1][j + 1]) * 0.5);
         }
     }
     
     fprintf(fp, "\n");
-    fprintf(fp, "CELL_DATA %i \n", ((imax+1) * (jmax+1)));
+    fprintf(fp, "CELL_DATA %i \n", (imax * jmax));
     fprintf(fp, "SCALARS pressure float 1 \n");
     fprintf(fp, "LOOKUP_TABLE default \n");
-    for (j = 1; j < jmax + 2; j++)
+    for (j = 1; j < jmax + 1; j++)
     {
-        for (i = 1; i < imax + 2; i++)
+        for (i = 1; i < imax + 1; i++)
         {
-            printf("[DEBUG][R%d] Viz[P](%d,%d)\n", mpiRank,i,j); //debug
+//printf("[DEBUG][R%d] Viz[P](%d,%d)\n", mpiRank,i,j); //debug
             fprintf(fp, "%f\n", P[i][j]);
         }
     }
@@ -82,11 +82,10 @@ void write_vtkHeader(FILE *fp, int imax, int jmax,
 }
 
 
-void write_vtkPointCoordinates(FILE *fp, int imax, int jmax,
-                               double dx, double dy)
+void write_vtkPointCoordinates(FILE *fp, int xStart, int yStart, int imax, int jmax, double dx, double dy)
 {
-    double originX = 0.0;
-    double originY = 0.0;
+    double originX = xStart*dx;
+    double originY = yStart*dy;
     
     int i = 0;
     int j = 0;

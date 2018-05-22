@@ -76,8 +76,8 @@ int main(int argc, char **argv)
     double dt_value;          /* time for output */
     int n = 0;                  /* timestep iteration counter */
     double res = 10;          /* residual */
-    double res_glob;            /* used to store global residual*/
-    // double t = 0;              /* initial time */
+    double res_global;            /* used to store global residual*/
+    double t = 0;              /* initial time */
     int it;                      /* sor iteration counter */
     int iproc;                  /* number of processes in i direction*/
     int jproc;                  /* number of processes in j direction*/
@@ -114,111 +114,118 @@ int main(int argc, char **argv)
     double *bufRecv = (double *) malloc((size_t) (3 * (ir - il + 3) * sizeof(double *)));
     
     init_uvp(UI, VI, PI, imax_local, jmax_local, U, V, P);
-    
+
 // Todo: This shouldn't be necessary and can probably be removed now
-    //    // Perform one dt calculation prior to parallelized dt calculation in while loop.
-//    if (tau > 0)
-//    {
-//        dt = fmin(fmin((Re / 2 / (1 / pow(dx, 2) + 1 / pow(dy, 2))), fmin(dx / UI, dy / VI)), dt_value);
-//    }
-    
-    printf("[R%d] Right before writing the viz...\n", my_rank); //debug
-    write_vtkFile(problem, n, my_rank, xlength, ylength, imax_local, jmax_local, dx, dy, U, V, P);
+    // Perform one dt calculation prior to parallelized dt calculation in while loop.
+    if (tau > 0)
+    {
+        dt = fmin(fmin((Re / 2 / (1 / pow(dx, 2) + 1 / pow(dy, 2))), fmin(dx / UI, dy / VI)), dt_value);
+    }
+
+//    printf("[R%d] Right before writing the viz...\n", my_rank); //debug
+    write_vtkFile(problem, n, my_rank, xlength, ylength, il, jb, imax_local+1, jmax_local+1, dx, dy, U, V, P);
     n++;
-    printf("[R%d] Right after writing the viz...\n", my_rank); //debug
+//    printf("[R%d] Right after writing the viz...\n", my_rank); //debug
     // Max values for U and V, for dt calculation
     double uMax = UI;
     double vMax = VI;
 // 	// simulation interval 0 to t_end
-    // double currentOutputTime = 0; // For chosing when to output
-    // while(t < t_end){
-    
-    // adaptive stepsize control based on stability conditions ensures stability of the method!
-    // dt = tau * min(cond1, cond2, cond3) where tau is a safety factor
-    // NOTE: if tau<0, stepsize is not adaptively computed!
-    if (tau > 0)
+    double currentOutputTime = 0; // For chosing when to output
+    while (t < t_end)
     {
-        double dtLocal;
-        calculate_dt(Re, tau, &dtLocal, dx, dy, uMax, vMax);
-        dtLocal = fmin(dtLocal, dt_value); // test, to avoid a dt bigger than visualization interval
-        printf("[R%d] Local dt before allreduce: %f\n", my_rank, dtLocal); //debug
-        MPI_Allreduce(&dtLocal, &dt, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
-        printf("[R%d] Global dt after allreduce: %f\n", my_rank, dt); //debug
-        // Used to check the minimum time-step for convergence
-        if (dt < mindt)
+        // ensure boundary conditions for velocity
+        
+        // here we only need to set boundary values if local boundaries coincide with global boundaries
+        if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc - 1)
         {
-            mindt = dt;
+            boundaryvalues(omg_i, omg_j, imax_local, jmax_local, U, V);
         }
-    }
-    
-    // ensure boundary conditions for velocity
-    
-    // here we only need to set boundary values if local boundaries coincide with global boundaries
-    if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc - 1)
-    {
-        boundaryvalues(omg_i, omg_j, imax_local, jmax_local, U, V);
-    }
-
-//		if(t == 0){
-//			write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
-//			n++;
-//		}
-    
-    // momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
-    calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax_local, jmax_local, U, V, F, G);
-    
-    if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc - 1)
-    {
-        boundaryvalues_FG(omg_i, omg_j, imax_local, jmax_local, F, G, U, V);
-    }
+        
+//        if (t == 0)
+//        {
+//            write_vtkFile(problem, n, my_rank, xlength, ylength, il, jb, imax_local+1, jmax_local+1, dx, dy, U, V, P);
+//            n++;
+//        }
+        
+        // momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
+        calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax_local, jmax_local, U, V, F, G);
+        
+        if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc - 1)
+        {
+            boundaryvalues_FG(omg_i, omg_j, imax_local, jmax_local, F, G, U, V);
+        }
 
 // 		// momentum equations M1 and M2 are plugged into continuity equation C to produce PPE - depends on F and G - RS is the rhs of the implicit pressure update scheme
-    calculate_rs(dt, dx, dy, imax_local, jmax_local, F, G, RS);
+        calculate_rs(dt, dx, dy, imax_local, jmax_local, F, G, RS);
 
 // 		// solve the system of eqs arising from implicit pressure uptate scheme using succesive overrelaxation solver
-    it = 0;
-    res = 1e9;
-    // while(it < itermax && res_global > eps){
-    pressure_comm(P, il, ir, jb, jt, rank_l, rank_r, rank_b, rank_t, bufSend, bufRecv, &status, imax_local + 1,
-                  jmax_local + 1);
-    sor(omg, dx, dy, imax_local + 1, jmax_local + 1, P, RS, &res);
-    if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc - 1)
-    {
-        boundaryvalues_P(omg_i, omg_j, imax_local + 1, jmax_local + 1, P);
-    }
-    it++;
-    MPI_Allreduce(&res, &res_glob, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    
-    // }
-//         if (it == itermax)
-//         {
-// //            printf("[%12.9f] WARNING: max number of iterations reached on SOR. Probably it did not converge!\n", t);
+        it = 0;
+        res = 1e9;
+        res_global = 1e9;
+        while (it < itermax && res_global > eps)
+        {
+            pressure_comm(P, il, ir, jb, jt, rank_l, rank_r, rank_b, rank_t, bufSend, bufRecv, &status, imax_local + 1,
+                          jmax_local + 1);
+            sor(omg, dx, dy, imax_local + 1, jmax_local + 1, P, RS, &res);
+            if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc - 1)
+            {
+                boundaryvalues_P(omg_i, omg_j, imax_local + 1, jmax_local + 1, P);
+            }
+            it++;
+            MPI_Allreduce(&res, &res_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        }
+        if (it == itermax && my_rank == 0)
+        {
+            printf("[%12.9f] WARNING: max number of iterations reached on SOR. Probably it did not converge!\n", t);
 //             logEvent(t, "WARNING: max number of iterations reached on SOR. Probably it did not converge!");
-//         }
+        }
 // 		// calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
-    calculate_uv(dt, dx, dy, imax_local, jmax_local, omg_i, omg_j, iproc, jproc, U, V, F, G, P, &uMax,
-                 &vMax); // Here we get the uMax and vMax
-    uv_comm(U, V, rank_l, rank_r, rank_b, rank_t, bufSend, bufRecv, &status, imax_local, jmax_local);
-
-// 		// write visualization file for current iteration (only every dt_value step)
-// 		if (t >= currentOutputTime)
-// 		{
-//             logEvent(t, "INFO: Writing visualization file n=%d", n);
-// 			write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
-// 			currentOutputTime += dt_value;
-// 			// update output timestep iteration counter
-// 			n++;
-// 		}
-//         // Recap shell output
-// //        printf("[%12.9f] INFO: dt=%f, numSorIterations=%d, sorResidual=%f\n", t, dt, it, res);
-//         logEvent(t, "INFO: dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res);
-// 		// advance in time
-// 		t += dt;
-// 	}
+        calculate_uv(dt, dx, dy, imax_local, jmax_local, omg_i, omg_j, iproc, jproc, U, V, F, G, P, &uMax,
+                     &vMax); // Here we get the uMax and vMax
+        uv_comm(U, V, rank_l, rank_r, rank_b, rank_t, bufSend, bufRecv, &status, imax_local, jmax_local);
+        
+        // write visualization file for current iteration (only every dt_value step)
+        if (t >= currentOutputTime && my_rank == 0)
+        {
+//            logEvent(t, "INFO: Writing visualization file n=%d", n);
+            printf("INFO: Writing visualization file n=%d\n", n);
+            write_vtkFile(problem, n, my_rank, xlength, ylength, il, jb, imax_local+1, jmax_local+1, dx, dy, U, V, P);
+            currentOutputTime += dt_value;
+            // update output timestep iteration counter
+            n++;
+        }
+        // Recap shell output
+        //        printf("[%12.9f] INFO: dt=%f, numSorIterations=%d, sorResidual=%f\n", t, dt, it, res);
+//        logEvent(t, "INFO: dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res);
+        if (my_rank == 0 && it == itermax)
+        {
+            printf("INFO: dt=%f, numSorIterations=%d, sorResidual=%f\n", dt, it, res);
+        }
+        
+        // adaptive stepsize control based on stability conditions ensures stability of the method!
+        // dt = tau * min(cond1, cond2, cond3) where tau is a safety factor
+        // NOTE: if tau<0, stepsize is not adaptively computed!
+        if (tau > 0)
+        {
+            double dtLocal;
+            calculate_dt(Re, tau, &dtLocal, dx, dy, uMax, vMax);
+            dtLocal = fmin(dtLocal, dt_value); // test, to avoid a dt bigger than visualization interval
+//            printf("[R%d] Local dt before allreduce: %f\n", my_rank, dtLocal); //debug
+            MPI_Allreduce(&dtLocal, &dt, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+//            printf("[R%d] Global dt after allreduce: %f\n", my_rank, dt); //debug
+            // Used to check the minimum time-step for convergence
+            if (dt < mindt)
+            {
+                mindt = dt;
+            }
+        }
+        // advance in time
+        t += dt;
+    }
     
     // write visualisation file for the last iteration
     // logEvent(t, (char*)"INFO: Writing visualization file n=%d", n);
-    write_vtkFile(problem, n, my_rank, xlength, ylength, imax_local, jmax_local, dx, dy, U, V, P);
+    write_vtkFile(problem, n, my_rank, xlength, ylength, il, jb, imax_local+1, jmax_local+1, dx, dy, U, V, P);
     
     // Check value of U[imax/2][7*jmax/8] (task6)
     // logMsg("Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
@@ -234,7 +241,9 @@ int main(int argc, char **argv)
     MPI_Finalize();
 //    logMsg("Min dt value used: %16e", mindt);
     if (my_rank == 0)
+    {
         printf("Min dt value used: %16e\n", mindt);
+    }
     
     // closeLogFile(); // Properly close the log file
     
