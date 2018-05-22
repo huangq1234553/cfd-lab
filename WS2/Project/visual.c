@@ -6,14 +6,14 @@
 void write_vtkFile(const char *szProblem, int timeStepNumber, int mpiRank, double xlength, double ylength, int imax,
                    int jmax, double dx, double dy, double **U, double **V, double **P)
 {
-    printf("[DEBUG] Step into write_vtkFile()\n"); //debug
+    printf("[DEBUG][R%d] Step into write_vtkFile(imax=%d,jmax=%d)\n", mpiRank,imax,jmax); //debug
     int i, j;
     char szFileName[80];
     FILE *fp = NULL;
     sprintf(szFileName, "%s.R%i.%i.vtk", szProblem, mpiRank, timeStepNumber);
-    printf("[DEBUG] Right before opening file %s\n", szFileName); //debug
+    printf("[DEBUG][R%d] Right before opening file %s\n", mpiRank, szFileName); //debug
     fp = fopen(szFileName, "w");
-    printf("[DEBUG] Right after opening file\n"); //debug
+    printf("[DEBUG][R%d] Right after opening file\n", mpiRank); //debug
     if (fp == NULL)
     {
         char szBuff[80];
@@ -33,7 +33,7 @@ void write_vtkFile(const char *szProblem, int timeStepNumber, int mpiRank, doubl
     {
         for (i = 1; i < imax + 2; i++)
         {
-            printf("[DEBUG] Viz[U,V](%d,%d)\n",i,j); //debug
+            printf("[DEBUG][R%d] Viz[U,V](%d,%d)\n", mpiRank,i,j); //debug
             fprintf(fp, "%f %f 0\n", (U[i + 1][j] + U[i + 1][j + 1]) * 0.5, (V[i][j + 1] + V[i + 1][j + 1]) * 0.5);
         }
     }
@@ -46,6 +46,7 @@ void write_vtkFile(const char *szProblem, int timeStepNumber, int mpiRank, doubl
     {
         for (i = 1; i < imax + 2; i++)
         {
+            printf("[DEBUG][R%d] Viz[P](%d,%d)\n", mpiRank,i,j); //debug
             fprintf(fp, "%f\n", P[i][j]);
         }
     }
