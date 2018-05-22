@@ -248,7 +248,7 @@ void calculate_uv(double dt, double dx, double dy, int imax_local, int jmax_loca
                   int jproc, double **U, double **V, double **F, double **G, double **P)
 {
     // internal u-points calculated for all subdomains independent of global location
-    for (int i=2; i < imax_local + 3 - 1; ++i)
+    for (int i = 2; i < imax_local + 3 - 1; ++i)
     {
         for (int j=1; j < jmax_local + 2; ++j)
         {
@@ -258,7 +258,7 @@ void calculate_uv(double dt, double dx, double dy, int imax_local, int jmax_loca
     }
 
     // internal v-points calculated for all subdomains independent of global location
-    for (int i=1; i < imax_local + 2; ++i)
+    for (int i = 1; i < imax_local + 2; ++i)
     {
         for (int j=2; j < jmax_local + 3 -1; ++j)
         {

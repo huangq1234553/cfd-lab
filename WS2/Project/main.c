@@ -176,6 +176,7 @@ int main(int argc, char** argv){
 //         }
 // 		// calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
         calculate_uv(dt, dx, dy, imax_local, jmax_local, omg_i, omg_j, iproc, jproc, U, V, F, G, P);
+        uv_comm(U,V,rank_l,rank_r,rank_b,rank_t,bufSend,bufRecv, &status, imax, jmax);
 		
 // 		// write visualization file for current iteration (only every dt_value step)
 // 		if (t >= currentOutputTime)

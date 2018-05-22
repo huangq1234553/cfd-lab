@@ -31,6 +31,9 @@ void pressure_comm(
    int imax_local,
    int jmax_local);
 
+void uv_comm( double**U,double**V, int rank_l,int rank_r,int rank_b,int rank_t,
+              double *bufSend,double *bufRecv, MPI_Status *status, int imax, int jmax);
+
 void init_parallel (
   int iproc,
   int jproc,
