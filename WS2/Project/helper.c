@@ -31,6 +31,14 @@ double fmax( double a, double b)
     return b;
 }
 
+void updateMax(double *currentMax, double newValue)
+{
+    double absVelocity = fabs(newValue);
+    if (absVelocity > *currentMax)
+    {
+        *currentMax = absVelocity;
+    }
+}
 
 /* ----------------------------------------------------------------------- */
 /*                         local auxiliary functions                       */

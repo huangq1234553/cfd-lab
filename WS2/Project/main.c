@@ -87,7 +87,7 @@ int main(int argc, char **argv)
     read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax, &jmax,
                     &alpha, &omg,
                     &tau, &itermax, &eps, &dt_value, problem, geometry, &iproc, &jproc);
-    strcpy(problem,argv[1]); // Just because we are not currently reading it from config. TODO: fix this properly.
+    strcpy(problem, argv[1]); // Just because we are not currently reading it from config. TODO: fix this properly.
     
     MPI_Status status;
     int my_rank, num_proc;
@@ -125,6 +125,9 @@ int main(int argc, char **argv)
     write_vtkFile(problem, n, my_rank, xlength, ylength, imax_local, jmax_local, dx, dy, U, V, P);
     n++;
     printf("[R%d] Right after writing the viz...\n", my_rank); //debug
+    // Max values for U and V, for dt calculation
+    double uMax = UI;
+    double vMax = VI;
 // 	// simulation interval 0 to t_end
     // double currentOutputTime = 0; // For chosing when to output
     // while(t < t_end){
@@ -152,18 +155,18 @@ int main(int argc, char **argv)
 //			write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
 //			n++;
 //		}
-
-		// momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
-		calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax_local, jmax_local, U, V, F, G);
-
-    if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc -1)
+    
+    // momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
+    calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax_local, jmax_local, U, V, F, G);
+    
+    if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc - 1)
     {
         boundaryvalues_FG(omg_i, omg_j, imax_local, jmax_local, F, G, U, V);
     }
 
 // 		// momentum equations M1 and M2 are plugged into continuity equation C to produce PPE - depends on F and G - RS is the rhs of the implicit pressure update scheme
-		calculate_rs(dt, dx, dy, imax_local, jmax_local, F, G, RS);
-		
+    calculate_rs(dt, dx, dy, imax_local, jmax_local, F, G, RS);
+
 // 		// solve the system of eqs arising from implicit pressure uptate scheme using succesive overrelaxation solver
 		it = 0;
         res = 1e9;
@@ -185,9 +188,9 @@ int main(int argc, char **argv)
 //             logEvent(t, "WARNING: max number of iterations reached on SOR. Probably it did not converge!");
 //         }
 // 		// calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
-        calculate_uv(dt, dx, dy, imax_local, jmax_local, omg_i, omg_j, iproc, jproc, U, V, F, G, P);
-        uv_comm(U,V,rank_l,rank_r,rank_b,rank_t,bufSend,bufRecv, &status, imax_local, jmax_local);
-		
+    calculate_uv(dt, dx, dy, imax_local, jmax_local, omg_i, omg_j, iproc, jproc, U, V, F, G, P, &uMax, &vMax); // Here we get the uMax and vMax
+    uv_comm(U, V, rank_l, rank_r, rank_b, rank_t, bufSend, bufRecv, &status, imax_local, jmax_local);
+
 // 		// write visualization file for current iteration (only every dt_value step)
 // 		if (t >= currentOutputTime)
 // 		{
@@ -207,8 +210,8 @@ int main(int argc, char **argv)
     // write visualisation file for the last iteration
     // logEvent(t, (char*)"INFO: Writing visualization file n=%d", n);
     write_vtkFile(problem, n, my_rank, xlength, ylength, imax_local, jmax_local, dx, dy, U, V, P);
-
-	// Check value of U[imax/2][7*jmax/8] (task6)
+    
+    // Check value of U[imax/2][7*jmax/8] (task6)
     // logMsg("Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
     free_matrix(P, 0, imax_local + 1, 0, jmax_local + 1);
     free_matrix(U, 0, imax_local + 2, 0, jmax_local + 1);
