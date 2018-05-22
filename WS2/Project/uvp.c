@@ -188,8 +188,8 @@ void calculate_rs(
   double **G,
   double **RS
 ){
-  for(int i=1; i<imax+1; i++){
-    for(int j=1; j<jmax+1; j++){
+  for(int i=1; i<=imax+1; i++){
+    for(int j=1; j<=jmax+1; j++){
       RS[i][j] = ( (F[i+1][j] - F[i][j])/dx + (G[i][j+1] - G[i][j])/dy )/dt;
     }
   }

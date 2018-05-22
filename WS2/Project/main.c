@@ -155,7 +155,7 @@ int main(int argc, char** argv){
 
 // 		// momentum equations M1 and M2 are plugged into continuity equation C to produce PPE - depends on F and G - RS is the rhs of the implicit pressure update scheme
     printf("Before RS\n");
-		calculate_rs(dt, dx, dy, imax_local + 1, jmax_local + 1, F, G, RS);
+		calculate_rs(dt, dx, dy, imax_local, jmax_local, F, G, RS);
 		
 // 		// solve the system of eqs arising from implicit pressure uptate scheme using succesive overrelaxation solver
 		it = 0;
