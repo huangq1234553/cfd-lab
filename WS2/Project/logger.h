@@ -7,7 +7,7 @@
 
 void openLogFile();
 void logEvent(double t, char *fmt, ...);
-void logMsg(char *fmt, ...);
+void logMsg(const char *fmt, ...);
 void closeLogFile();
 
 #endif //SIM_LOGGER_H

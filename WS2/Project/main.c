@@ -4,8 +4,9 @@
 #include "sor.h"
 #include "boundary_val.h"
 #include "uvp.h"
-#include "logger.h"
-#include <mpi.h>
+// #include "logger.h"
+#include <mpi/mpi.h>
+#include "parallel.h"
 
 
 /**
@@ -43,7 +44,10 @@
  */
 
 int main(int argc, char** argv){
-
+	
+	printf("Argc: %d\n", argc);
+	printf("Argv: %s\n", argv[2]);
+	// printf("%c", *argv[2]);
     // Handling the problem file name which is passed as 1st argument.
 	char szFileName[256]; // We assume name will not be longer than 256 chars...
     strcpy(szFileName, argv[1]);
@@ -73,13 +77,13 @@ int main(int argc, char** argv){
     double dt_value;          /* time for output */
 	// int n = 0;				  /* timestep iteration counter */
 	double res = 10;		  /* residual */
-	double t = 0;			  /* initial time */
+	// double t = 0;			  /* initial time */
 	int it;					  /* sor iteration counter */
     int iproc;                  /* number of processes in i direction*/
     int jproc;                  /* number of processes in j direction*/
-	double mindt=10000;
+	// double mindt=10000;
     
-    openLogFile(); // Initialize the log file descriptor.
+    // openLogFile(); // Initialize the log file descriptor.
     read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax, &jmax,
                     &alpha, &omg,
                     &tau, &itermax, &eps, &dt_value, problem, geometry, &iproc, &jproc);
@@ -96,66 +100,70 @@ int main(int argc, char** argv){
 //	init_uvp(UI,VI,PI,imax,jmax,U,V,P);
 
    MPI_Status status;
-   
-   int my_rank, p;
+   int my_rank, num_proc;
    MPI_Init(&argc, &argv);
-   MPI_Comm_size(MPI_COMM_WORLD, &p);
+   MPI_Comm_size(MPI_COMM_WORLD, &num_proc);
    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);   
    int il, ir, jb, jt;
-   // int imax_local, jmax_local;
    int rank_l, rank_r, rank_b, rank_t;
-   int omg_i, int omg_j;
+   int omg_i, omg_j;
 
    init_parallel ( iproc, jproc, imax, jmax, my_rank, &il, &ir, &jb, &jt, &rank_l, &rank_r, &rank_b, &rank_t,
-				&omg_i, &omg_j, num_proc)
+				&omg_i, &omg_j, num_proc);
 
-   double** P = matrix(il-1, ir+1, jb-1, jt+1);
-   double** U = matrix(il-2, ir+1, jb-1, jt+1);
-   double** V = matrix(il-1, ir+1, jb-2, jt+1);
-   double** F = matrix(il-2, ir+1, jb-1, jt+1);
-   double** G = matrix(il-1, ir+1, jb-2, jt+1);
-   double** RS = matrix(il, ir, jb, jt);
+   int imax_local = ir-il + 1, jmax_local = jt - jb + 1 ;
 
-   printf("This is process %d, my boundaries are (%d, %d) (%d, %d)", my_rank, il, ir, jb, jt);
+   double** P = matrix( 0	, imax_local + 1,  0, jmax_local + 1);
+   double** U = matrix(	0 	, imax_local + 2,  0, jmax_local + 1);
+   double** V = matrix( 0 	, imax_local + 1,  0, jmax_local + 2);
+   double** F = matrix(	0	, imax_local + 2,  0, jmax_local + 1);
+   double** G = matrix(	0	, imax_local + 1,  0, jmax_local + 2);
+   double** RS = matrix(1	, imax_local,  1, jmax_local);
+   double* bufSend = (double*) malloc( (size_t)( 2 * (ir - il + 3) * sizeof(double*)) );
+   double* bufRecv = (double*) malloc( (size_t)( 2 * (ir - il + 3) * sizeof(double*)) );
 
-//    init_uvp(UI, VI, PI, imax, jmax, U, V, P);
+   init_uvp(UI, VI, PI, imax_local, jmax_local, U, V, P);
 // 	// TODO: Check if this visualization output can be removed!
-// //	write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
-// //	n++;
+	// write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
+	// n++;
 // 	// simulation interval 0 to t_end
-// 	double currentOutputTime = 0; // For chosing when to output
-// 	while(t < t_end){
+	// double currentOutputTime = 0; // For chosing when to output
+	// while(t < t_end){
 		
-// 		// adaptive stepsize control based on stability conditions ensures stability of the method!
-// 		// dt = tau * min(cond1, cond2, cond3) where tau is a safety factor
-// 		// NOTE: if tau<0, stepsize is not adaptively computed!
-// 		if(tau > 0){
-// 			calculate_dt(Re, tau, &dt, dx, dy, imax, jmax, U, V);
-//             dt = fmin(dt, dt_value); // test, to avoid a dt bigger than visualization interval
-// 			// Used to check the minimum time-step for convergence
-// 			if (dt < mindt)
-// 				mindt = dt;
-// 		}
+		// adaptive stepsize control based on stability conditions ensures stability of the method!
+		// dt = tau * min(cond1, cond2, cond3) where tau is a safety factor
+		// NOTE: if tau<0, stepsize is not adaptively computed!
+		// if(tau > 0){
+			// calculate_dt(Re, tau, &dt, dx, dy, imax, jmax, U, V);
+            // dt = fmin(dt, dt_value); // test, to avoid a dt bigger than visualization interval
+			// Used to check the minimum time-step for convergence
+			// if (dt < mindt)
+			// 	mindt = dt;
+		// }
 		
 // 		// ensure boundary conditions for velocity
-// 		boundaryvalues(imax, jmax, U, V);
+		// boundaryvalues(imax, jmax, U, V);
 // //		if(t == 0){
 // //			write_vtkFile(problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P);
 // //			n++;
 // //		}
 // 		// momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
-// 		calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax, jmax, U, V, F, G);
+		calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax_local, jmax_local, U, V, F, G);
 		
+
 // 		// momentum equations M1 and M2 are plugged into continuity equation C to produce PPE - depends on F and G - RS is the rhs of the implicit pressure update scheme
-// 		calculate_rs(dt, dx, dy, imax, jmax, F, G, RS);
+		calculate_rs(dt, dx, dy, imax_local, jmax_local, F, G, RS);
 		
 // 		// solve the system of eqs arising from implicit pressure uptate scheme using succesive overrelaxation solver
-// 		it = 0;
-//         res = 1e9;
-//         while(it < itermax && res > eps){
-// 			sor(omg, dx, dy, imax, jmax, P, RS, &res);
-// 			it++;
-// 		}
+		it = 0;
+        res = 1e9;
+        // while(it < itermax && res > eps){
+        	pressure_comm(P, il, ir, jb, jt, rank_l, rank_r, rank_b, rank_t, bufSend, bufRecv, &status, imax_local, jmax_local);
+        	printf("This is before SOR\n");
+			sor(omg, dx, dy, imax_local, jmax_local, P, RS, &res);
+			it++;
+			MPI_Barrier(MPI_COMM_WORLD);
+		// }
 //         if (it == itermax)
 //         {
 // //            printf("[%12.9f] WARNING: max number of iterations reached on SOR. Probably it did not converge!\n", t);
@@ -186,14 +194,14 @@ int main(int argc, char** argv){
 
 // 	// Check value of U[imax/2][7*jmax/8] (task6)
 //     logMsg("Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
-
-	free_matrix(U, il-1, ir+1, jb-1, jt+1);
-   	free_matrix(V, il-2, ir+1, jb-1, jt+1);
-   	free_matrix(F, il-1, ir+1, jb-2, jt+1);
-   	free_matrix(G, il-2, ir+1, jb-1, jt+1);
-   	free_matrix(RS, il-1, ir+1, jb-2, jt+1);
-   	free_matrix(P, il, ir, jb, jt);
-
+   	free_matrix(P, 	0	, imax_local + 1,  0, jmax_local + 1);
+   	free_matrix(U,	0 	, imax_local + 2,  0, jmax_local + 1);
+   	free_matrix(V,  0 	, imax_local + 1,  0, jmax_local + 2);
+   	free_matrix(F,	0	, imax_local + 2,  0, jmax_local + 1);
+   	free_matrix(G,	0	, imax_local + 1,  0, jmax_local + 2);
+   	free_matrix(RS, 1	, imax_local,  1, jmax_local);
+   	free( bufSend );
+   	free( bufRecv );
     
     MPI_Finalize();
     // logMsg("Min dt value used: %16e", mindt);

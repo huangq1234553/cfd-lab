@@ -15,7 +15,7 @@
  *   then optional args in prtf style can be passed.
  * 3) Make sure to call closeLogfile() before exiting the main (this closes the file at OS level).
  */
-static char* LOG_FILE_NAME = "sim.log";
+static char* LOG_FILE_NAME = (char*)"sim.log";
 static FILE* LOG_FILE;
 
 void openLogFile()
@@ -39,7 +39,7 @@ void logEvent(double t, char *fmt, ...)
     va_end(args);
 }
 
-void logMsg(char *fmt, ...)
+void logMsg(const char *fmt, ...)
 {
     // Newline at the end of the message is included.
     va_list args;
