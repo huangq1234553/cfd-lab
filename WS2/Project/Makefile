@@ -1,5 +1,5 @@
 CC = mpicxx
-CFLAGS = -Wall -pedantic -Werror
+CFLAGS = -Wall -pedantic -Werror -ggdb
 .c.o:  ; $(CC) -c $(CFLAGS) $<
 
 OBJ = 	helper.o\
