@@ -91,4 +91,34 @@ void boundaryvalues_FG(int omg_i, int omg_j, int imax_local, int jmax_local, dou
 	}
 }
 
+void boundaryvalues_P(int omg_i, int omg_j, int imax_local, int jmax_local, double **P)
+{
+    /* set boundary values */
+    int i,j;
+
+    if (omg_i == 0)
+    {
+        for(i = 1; i <= imax_local; i++) {
+            P[i][0] = P[i][1];
+        }
+    }
+    else
+    {
+        for(i = 1; i <= imax_local; i++) {
+            P[i][jmax_local+1] = P[i][jmax_local];
+        }
+    }
+
+    if(omg_j == 0){
+        for(j = 1; j <= jmax_local; j++) {
+            P[0][j] = P[1][j];
+        }
+    }
+    else{
+        for(j = 1; j <= jmax_local; j++) {
+            P[imax_local+1][j] = P[imax_local][j];
+        }
+    }
+}
+
 //eof

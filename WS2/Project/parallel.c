@@ -221,13 +221,15 @@ void uv_comm( double**U,double**V, int rank_l,int rank_r,int rank_b,int rank_t,
             status                                      // status of communication
     );
 
-    // Fill first-leftmost column of U
-    for(int j = 1; j < jmax + 2; ++j){
-        U[0][j] = bufRecv[j-1];
-    }
-    // Fill first-leftmost column of V
-    for(int j = 1; j < jmax + 3; ++j){
-        V[0][j] = bufRecv[(j - 1) + (jmax + 1)];
+    if(rank_l != MPI_PROC_NULL) {
+        // Fill first-leftmost column of U
+        for (int j = 1; j < jmax + 2; ++j) {
+            U[0][j] = bufRecv[j - 1];
+        }
+        // Fill first-leftmost column of V
+        for (int j = 1; j < jmax + 3; ++j) {
+            V[0][j] = bufRecv[(j - 1) + (jmax + 1)];
+        }
     }
 
     // Send left || Receive right
@@ -259,13 +261,15 @@ void uv_comm( double**U,double**V, int rank_l,int rank_r,int rank_b,int rank_t,
             status                                      // status of communication
     );
 
-    // Fill first-rightmost column of U
-    for(int j = 1; j < jmax + 2; ++j){
-        U[imax + 3][j] = bufRecv[j-1];
-    }
-    // Fill first-rightmost column of V
-    for(int j = 1; j < jmax + 3; ++j){
-        V[imax + 2][j] = bufRecv[(j - 1) + (jmax + 1)];
+    if(rank_r != MPI_PROC_NULL) {
+        // Fill first-rightmost column of U
+        for (int j = 1; j < jmax + 2; ++j) {
+            U[imax + 3][j] = bufRecv[j - 1];
+        }
+        // Fill first-rightmost column of V
+        for (int j = 1; j < jmax + 3; ++j) {
+            V[imax + 2][j] = bufRecv[(j - 1) + (jmax + 1)];
+        }
     }
 
     // Send bottom || Receive top
@@ -297,13 +301,15 @@ void uv_comm( double**U,double**V, int rank_l,int rank_r,int rank_b,int rank_t,
             status                                      // status of communication
     );
 
-    // Fill first-topmost row of U
-    for(int i = 1; i < imax + 3; ++i){
-        U[i][jmax + 2] = bufRecv[i-1];
-    }
-    // Fill first-topmost row of V
-    for(int i = 1; i < imax + 2; ++i){
-        V[i][imax + 3]= bufRecv[(i-1) + (imax + 2)];
+    if(rank_t != MPI_PROC_NULL) {
+        // Fill first-topmost row of U
+        for (int i = 1; i < imax + 3; ++i) {
+            U[i][jmax + 2] = bufRecv[i - 1];
+        }
+        // Fill first-topmost row of V
+        for (int i = 1; i < imax + 2; ++i) {
+            V[i][imax + 3] = bufRecv[(i - 1) + (imax + 2)];
+        }
     }
 
     // Send top || Receive bottom
@@ -335,13 +341,15 @@ void uv_comm( double**U,double**V, int rank_l,int rank_r,int rank_b,int rank_t,
             status                                      // status of communication
     );
 
-    // Fill first-bottommost row of U
-    for(int i = 1; i < imax + 3; ++i){
-        U[i][0] = bufRecv[i-1];
-    }
-    // Fill first-bottommost row of V
-    for(int i = 1; i < imax + 2; ++i){
-        V[i][0]= bufRecv[(i-1) + (imax + 2)];
+    if(rank_b != MPI_PROC_NULL) {
+        // Fill first-bottommost row of U
+        for (int i = 1; i < imax + 3; ++i) {
+            U[i][0] = bufRecv[i - 1];
+        }
+        // Fill first-bottommost row of V
+        for (int i = 1; i < imax + 2; ++i) {
+            V[i][0] = bufRecv[(i - 1) + (imax + 2)];
+        }
     }
 
 }

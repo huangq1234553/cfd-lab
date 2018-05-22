@@ -172,6 +172,10 @@ int main(int argc, char **argv)
         // while(it < itermax && res_global > eps){
         	pressure_comm(P, il, ir, jb, jt, rank_l, rank_r, rank_b, rank_t, bufSend, bufRecv, &status, imax_local + 1, jmax_local + 1);
 			sor(omg, dx, dy, imax_local + 1, jmax_local + 1, P, RS, &res);
+            if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc -1)
+            {
+                boundaryvalues_P(omg_i, omg_j, imax_local + 1, jmax_local + 1, P);
+            }
 			it++;
 			MPI_Barrier(MPI_COMM_WORLD);
             MPI_Allreduce(&res, &res_glob, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
