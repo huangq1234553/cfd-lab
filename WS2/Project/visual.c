@@ -29,9 +29,9 @@ void write_vtkFile(const char *szProblem, int timeStepNumber, int mpiRank, doubl
     
     fprintf(fp, "\n");
     fprintf(fp, "VECTORS velocity float\n");
-    for (j = 0; j < jmax + 1; j++)
+    for (j = 1; j < jmax + 2; j++)
     {
-        for (i = 0; i < imax + 1; i++)
+        for (i = 1; i < imax + 2; i++)
         {
             printf("[DEBUG] Viz[U,V](%d,%d)\n",i,j); //debug
             fprintf(fp, "%f %f 0\n", (U[i + 1][j] + U[i + 1][j + 1]) * 0.5, (V[i][j + 1] + V[i + 1][j + 1]) * 0.5);
