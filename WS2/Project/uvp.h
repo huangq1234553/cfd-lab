@@ -73,17 +73,7 @@ void calculate_rs(
  * @f$ {\delta t} := \tau \, \min\left( \frac{Re}{2}\left(\frac{1}{{\delta x}^2} + \frac{1}{{\delta y}^2}\right)^{-1},  \frac{{\delta x}}{|u_{max}|},\frac{{\delta y}}{|v_{max}|} \right) @f$
  *
  */
-void calculate_dt(
-  double Re,
-  double tau,
-  double *dt,
-  double dx,
-  double dy,
-  int imax,
-  int jmax,
-  double **U,
-  double **V
-);
+void calculate_dt(double Re, double tau, double *dt, double dx, double dy, double uMax, double vMax);
 
 
 /**
