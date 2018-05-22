@@ -116,7 +116,9 @@ int main(int argc, char **argv)
     init_uvp(UI, VI, PI, imax_local, jmax_local, U, V, P);
 
     // Perform one dt calculation prior to parallelized dt calculation in while loop.
-    dt = fmin(fmin((Re/2/(1/pow(dx,2) + 1/pow(dy,2))), fmin(dx/UI, dy/VI)), dt_value);
+    if(tau > 0){
+       dt = fmin(fmin((Re/2/(1/pow(dx,2) + 1/pow(dy,2))), fmin(dx/UI, dy/VI)), dt_value);
+    }
 // 	// TODO: Check if this visualization output can be removed!
     
     printf("[R%d] Right before writing the viz...\n", my_rank); //debug
@@ -158,10 +160,6 @@ int main(int argc, char **argv)
     {
         boundaryvalues_FG(omg_i, omg_j, imax_local, jmax_local, F, G, U, V);
     }
-    // if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc -1)
-    // {
-    //     boundaryvalues_FG(omg_i, omg_j, imax_local, jmax_local, F, G);
-    // }		
 
 // 		// momentum equations M1 and M2 are plugged into continuity equation C to produce PPE - depends on F and G - RS is the rhs of the implicit pressure update scheme
 		calculate_rs(dt, dx, dy, imax_local, jmax_local, F, G, RS);
