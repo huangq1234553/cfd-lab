@@ -150,7 +150,7 @@ int main(int argc, char** argv){
 
     if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc -1)
     {
-        boundaryvalues_FG(omg_i, omg_j, imax_local, jmax_local, F, G);
+        boundaryvalues_FG(omg_i, omg_j, imax_local, jmax_local, F, G, U, V);
     }
     // if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc -1)
     // {
