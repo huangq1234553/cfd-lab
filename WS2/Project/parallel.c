@@ -87,9 +87,12 @@ void pressure_comm(
   );
 
    // Fill leftmost column in P for bufRecv
-   for(int j = 1; j < jmax+1; ++j){
-      P[0][j] = bufRecv[j-1];
-   }
+
+    if(rank_l != MPI_PROC_NULL) {
+        for (int j = 1; j < jmax + 1; ++j) {
+            P[0][j] = bufRecv[j - 1];
+        }
+    }
    
    // Send left || Receive right
    
@@ -114,9 +117,11 @@ void pressure_comm(
   );
 
    // Fill rightmost column of P with bufRecv
-   for(int j = 1; j < jmax + 1; ++j){
-      P[imax +1][j] = bufRecv[j-1];
-   }
+    if(rank_r != MPI_PROC_NULL) {
+        for (int j = 1; j < jmax + 1; ++j) {
+            P[imax + 1][j] = bufRecv[j - 1];
+        }
+    }
 
 
    // Send bottom || Receive top   
@@ -142,9 +147,11 @@ void pressure_comm(
   );
 
    // Fill topmost row in P with bufRecv
-   for(int i = 1; i < imax + 1; ++i){
-      P[i][jmax+1] = bufRecv[i-1];
-   }
+    if(rank_t != MPI_PROC_NULL) {
+        for (int i = 1; i < imax + 1; ++i) {
+            P[i][jmax + 1] = bufRecv[i - 1];
+        }
+    }
 
    // Send top || Receive bottom
 
@@ -169,9 +176,11 @@ void pressure_comm(
   );
 
    // Fill second-topmost column in P with bufRecv
-   for(int i = 1; i < imax + 1; ++i){
-      P[i][0] = bufRecv[i-1];
-   }
+    if(rank_b != MPI_PROC_NULL) {
+        for (int i = 1; i < imax + 1; ++i) {
+            P[i][0] = bufRecv[i - 1];
+        }
+    }
 
 }
 
