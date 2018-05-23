@@ -58,7 +58,7 @@ void boundaryvalues_FG(int omg_i, int omg_j, int imax_local, int jmax_local, dou
 		// NOTE: F and G have different sizes, hence indexing shift
 		for (int j = 1; j < jmax_local + 2; j++) {
 			// F left boundary condition
-			F[1][jmax_local] = U[1][j];
+			F[1][j] = U[1][j];
 		}
 	}
 	else // if omg_i == iproc - 1
@@ -67,6 +67,7 @@ void boundaryvalues_FG(int omg_i, int omg_j, int imax_local, int jmax_local, dou
 		// NOTE: F and G have different sizes, hence indexing shift
 		for (int j = 1; j < jmax_local + 2; j++) {
 			// F right boundary condition
+					//TODO: should the index not be [imax_local + 2][j]?
 			F[imax_local+3][j] = U[imax_local+3][j];
 		}
 	}
@@ -86,6 +87,7 @@ void boundaryvalues_FG(int omg_i, int omg_j, int imax_local, int jmax_local, dou
 		// NOTE: F and G have different sizes, hence indexing shift
 		for (int i = 1; i < imax_local + 2; i++) {
 			// G top boundary condition
+			//TODO: should the index not be [i][jmax_local+2]?
 			G[i][jmax_local+3] = V[i][jmax_local+3];
 		}
 	}
