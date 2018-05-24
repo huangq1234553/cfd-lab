@@ -110,8 +110,8 @@ int main(int argc, char **argv)
     double **F = matrix(0, imax_local + 3, 0, jmax_local + 2);
     double **G = matrix(0, imax_local + 2, 0, jmax_local + 3);
     double **RS = matrix(1, imax_local + 1, 1, jmax_local + 1);
-    double *bufSend = (double *) malloc((size_t) (3 * (ir - il + 3) * sizeof(double *)));
-    double *bufRecv = (double *) malloc((size_t) (3 * (ir - il + 3) * sizeof(double *)));
+    double *bufSend = (double *) malloc((size_t) (3 * (imax_local + 3) * sizeof(double *)));
+    double *bufRecv = (double *) malloc((size_t) (3 * (imax_local + 3) * sizeof(double *)));
     
     init_uvp(UI, VI, PI, imax_local, jmax_local, U, V, P);
 
