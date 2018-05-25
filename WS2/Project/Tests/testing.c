@@ -4,9 +4,15 @@
 #include "../helper.h"
 #include "../logger.h"
 
+bool acceptablyEqual(double a, double b)
+{
+    double eps = 1e-8;
+    return (fabs(a-b) < eps);
+}
+
 void assertEqual(double value, double expectation, char *testName)
 {
-    if (value != expectation)
+    if (!acceptablyEqual(value, expectation))
     {
         logTestEvent(ERROR, testName, "assertEqual: %f != %f", value, expectation);
         ERROR("AssertionError");
@@ -15,7 +21,7 @@ void assertEqual(double value, double expectation, char *testName)
 
 int expectEqual(double value, double expectation, char *testName, char *errorMsgFmt, ...)
 {
-    if (value != expectation)
+    if (!acceptablyEqual(value, expectation))
     {
         char buf[1024], buf2[512];
         va_list localArgs;
