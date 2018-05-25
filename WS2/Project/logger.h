@@ -23,15 +23,25 @@ typedef enum DebugLevel
 } DebugLevel;
 
 void setLoggerStartTime();
-void setLoggerOutputFolder(const char * outputFolder);
+
+void setLoggerOutputFolder(const char *outputFolder);
+
 void setLoggerFileName(const char *outputFile);
+
 void setLoggerDebugLevel(DebugLevel debugLevel);
+
 DebugLevel getLoggerDebugLevel();
+
 void openLogFile();
+
 void logRawString(char *fmt, ...);
+
 void logEvent(DebugLevel eventDebugLevel, double t, char *fmt, ...);
-void logTestEvent(DebugLevel eventDebugLevel, char *fmt, ...);
+
+void logTestEvent(DebugLevel eventDebugLevel, char *testName, char *fmt, ...);
+
 void logMsg(char *fmt, ...);
+
 void closeLogFile();
 
 #endif //SIM_LOGGER_H

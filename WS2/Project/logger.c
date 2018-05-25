@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <memory.h>
+#include <sys/stat.h>
 
 /*
  * Logging machinery - how to:
@@ -38,6 +39,11 @@ void setLoggerStartTime()
 void setLoggerOutputFolder(const char *outputFolder)
 {
     strcpy(LOG_FILE_FOLDER, outputFolder);
+    // Create folder if not on filesystem
+    struct stat st = {0};
+    if (stat(outputFolder, &st) == -1) {
+        mkdir(outputFolder, 0700);
+    }
     sprintf(LOG_FILE_FULL_PATH, "%s/%s", LOG_FILE_FOLDER, LOG_FILE_NAME);
 }
 
@@ -108,7 +114,7 @@ void logEvent(DebugLevel eventDebugLevel, double t, char *fmt, ...)
     va_end(args);
 }
 
-void logTestEvent(DebugLevel eventDebugLevel, char *fmt, ...)
+void logTestEvent(DebugLevel eventDebugLevel, char *testName, char *fmt, ...)
 {
     // Newline at the end of the message is included.
     // If this trace is too low level for current debug level, skip it.
@@ -118,12 +124,12 @@ void logTestEvent(DebugLevel eventDebugLevel, char *fmt, ...)
     double timestamp = getTimeSpentSeconds(LOGGER_START_TIME, getCurrentTimeMillis());
     va_list args;
     va_start(args,fmt);
-    printf("[%06.3f] %s: ", timestamp, DEBUG_STR[eventDebugLevel]);
+    printf("[%06.3f] %s: [%s] ", timestamp, DEBUG_STR[eventDebugLevel], testName);
     vprintf(fmt, args);
     printf("\n");
     va_end(args);
     va_start(args,fmt);
-    fprintf(LOG_FILE, "[%06.3f] %s: ", timestamp, DEBUG_STR[eventDebugLevel]);
+    fprintf(LOG_FILE, "[%06.3f] %s: [%s] ", timestamp, DEBUG_STR[eventDebugLevel], testName);
     vfprintf(LOG_FILE, fmt, args);
     fprintf(LOG_FILE, "\n");
     va_end(args);

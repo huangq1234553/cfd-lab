@@ -7,7 +7,6 @@
 void setupGlobal(int *argc, char ***argv, int *mpiRank, int *mpiNumProc)
 {
     // Setup MPI
-    MPI_Status status;
     MPI_Init(argc, argv);
     MPI_Comm_size(MPI_COMM_WORLD, mpiNumProc);
     MPI_Comm_rank(MPI_COMM_WORLD, mpiRank);
@@ -15,7 +14,8 @@ void setupGlobal(int *argc, char ***argv, int *mpiRank, int *mpiNumProc)
     setLoggerDebugLevel(INFO);
     char fnamebuf[128];
     sprintf(fnamebuf, "tests.%d.log", *mpiRank);
-    setLoggerFileName(fnamebuf); // It will log in current working directory
+    setLoggerOutputFolder("Out");
+    setLoggerFileName(fnamebuf);
     setLoggerStartTime();
     openLogFile();
 }
