@@ -38,7 +38,7 @@ void logRawString(char *fmt, ...);
 
 void logEvent(DebugLevel eventDebugLevel, double t, char *fmt, ...);
 
-void logTestEvent(DebugLevel eventDebugLevel, char *testName, char *fmt, ...);
+void logTestEvent(DebugLevel eventDebugLevel, const char *testName, char *fmt, ...);
 
 void logMsg(char *fmt, ...);
 

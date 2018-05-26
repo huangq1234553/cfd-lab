@@ -1,6 +1,5 @@
 #include "parallel.h"
 
-
 void Program_Message(char *txt)
 /* produces a stderr text output  */
 
@@ -402,9 +401,31 @@ void init_parallel(
     {
         printf("This geometry is not allowed, please choose a suitable number of processes or change grid size");
     }
+    
+    getProcessCoordinates(iproc, myrank, omg_i, omg_j);
+    getProcessNeighbours(iproc, jproc, omg_i, omg_j, rank_l, rank_r, rank_b, rank_t);
+    
+    // Assume that imax%iproc == 0 && jmax%jproc == 0
+    imax_local = imax / iproc;
+    jmax_local = jmax / jproc;
+    
+    (*il) = imax_local * (*omg_i);
+    (*ir) = imax_local * (*omg_i + 1) - 1;
+    (*jb) = jmax_local * (*omg_j);
+    (*jt) = jmax_local * (*omg_j + 1) - 1;
+    
+}
+
+void getProcessCoordinates(int iproc, int myrank, int *omg_i, int *omg_j)
+{
     *omg_i = myrank % iproc;
     *omg_j = myrank / iproc;
-    
+}
+
+void getProcessNeighbours(int iproc, int jproc, const int *omg_i, const int *omg_j, int *rank_l, int *rank_r,
+                          int *rank_b,
+                          int *rank_t)
+{
     // Here we try to determine the ranks of our neighbours (l/r/b/t)
     if ((*omg_i != 0))
     {
@@ -443,14 +464,4 @@ void init_parallel(
     {
         (*rank_t) = MPI_PROC_NULL;
     }
-    
-    // Assume that imax%iproc == 0 && jmax%jproc == 0
-    imax_local = imax / iproc;
-    jmax_local = jmax / jproc;
-    
-    (*il) = imax_local * (*omg_i);
-    (*ir) = imax_local * (*omg_i + 1) - 1;
-    (*jb) = jmax_local * (*omg_j);
-    (*jt) = jmax_local * (*omg_j + 1) - 1;
-    
 }

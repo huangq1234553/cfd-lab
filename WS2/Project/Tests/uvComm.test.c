@@ -32,7 +32,6 @@ void setup(int mpiRank, int rank_l_, int rank_r_, int rank_b_, int rank_t_)
 
 void teardown()
 {
-    // TODO some teardown code, e.g. free heap vars
     free_matrix(U, 0, imax + 2, 0, jmax + 1);
     free_matrix(V, 0, imax + 1, 0, jmax + 2);
     free(bufSend);

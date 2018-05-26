@@ -51,3 +51,9 @@ void init_parallel (
   int *omg_i,
   int *omg_j,
   int num_proc);
+
+void getProcessCoordinates(int iproc, int myrank, int *omg_i, int *omg_j);
+
+void getProcessNeighbours(int iproc, int jproc, const int *omg_i, const int *omg_j, int *rank_l, int *rank_r,
+                          int *rank_b,
+                          int *rank_t);

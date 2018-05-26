@@ -10,7 +10,7 @@ bool acceptablyEqual(double a, double b)
     return (fabs(a-b) < eps);
 }
 
-void assertEqual(double value, double expectation, char *testName)
+void assertEqual(double value, double expectation, const char *testName)
 {
     if (!acceptablyEqual(value, expectation))
     {
@@ -19,7 +19,7 @@ void assertEqual(double value, double expectation, char *testName)
     }
 }
 
-int expectEqual(double value, double expectation, char *testName, char *errorMsgFmt, ...)
+int expectEqual(double value, double expectation, const char *testName, char *errorMsgFmt, ...)
 {
     if (!acceptablyEqual(value, expectation))
     {

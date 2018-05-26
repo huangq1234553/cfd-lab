@@ -114,7 +114,7 @@ void logEvent(DebugLevel eventDebugLevel, double t, char *fmt, ...)
     va_end(args);
 }
 
-void logTestEvent(DebugLevel eventDebugLevel, char *testName, char *fmt, ...)
+void logTestEvent(DebugLevel eventDebugLevel, const char *testName, char *fmt, ...)
 {
     // Newline at the end of the message is included.
     // If this trace is too low level for current debug level, skip it.
