@@ -4,6 +4,7 @@
 #include "uvComm.test.h"
 #include "getProcessCoordinates.test.h"
 #include "getProcessNeighbours.test.h"
+#include "pressureComm.test.h"
 
 /// Setup and teardown functions
 void setupGlobal(int *argc, char ***argv, int *mpiRank, int *mpiNumProc)
@@ -43,6 +44,7 @@ int main(int argc, char **argv)
     int failures = getProcessCoordinatesTest(mpiRank, mpiNumProc);
     failures += getProcessNeighboursTest(mpiRank, mpiNumProc);
     failures += uvCommTest(mpiRank, mpiNumProc);
+    failures += pressureCommTest(mpiRank, mpiNumProc);
 
 //  Now gather the sum of all failed tests
     int globalFailures = 0;

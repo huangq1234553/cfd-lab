@@ -15,10 +15,13 @@ OBJ = 	helper.o\
 SIM_OBJ = main.o
 TEST_OBJ = 	 Tests/tests.o\
 			 Tests/testing.o\
-			 Tests/uvComm.test.o\
 			 Tests/getProcessCoordinates.test.o\
-			 Tests/getProcessNeighbours.test.o
+			 Tests/getProcessNeighbours.test.o\
+			 Tests/uvComm.test.o\
+			 Tests/pressureComm.test.o
 ALL_OBJ = $(OBJ) $(SIM_OBJ) $(TEST_OBJ)
+
+TEST_OUT_DIR = Tests/Out
 
 .PHONY: sim tests clean-core clean-sim clean-tests
 
@@ -29,6 +32,9 @@ sim:  $(OBJ) $(SIM_OBJ)
 
 tests: $(OBJ) $(TEST_OBJ)
 	$(CC) $(CFLAGS) -o Tests/tests $(OBJ) $(TEST_OBJ) -lm
+
+runsim:
+	mkdir -p Viz && mpirun -np 4 ./sim Viz/problem
 
 runtests:
 	$(MAKE) -C Tests/ all
@@ -44,6 +50,10 @@ clean-sim:
 
 clean-tests:
 	rm $(TEST_OBJ)
+
+clean-tests-output:
+	rm $(TEST_OUT_DIR)/*
+	rmdir $(TEST_OUT_DIR)
 
 clean: clean-core clean-sim clean-tests
 
