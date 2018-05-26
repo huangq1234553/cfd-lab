@@ -115,7 +115,7 @@ int main(int argc, char **argv)
     
     init_uvp(UI, VI, PI, imax_local, jmax_local, U, V, P);
 
-// Todo: This shouldn't be necessary and can probably be removed now
+    // Todo: This shouldn't be necessary and can probably be removed now
     // Perform one dt calculation prior to parallelized dt calculation in while loop.
     if (tau > 0)
     {
@@ -167,8 +167,7 @@ int main(int argc, char **argv)
         {
             
             sor(omg, dx, dy, imax_local + 1, jmax_local + 1, P, RS, &res);
-            pressure_comm(P, il, ir, jb, jt, rank_l, rank_r, rank_b, rank_t, bufSend, bufRecv, &status, imax_local + 1,
-                          jmax_local + 1);
+            pressure_comm(P, rank_l, rank_r, rank_b, rank_t, bufSend, bufRecv, &status, imax_local + 1, jmax_local + 1);
             if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc - 1)
             {
                 boundaryvalues_P(omg_i, omg_j, iproc, jproc,  imax_local + 1, jmax_local + 1, P);

@@ -45,21 +45,8 @@ void Programm_Stop(char *txt)
 }
 
 
-void pressure_comm(
-        double **P,
-        int il,
-        int ir,
-        int jb,
-        int jt,
-        int rank_l,
-        int rank_r,
-        int rank_b,
-        int rank_t,
-        double *bufSend,
-        double *bufRecv,
-        MPI_Status *status,
-        int imax,
-        int jmax)
+void pressure_comm(double **P, int rank_l, int rank_r, int rank_b, int rank_t, double *bufSend, double *bufRecv,
+                   MPI_Status *status, int imax, int jmax)
 {
     
     // Send right || Receive left

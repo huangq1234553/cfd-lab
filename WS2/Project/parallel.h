@@ -15,21 +15,8 @@ void Programm_Sync(char *txt);
 void Programm_Stop(char *txt);
 /* all processes will produce a text output, be synchronized and finished */
 
-void pressure_comm(
-   double **P,
-   int il,
-   int ir,
-   int jb,
-   int jt,
-   int rank_l,
-   int rank_r,
-   int rank_b,
-   int rank_t,
-   double *bufSend,
-   double *bufRecv,
-   MPI_Status *status,
-   int imax_local,
-   int jmax_local);
+void pressure_comm(double **P, int rank_l, int rank_r, int rank_b, int rank_t, double *bufSend, double *bufRecv,
+                   MPI_Status *status, int imax_local, int jmax_local);
 
 void uv_comm( double**U,double**V, int rank_l,int rank_r,int rank_b,int rank_t,
               double *bufSend,double *bufRecv, MPI_Status *status, int imax, int jmax);
