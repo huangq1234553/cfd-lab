@@ -10,7 +10,7 @@ static char *TEST_NAME = "uvComm.test";
 
 static double **U, **V, *bufSend, *bufRecv;
 static int rank_l, rank_r, rank_b, rank_t;
-static int imax = 2, jmax = 2;
+static int imax = 10, jmax = 10;
 static MPI_Status *status;
 
 // Here we need to declare as static to make the function local in scope
@@ -43,7 +43,8 @@ int uvCommTest(int mpiRank, int mpiNumProc)
 {
     // Now assume we are in a 2x2 grid, so let's check we have enough MPI processes
     assert(mpiNumProc >= 4);
-//    assertEqual(mpiNumProc,4);
+    // Barrier to make sure all processes are in sync here
+    MPI_Barrier(MPI_COMM_WORLD);
     // Now setup neighbors
     switch (mpiRank)
     {
@@ -60,6 +61,7 @@ int uvCommTest(int mpiRank, int mpiNumProc)
             setup(mpiRank, 2, MPI_PROC_NULL, 1, MPI_PROC_NULL);
             break;
         default:
+            MPI_Barrier(MPI_COMM_WORLD); // Sync at exit
             return 0; // In case of extra processors, they don't have anything to do
     }
     // Perform communication
@@ -84,9 +86,9 @@ int uvCommTest(int mpiRank, int mpiNumProc)
         {
             logTestEvent(DEBUG, TEST_NAME, "[R%d] Checking right ghost layer at %d", mpiRank, i);
             failedTests += expectEqual(U[imax + 3][i], rank_r, TEST_NAME,
-                                       "[R%d] Right ghost layer check failed: U[imax+3][%d] = ", mpiRank, i, U);
+                                       "[R%d] Right ghost layer check failed: U[imax+3][%d] = ", mpiRank, i);
             failedTests += expectEqual(V[imax + 2][i], rank_r, TEST_NAME,
-                                       "[R%d] Right ghost layer check failed: V[imax+2][%d] = ", mpiRank, i, V);
+                                       "[R%d] Right ghost layer check failed: V[imax+2][%d] = ", mpiRank, i);
         }
     }
     
@@ -106,9 +108,9 @@ int uvCommTest(int mpiRank, int mpiNumProc)
         for (int i = 1; i <= imax; ++i)
         {
             failedTests += expectEqual(U[i][jmax + 2], rank_t, TEST_NAME,
-                                       "[R%d] Top ghost layer check failed: U[%d][jmax+2] = ", mpiRank, i, U);
+                                       "[R%d] Top ghost layer check failed: U[%d][jmax+2] = ", mpiRank, i);
             failedTests += expectEqual(V[i][jmax + 3], rank_t, TEST_NAME,
-                                       "[R%d] Top ghost layer check failed: V[%d][jmax+3] = ", mpiRank, i, V);
+                                       "[R%d] Top ghost layer check failed: V[%d][jmax+3] = ", mpiRank, i);
         }
     }
     //
@@ -123,6 +125,9 @@ int uvCommTest(int mpiRank, int mpiNumProc)
     }
     // Teardown
     teardown();
+    
+    // Barrier to make sure all processes are in sync here
+    MPI_Barrier(MPI_COMM_WORLD);
     
     return failedTests;
 }
