@@ -11,7 +11,7 @@ static char *TEST_NAME = "getProcessCoordinates.test";
 static int processesPerRow, processesPerColumn;
 static int omegaIExpected, omegaJExpected; // The coordinates
 
-void setup(int processesPerRow_, int processesPerColumn_, int omegaI_, int omegaJ_)
+static void setup(int processesPerRow_, int processesPerColumn_, int omegaI_, int omegaJ_)
 {
     processesPerRow = processesPerRow_;
     processesPerColumn = processesPerColumn_;
@@ -19,7 +19,7 @@ void setup(int processesPerRow_, int processesPerColumn_, int omegaI_, int omega
     omegaJExpected = omegaJ_;
 }
 
-void teardown()
+static void teardown()
 {
 }
 
@@ -47,7 +47,7 @@ int getProcessCoordinatesTest(int mpiRank, int mpiNumProc)
     }
     int omegaI, omegaJ;
     // Perform coordinates computation
-    getProcessCoordinates(2, mpiRank, &omegaI, &omegaJ);
+    getProcessCoordinates(processesPerRow, mpiRank, &omegaI, &omegaJ);
     
     // Now check values
     int failedTests = 0;

@@ -16,7 +16,8 @@ SIM_OBJ = main.o
 TEST_OBJ = 	 Tests/tests.o\
 			 Tests/testing.o\
 			 Tests/uvComm.test.o\
-			 Tests/getProcessCoordinates.test.o
+			 Tests/getProcessCoordinates.test.o\
+			 Tests/getProcessNeighbours.test.o
 ALL_OBJ = $(OBJ) $(SIM_OBJ) $(TEST_OBJ)
 
 .PHONY: sim tests clean-core clean-sim clean-tests
