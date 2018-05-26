@@ -159,18 +159,6 @@ int main(int argc, char **argv)
 // 		// momentum equations M1 and M2 are plugged into continuity equation C to produce PPE - depends on F and G - RS is the rhs of the implicit pressure update scheme
         calculate_rs(dt, dx, dy, imax_local, jmax_local, F, G, RS);
 
-        if(my_rank == 0){
-
-	        for(int j = jmax_local; j >= 0 ; --j){
-	        	for(int i = 0; i < imax_local+1 ; ++i)
-	        	{
-	        		printf("%f ", RS[i][j]);
-	        	}
-	        	printf("\n");
-	    	}
-
-	    }
-	    MPI_Barrier(MPI_COMM_WORLD);
 // 		// solve the system of eqs arising from implicit pressure uptate scheme using succesive overrelaxation solver
         it = 0;
         res = 1e9;
@@ -187,6 +175,9 @@ int main(int argc, char **argv)
             }
             it++;
             MPI_Allreduce(&res, &res_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+            res_global = res_global/(imax*jmax);
+            res_global = sqrt(res_global);
         }
         if (it == itermax && my_rank == 0)
         {
@@ -245,12 +236,14 @@ int main(int argc, char **argv)
     
     // Check value of U[imax/2][7*jmax/8] (task6)
     // logMsg("Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
-    free_matrix(P, 0, imax_local + 1, 0, jmax_local + 1);
-    free_matrix(U, 0, imax_local + 2, 0, jmax_local + 1);
-    free_matrix(V, 0, imax_local + 1, 0, jmax_local + 2);
-    free_matrix(F, 0, imax_local + 2, 0, jmax_local + 1);
-    free_matrix(G, 0, imax_local + 1, 0, jmax_local + 2);
-    free_matrix(RS, 1, imax_local, 1, jmax_local);
+    free_matrix(P, 0, imax_local + 2, 0, jmax_local + 2);
+    free_matrix(U, 0, imax_local + 3, 0, jmax_local + 2);
+    free_matrix(V, 0, imax_local + 2, 0, jmax_local + 3);
+    free_matrix(F, 0, imax_local + 3, 0, jmax_local + 2);
+    free_matrix(G, 0, imax_local + 2, 0, jmax_local + 3);	
+
+
+    free_matrix(RS, 0, imax_local, 0, jmax_local);
     free(bufSend);
     free(bufRecv);
     

@@ -220,7 +220,7 @@ void calculate_rs(
 void calculate_dt(double Re, double tau, double *dt, double dx, double dy, double uMax, double vMax)
 {
     double minimum = fmin((Re / 2 / (1 / pow(dx, 2) + 1 / pow(dy, 2))), fmin(dx / uMax, dy / vMax));
-    *dt = tau * minimum / 20;
+    *dt = tau * minimum ;
 }
 
 /**
