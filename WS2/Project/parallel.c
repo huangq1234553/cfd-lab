@@ -74,13 +74,13 @@ void pressure_comm(
     MPI_Sendrecv(
             bufSend,                                      // send buffer
             jmax,                           // number of records
-            MPI_FLOAT,                                   // datatype
+            MPI_DOUBLE,                                   // datatype
             // destination process
             rank_r,
             1,                                           // message tag
             bufRecv,                                  // receive buffer
             jmax,                               // number of records
-            MPI_FLOAT,                                   // datatype
+            MPI_DOUBLE,                                   // datatype
             // source process
             rank_l,
             1,                                           // message tag
@@ -111,12 +111,12 @@ void pressure_comm(
     MPI_Sendrecv(
             bufSend,                                      // send buffer
             jmax,               // number of records
-            MPI_FLOAT,                                   // datatype
+            MPI_DOUBLE,                                   // datatype
             rank_l,                                         // destination process
             2,                                           // message tag
             bufRecv,                                  // receive buffer
             jmax,               // number of records
-            MPI_FLOAT,                                   // datatype
+            MPI_DOUBLE,                                   // datatype
             rank_r,                                 // source process
             2,                                           // message tag
             MPI_COMM_WORLD,                              // communicator
@@ -144,12 +144,12 @@ void pressure_comm(
     MPI_Sendrecv(
             bufSend,                                      // send buffer
             imax,               // number of records
-            MPI_FLOAT,                                   // datatype
+            MPI_DOUBLE,                                   // datatype
             rank_b,                                 // destination process
             3,                                           // message tag
             bufRecv,                                  // receive buffer
             imax,               // number of records
-            MPI_FLOAT,                                   // datatype
+            MPI_DOUBLE,                                   // datatype
             rank_t,                                     // source process
             3,                                           // message tag
             MPI_COMM_WORLD,                              // communicator
@@ -176,12 +176,12 @@ void pressure_comm(
     MPI_Sendrecv(
             bufSend,                                      // send buffer
             imax,               // number of records
-            MPI_FLOAT,                                   // datatype
+            MPI_DOUBLE,                                   // datatype
             rank_t,                                 // destination process
             4,                                           // message tag
             bufRecv,                                  // receive buffer
             imax,               // number of records
-            MPI_FLOAT,                                   // datatype
+            MPI_DOUBLE,                                   // datatype
             rank_b,                                      // source process
             4,                                           // message tag
             MPI_COMM_WORLD,                              // communicator
@@ -271,12 +271,12 @@ void uv_comm(double **U, double **V, int rank_l, int rank_r, int rank_b, int ran
     MPI_Sendrecv(
             bufSend,                                      // send buffer
             count,               // number of records
-            MPI_FLOAT,                                   // datatype
+            MPI_DOUBLE,                                   // datatype
             rank_l,                                         // destination process
             2,                                           // message tag
             bufRecv,                                  // receive buffer
             count,               // number of records
-            MPI_FLOAT,                                   // datatype
+            MPI_DOUBLE,                                   // datatype
             rank_r,                                 // source process
             2,                                           // message tag
             MPI_COMM_WORLD,                              // communicator
@@ -316,12 +316,12 @@ void uv_comm(double **U, double **V, int rank_l, int rank_r, int rank_b, int ran
     MPI_Sendrecv(
             bufSend,                                      // send buffer
             count,               // number of records
-            MPI_FLOAT,                                   // datatype
+            MPI_DOUBLE,                                   // datatype
             rank_b,                                 // destination process
             3,                                           // message tag
             bufRecv,                                  // receive buffer
             count,               // number of records
-            MPI_FLOAT,                                   // datatype
+            MPI_DOUBLE,                                   // datatype
             rank_t,                                     // source process
             3,                                           // message tag
             MPI_COMM_WORLD,                              // communicator
@@ -361,12 +361,12 @@ void uv_comm(double **U, double **V, int rank_l, int rank_r, int rank_b, int ran
     MPI_Sendrecv(
             bufSend,                                      // send buffer
             count,               // number of records
-            MPI_FLOAT,                                   // datatype
+            MPI_DOUBLE,                                   // datatype
             rank_t,                                 // destination process
             4,                                           // message tag
             bufRecv,                                  // receive buffer
             count,               // number of records
-            MPI_FLOAT,                                   // datatype
+            MPI_DOUBLE,                                   // datatype
             rank_b,                                      // source process
             4,                                           // message tag
             MPI_COMM_WORLD,                              // communicator

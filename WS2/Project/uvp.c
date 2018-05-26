@@ -203,7 +203,7 @@ void calculate_rs(
     {
         for (int j = 1; j <= jmax + 1; j++)
         {
-            RS[i][j] = ((F[i + 1][j] - F[i][j]) / dx + (G[i][j + 1] - G[i][j]) / dy) / dt;
+            RS[i-1][j-1] = ((F[i + 1][j] - F[i][j]) / dx + (G[i][j + 1] - G[i][j]) / dy) / dt;
         }
     }
 }
@@ -220,7 +220,7 @@ void calculate_rs(
 void calculate_dt(double Re, double tau, double *dt, double dx, double dy, double uMax, double vMax)
 {
     double minimum = fmin((Re / 2 / (1 / pow(dx, 2) + 1 / pow(dy, 2))), fmin(dx / uMax, dy / vMax));
-    *dt = tau * minimum;
+    *dt = tau * minimum / 20;
 }
 
 /**

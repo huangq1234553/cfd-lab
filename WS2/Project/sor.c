@@ -19,7 +19,7 @@ void sor(
   for(i = 1; i <= imax; i++) {
     for(j = 1; j<=jmax; j++) {
       P[i][j] = (1.0-omg)*P[i][j]
-              + coeff*(( P[i+1][j]+P[i-1][j])/(dx*dx) + ( P[i][j+1]+P[i][j-1])/(dy*dy) - RS[i][j]);
+              + coeff*(( P[i+1][j]+P[i-1][j])/(dx*dx) + ( P[i][j+1]+P[i][j-1])/(dy*dy) - RS[i-1][j-1]);
     }
   }
 
@@ -27,8 +27,8 @@ void sor(
   rloc = 0;
   for(i = 1; i <= imax; i++) {
     for(j = 1; j <= jmax; j++) {
-      rloc += ( (P[i+1][j]-2.0*P[i][j]+P[i-1][j])/(dx*dx) + ( P[i][j+1]-2.0*P[i][j]+P[i][j-1])/(dy*dy) - RS[i][j])*
-              ( (P[i+1][j]-2.0*P[i][j]+P[i-1][j])/(dx*dx) + ( P[i][j+1]-2.0*P[i][j]+P[i][j-1])/(dy*dy) - RS[i][j]);
+      rloc += ( (P[i+1][j]-2.0*P[i][j]+P[i-1][j])/(dx*dx) + ( P[i][j+1]-2.0*P[i][j]+P[i][j-1])/(dy*dy) - RS[i-1][j-1])*
+              ( (P[i+1][j]-2.0*P[i][j]+P[i-1][j])/(dx*dx) + ( P[i][j+1]-2.0*P[i][j]+P[i][j-1])/(dy*dy) - RS[i-1][j-1]);
     }
   }
   rloc = rloc/(imax*jmax);

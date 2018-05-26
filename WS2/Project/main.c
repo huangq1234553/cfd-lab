@@ -109,7 +109,7 @@ int main(int argc, char **argv)
     double **V = matrix(0, imax_local + 2, 0, jmax_local + 3);
     double **F = matrix(0, imax_local + 3, 0, jmax_local + 2);
     double **G = matrix(0, imax_local + 2, 0, jmax_local + 3);
-    double **RS = matrix(1, imax_local + 1, 1, jmax_local + 1);
+    double **RS = matrix(0, imax_local, 0, jmax_local);
     double *bufSend = (double *) malloc((size_t) (3 * (imax_local + 3) * sizeof(double *)));
     double *bufRecv = (double *) malloc((size_t) (3 * (imax_local + 3) * sizeof(double *)));
     
@@ -146,6 +146,7 @@ int main(int argc, char **argv)
 //            write_vtkFile(problem, n, my_rank, xlength, ylength, il, jb, imax_local+1, jmax_local+1, dx, dy, U, V, P);
 //            n++;
 //        }
+
         
         // momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
         calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax_local, jmax_local, U, V, F, G);
@@ -158,6 +159,18 @@ int main(int argc, char **argv)
 // 		// momentum equations M1 and M2 are plugged into continuity equation C to produce PPE - depends on F and G - RS is the rhs of the implicit pressure update scheme
         calculate_rs(dt, dx, dy, imax_local, jmax_local, F, G, RS);
 
+        if(my_rank == 0){
+
+	        for(int j = jmax_local; j >= 0 ; --j){
+	        	for(int i = 0; i < imax_local+1 ; ++i)
+	        	{
+	        		printf("%f ", RS[i][j]);
+	        	}
+	        	printf("\n");
+	    	}
+
+	    }
+	    MPI_Barrier(MPI_COMM_WORLD);
 // 		// solve the system of eqs arising from implicit pressure uptate scheme using succesive overrelaxation solver
         it = 0;
         res = 1e9;

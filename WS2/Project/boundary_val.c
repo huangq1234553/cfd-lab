@@ -6,7 +6,7 @@ void boundaryvalues(int omg_i, int omg_j, int iproc, int jproc, int imax_local, 
 	{
 		// left ghost layer
 		// NOTE: U and V have different sizes, hence indexing shift
-		for (int j = 1; j < jmax_local + 2; j++) {
+		for (int j = 0; j < jmax_local + 3; j++) {
 			// left ghost layer - no-slip condition
 			U[1][j] = 0;
 			// left ghost layer - no-slip condition - no v component on right wall of the cell - we need to enforce the condition v = 0 at the boundary by interpolation
@@ -17,7 +17,7 @@ void boundaryvalues(int omg_i, int omg_j, int iproc, int jproc, int imax_local, 
 	{
 		// right ghost layer
 		// NOTE: U and V have different sizes, hence indexing shift
-		for (int j = 1; j < jmax_local + 2; j++) {
+		for (int j = 0; j < jmax_local + 3; j++) {
 			// right ghost layer - no-slip condition
 			U[imax_local + 3 - 1][j] = 0;
 			// right ghost layer - no-slip condition - no v component on right wall of the cell - we need to enforce the condition v = 0 at the boundary by interpolation
@@ -29,7 +29,7 @@ void boundaryvalues(int omg_i, int omg_j, int iproc, int jproc, int imax_local, 
 	{
 		// bottom ghost layer
 		// NOTE: U and V have different sizes, hence indexing shift
-		for (int i = 1; i < imax_local + 2; i++) {
+		for (int i = 0; i < imax_local + 3; i++) {
 			// lower boundary - no-slip condition
 			V[i][1] = 0;
 			// lower boundary - no-slip condition - no u component on the horizontal wall of the cell - we need to enforce the condition u = 0 at the boundary by interpolation
@@ -40,7 +40,7 @@ void boundaryvalues(int omg_i, int omg_j, int iproc, int jproc, int imax_local, 
 	{
 		// top ghost layer
 		// NOTE: U and V have different sizes, hence indexing shift
-		for (int i = 1; i < imax_local + 2; i++) {
+		for (int i = 0; i < imax_local + 3; i++) {
 			// upper boundary - moving wall condition - set v = 0
 			V[i][jmax_local + 3 - 1] = 0;
 			// upper boundary - moving wall condition - no u component on the horizontal wall of the cell - we need to enforce the condition u = 1 at the boundary by interpolation
