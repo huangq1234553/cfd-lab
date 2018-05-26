@@ -31,7 +31,7 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double dt, doub
                   double **U, double **V, double **F, double **G)
 {
     // calculate F in the domain
-    for (int i = 2; i <= imax + 2; i++)
+    for (int i = 1; i <= imax + 2; i++)
     {
         for (int j = 1; j <= jmax + 1; j++)
         {
@@ -54,7 +54,7 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double dt, doub
     // calculate G in the domain
     for (int i = 1; i <= imax + 1; i++)
     {
-        for (int j = 2; j <= jmax + 2; j++)
+        for (int j = 1; j <= jmax + 2; j++)
         {
             G[i][j] =
                     // velocity v
@@ -73,22 +73,22 @@ void calculate_fg(double Re, double GX, double GY, double alpha, double dt, doub
         }
     }
     
-    // set boundary conditions for F - see discrete momentum equations - apply Neumann BC - first derivative of pressure must be "zero" - dp/dx = 0
-    //TODO: why are we setting these values here? should we not only apply it at the global boundaries?
-            for (int j = 1; j <= jmax + 1; j++)
-    {
-        F[1][j] = U[1][j];
-        F[imax + 3][j] = U[imax + 3][j];
-    }
+    // // set boundary conditions for F - see discrete momentum equations - apply Neumann BC - first derivative of pressure must be "zero" - dp/dx = 0
+    // //TODO: why are we setting these values here? should we not only apply it at the global boundaries?
+    //         for (int j = 1; j <= jmax + 1; j++)
+    // {
+    //     F[1][j] = U[1][j];
+    //     F[imax + 3][j] = U[imax + 3][j];
+    // }
     
     
-    // set boundary conditions for G - see discrete momentum equations - apply Neumann BC - first derivative of pressure must be "zero" - dp/dy = 0
-    //TODO: why are we setting these values here? should we not only apply it at the global boundaries?
-            for (int i = 1; i <= imax + 1; i++)
-    {
-        G[i][1] = V[i][1];
-        G[i][jmax + 3] = V[i][jmax + 3];
-    }
+    // // set boundary conditions for G - see discrete momentum equations - apply Neumann BC - first derivative of pressure must be "zero" - dp/dy = 0
+    // //TODO: why are we setting these values here? should we not only apply it at the global boundaries?
+    //         for (int i = 1; i <= imax + 1; i++)
+    // {
+    //     G[i][1] = V[i][1];
+    //     G[i][jmax + 3] = V[i][jmax + 3];
+    // }
 }
 
 double secondDerivativeDx(double **A, int i, int j, double h)

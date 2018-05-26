@@ -87,6 +87,8 @@ void pressure_comm(
             MPI_COMM_WORLD,                              // communicator
             status                                      // status of communication
     );
+
+
     
     // Fill leftmost column in P for bufRecv
     
@@ -97,7 +99,7 @@ void pressure_comm(
             P[0][j] = bufRecv[j - 1];
         }
     }
-    
+    MPI_Barrier(MPI_COMM_WORLD);
     // Send left || Receive right
     
     // Fill bufSend with second-leftmost column for sending
@@ -129,7 +131,7 @@ void pressure_comm(
             P[imax + 1][j] = bufRecv[j - 1];
         }
     }
-    
+    MPI_Barrier(MPI_COMM_WORLD);
     
     // Send bottom || Receive top
     
@@ -162,7 +164,7 @@ void pressure_comm(
             P[i][jmax + 1] = bufRecv[i - 1];
         }
     }
-    
+    MPI_Barrier(MPI_COMM_WORLD);
     // Send top || Receive bottom
     
     // Fill bufSend with second-topmost column for sending
@@ -205,7 +207,7 @@ void uv_comm(double **U, double **V, int rank_l, int rank_r, int rank_b, int ran
     // Send right || Receive left
     int count = 0;
     // Fill bufSend with third-rightmost column of U
-    for (int j = 1; j < jmax + 2; ++j)
+    for (int j = 1; j < jmax + 3; ++j)
     {
         bufSend[j - 1] = U[imax + 3 - 2][j];
         count++;
@@ -213,7 +215,7 @@ void uv_comm(double **U, double **V, int rank_l, int rank_r, int rank_b, int ran
     // Fill bufSend with second-rightmost column of V
     for (int j = 1; j < jmax + 3; ++j)
     {
-        bufSend[(j - 1) + (jmax + 1)] = V[imax + 2 - 1][j];
+        bufSend[(j - 1) + (jmax + 2)] = V[imax + 2 - 1][j];
         count++;
     }
     
@@ -238,17 +240,18 @@ void uv_comm(double **U, double **V, int rank_l, int rank_r, int rank_b, int ran
     if (rank_l != MPI_PROC_NULL)
     {
         // Fill first-leftmost column of U
-        for (int j = 1; j < jmax + 2; ++j)
+        for (int j = 1; j < jmax + 3; ++j)
         {
             U[0][j] = bufRecv[j - 1];
         }
         // Fill first-leftmost column of V
         for (int j = 1; j < jmax + 3; ++j)
         {
-            V[0][j] = bufRecv[(j - 1) + (jmax + 1)];
+            V[0][j] = bufRecv[(j - 1) + (jmax + 2)];
         }
     }
     
+    MPI_Barrier(MPI_COMM_WORLD);
     // Send left || Receive right
     
     count = 0;
@@ -293,7 +296,7 @@ void uv_comm(double **U, double **V, int rank_l, int rank_r, int rank_b, int ran
             V[imax + 2][j] = bufRecv[(j - 1) + (jmax + 1)];
         }
     }
-    
+    MPI_Barrier(MPI_COMM_WORLD);
     // Send bottom || Receive top
     
     count = 0;
@@ -338,7 +341,7 @@ void uv_comm(double **U, double **V, int rank_l, int rank_r, int rank_b, int ran
             V[i][imax + 3] = bufRecv[(i - 1) + (imax + 2)];
         }
     }
-    
+    MPI_Barrier(MPI_COMM_WORLD);
     // Send top || Receive bottom
     
     count = 0;
@@ -349,7 +352,7 @@ void uv_comm(double **U, double **V, int rank_l, int rank_r, int rank_b, int ran
         count++;
     }
     // Fill bufSend with third-topmost row of V
-    for (int i = 1; i < imax + 2; ++i)
+    for (int i = 1; i < imax + 3; ++i)
     {
         bufSend[(i - 1) + (imax + 2)] = V[i][jmax + 3 - 2];
         count++;
@@ -378,7 +381,7 @@ void uv_comm(double **U, double **V, int rank_l, int rank_r, int rank_b, int ran
             U[i][0] = bufRecv[i - 1];
         }
         // Fill first-bottommost row of V
-        for (int i = 1; i < imax + 2; ++i)
+        for (int i = 1; i < imax + 3; ++i)
         {
             V[i][0] = bufRecv[(i - 1) + (imax + 2)];
         }

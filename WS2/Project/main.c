@@ -138,7 +138,7 @@ int main(int argc, char **argv)
         // here we only need to set boundary values if local boundaries coincide with global boundaries
         if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc - 1)
         {
-            boundaryvalues(omg_i, omg_j, imax_local, jmax_local, U, V);
+            boundaryvalues(omg_i, omg_j, iproc, jproc, imax_local, jmax_local, U, V);
         }
         
 //        if (t == 0)
@@ -152,7 +152,7 @@ int main(int argc, char **argv)
         
         if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc - 1)
         {
-            boundaryvalues_FG(omg_i, omg_j, imax_local, jmax_local, F, G, U, V);
+            boundaryvalues_FG(omg_i, omg_j, iproc, jproc, imax_local, jmax_local, F, G, U, V);
         }
 
 // 		// momentum equations M1 and M2 are plugged into continuity equation C to produce PPE - depends on F and G - RS is the rhs of the implicit pressure update scheme
@@ -164,12 +164,13 @@ int main(int argc, char **argv)
         res_global = 1e9;
         while (it < itermax && res_global > eps)
         {
+            
+            sor(omg, dx, dy, imax_local + 1, jmax_local + 1, P, RS, &res);
             pressure_comm(P, il, ir, jb, jt, rank_l, rank_r, rank_b, rank_t, bufSend, bufRecv, &status, imax_local + 1,
                           jmax_local + 1);
-            sor(omg, dx, dy, imax_local + 1, jmax_local + 1, P, RS, &res);
             if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc - 1)
             {
-                boundaryvalues_P(omg_i, omg_j, imax_local + 1, jmax_local + 1, P);
+                boundaryvalues_P(omg_i, omg_j, iproc, jproc,  imax_local + 1, jmax_local + 1, P);
             }
             it++;
             MPI_Allreduce(&res, &res_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -185,10 +186,12 @@ int main(int argc, char **argv)
         uv_comm(U, V, rank_l, rank_r, rank_b, rank_t, bufSend, bufRecv, &status, imax_local, jmax_local);
         
         // write visualization file for current iteration (only every dt_value step)
-        if (t >= currentOutputTime && my_rank == 0)
+        if (t >= currentOutputTime)
         {
 //            logEvent(t, "INFO: Writing visualization file n=%d", n);
-            printf("INFO: Writing visualization file n=%d\n", n);
+            if(my_rank == 0){
+               printf("INFO: Writing visualization file n=%d\n", n);
+            }
             write_vtkFile(problem, n, my_rank, xlength, ylength, il, jb, imax_local+1, jmax_local+1, dx, dy, U, V, P);
             currentOutputTime += dt_value;
             // update output timestep iteration counter
