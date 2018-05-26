@@ -13,20 +13,38 @@ OBJ = 	helper.o\
         parallel.o
 
 SIM_OBJ = main.o
-TEST_OBJ = Tests/tests.o Tests/testing.o Tests/uvComm.test.o
+TEST_OBJ = 	 Tests/tests.o\
+			 Tests/testing.o\
+			 Tests/uvComm.test.o\
+			 Tests/getProcessCoordinates.test.o
 ALL_OBJ = $(OBJ) $(SIM_OBJ) $(TEST_OBJ)
 
-all:  $(OBJ) $(SIM_OBJ)
+.PHONY: sim tests clean-core clean-sim clean-tests
+
+all: sim tests
+
+sim:  $(OBJ) $(SIM_OBJ)
 	$(CC) $(CFLAGS) -o sim $(OBJ) $(SIM_OBJ) -lm
 
 tests: $(OBJ) $(TEST_OBJ)
 	$(CC) $(CFLAGS) -o Tests/tests $(OBJ) $(TEST_OBJ) -lm
 
+runtests:
+	$(MAKE) -C Tests/ all
+
 %.o : %.c
 	$(CC) -c $(CFLAGS) $*.c -o $*.o
 
-clean:
-	rm $(ALL_OBJ)
+clean-core:
+	rm $(OBJ)
+
+clean-sim:
+	rm $(SIM_OBJ)
+
+clean-tests:
+	rm $(TEST_OBJ)
+
+clean: clean-core clean-sim clean-tests
 
 helper.o      : helper.h logger.h
 init.o        : helper.h init.h logger.h

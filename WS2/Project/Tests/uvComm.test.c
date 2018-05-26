@@ -6,14 +6,15 @@
 #include "testing.h"
 #include "../logger.h"
 
-char *TEST_NAME = "uvComm.test";
+static char *TEST_NAME = "uvComm.test";
 
-double **U, **V, *bufSend, *bufRecv;
-int rank_l, rank_r, rank_b, rank_t;
-int imax = 2, jmax = 2;
-MPI_Status *status;
+static double **U, **V, *bufSend, *bufRecv;
+static int rank_l, rank_r, rank_b, rank_t;
+static int imax = 2, jmax = 2;
+static MPI_Status *status;
 
-void setup(int mpiRank, int rank_l_, int rank_r_, int rank_b_, int rank_t_)
+// Here we need to declare as static to make the function local in scope
+static void setup(int mpiRank, int rank_l_, int rank_r_, int rank_b_, int rank_t_)
 {
     logTestEvent(DEBUG, TEST_NAME, "Setup start...");
     U = matrix(0, imax + 3, 0, jmax + 2);
@@ -30,7 +31,7 @@ void setup(int mpiRank, int rank_l_, int rank_r_, int rank_b_, int rank_t_)
     logTestEvent(DEBUG, TEST_NAME, "Setup end!");
 }
 
-void teardown()
+static void teardown()
 {
     free_matrix(U, 0, imax + 2, 0, jmax + 1);
     free_matrix(V, 0, imax + 1, 0, jmax + 2);

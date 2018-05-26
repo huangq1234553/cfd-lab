@@ -6,13 +6,12 @@ include_directories(SYSTEM ${MPI_INCLUDE_PATH})
 
 set(CMAKE_C_STANDARD 99)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wall -pedantic -Werror")
+set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wall -pedantic -Werror -Wno-write-strings")
 
 # Set the normal target
-set(TEST_SOURCE_FILES uvComm.test.c testing.c)
+set(TEST_SOURCE_FILES testing.c uvComm.test.c getProcessCoordinates.test.c)
 add_executable(tests tests.c ${TEST_SOURCE_FILES})
 target_link_libraries(tests core ${MPI_C_LIBRARIES} m)
-
 
 # The below is to always get an updated copy of cavity100.dat inside the cmake-build-debug folder where the binary is.
 #add_custom_target(copy_aux_files COMMAND cp *.dat *.pgm ${sim_BINARY_DIR}/ WORKING_DIRECTORY ${sim_SOURCE_DIR})

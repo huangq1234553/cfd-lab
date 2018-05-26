@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "../logger.h"
 #include "uvComm.test.h"
+#include "getProcessCoordinates.test.h"
 
 /// Setup and teardown functions
 void setupGlobal(int *argc, char ***argv, int *mpiRank, int *mpiNumProc)
@@ -38,13 +39,14 @@ int main(int argc, char **argv)
     {
         logMsg("Starting tests! :)");
     }
-    int uvCommFailures = uvCommTest(mpiRank, mpiNumProc);
+    int failures = getProcessCoordinatesTest(mpiRank, mpiNumProc);
+    failures += uvCommTest(mpiRank, mpiNumProc);
 
 //  Now gather the sum of all failed tests
-    int globalUvCommFailures = 0;
-    MPI_Reduce(&uvCommFailures, &globalUvCommFailures, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+    int globalFailures = 0;
+    MPI_Reduce(&failures, &globalFailures, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     teardownGlobal();
-    return (globalUvCommFailures >= 0);
+    return (globalFailures > 0);
 }
 
 //eof
