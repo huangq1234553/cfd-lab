@@ -1,4 +1,6 @@
 #include "parallel.h"
+#include "logger.h"
+#include "helper.h"
 
 void Program_Message(char *txt)
 /* produces a stderr text output  */
@@ -380,7 +382,9 @@ void init_parallel(
     
     if (imax % iproc != 0 && jmax % jproc != 0)
     {
-        printf("This geometry is not allowed, please choose a suitable number of processes or change grid size");
+        if (myrank==0)
+            logMsg("This domain decomposition is not allowed, please choose a suitable number of processes or change grid size.");
+        THROW_ERROR("This domain decomposition is not allowed, please choose a suitable number of processes or change grid size.");
     }
     
     getProcessCoordinates(iproc, myrank, omg_i, omg_j);

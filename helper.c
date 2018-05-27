@@ -83,7 +83,7 @@ void errhandler( int nLine, const char *szFile, const char *szString )
 	sprintf( szTmp, " %s  File: %s   Variable: %s  Line: %d", szMessage, szFileName, szVarName, nLine ); \
     else \
 	sprintf( szTmp, " %s  File: %s   Variable: %s ", szMessage, szFileName, szVarName); \
-    ERROR( szTmp ); \
+    THROW_ERROR( szTmp ); \
   }
     
 
@@ -165,9 +165,9 @@ void read_string( const char* szFileName, const char* szVarName, char*   pVariab
 {
     char* szValue = NULL;	/* string containg the read variable value */
 
-    if( szVarName  == 0 )  ERROR("null pointer given as variable name" );
-    if( szFileName == 0 )  ERROR("null pointer given as filename" );
-    if( pVariable  == 0 )  ERROR("null pointer given as variable" );
+    if( szVarName  == 0 )  THROW_ERROR("null pointer given as variable name" );
+    if( szFileName == 0 )  THROW_ERROR("null pointer given as filename" );
+    if( pVariable  == 0 )  THROW_ERROR("null pointer given as variable" );
 
     if( szVarName[0] == '*' )
 	szValue = find_string( szFileName, szVarName +1 );
@@ -191,9 +191,9 @@ void read_int( const char* szFileName, const char* szVarName, int* pVariable)
 {
     char* szValue = NULL;	/* string containing the read variable value */
 
-    if( szVarName  == 0 )  ERROR("null pointer given as varable name" );
-    if( szFileName == 0 )  ERROR("null pointer given as filename" );
-    if( pVariable  == 0 )  ERROR("null pointer given as variable" );
+    if( szVarName  == 0 )  THROW_ERROR("null pointer given as varable name" );
+    if( szFileName == 0 )  THROW_ERROR("null pointer given as filename" );
+    if( pVariable  == 0 )  THROW_ERROR("null pointer given as variable" );
 
     if( szVarName[0] == '*' )
 	szValue = find_string( szFileName, szVarName +1 );
@@ -217,9 +217,9 @@ void read_double( const char* szFileName, const char* szVarName, double* pVariab
 {
     char* szValue = NULL;	/* String mit dem eingelesenen Variablenwert */
 
-    if( szVarName  == 0 )  ERROR("null pointer given as varable name" );
-    if( szFileName == 0 )  ERROR("null pointer given as filename" );
-    if( pVariable  == 0 )  ERROR("null pointer given as variable" );
+    if( szVarName  == 0 )  THROW_ERROR("null pointer given as varable name" );
+    if( szFileName == 0 )  THROW_ERROR("null pointer given as filename" );
+    if( pVariable  == 0 )  THROW_ERROR("null pointer given as variable" );
 
     if( szVarName[0] == '*' )
 	szValue = find_string( szFileName, szVarName +1 );
@@ -269,7 +269,7 @@ void write_matrix( const char* szFileName,       /* filename */
        {
 	   char szBuff[80];
 	   sprintf( szBuff, "Outputfile %s cannot be created", szFileName );
-	   ERROR( szBuff );
+	   THROW_ERROR( szBuff );
        }
        
 /*       fprintf( fh,"%f\n%f\n%d\n%d\n%d\n%d\n", xlength, ylength, nrl, nrh, ncl, nch ); */
@@ -281,7 +281,7 @@ void write_matrix( const char* szFileName,       /* filename */
        {
 	   char szBuff[80];
 	   sprintf( szBuff, "Outputfile %s cannot be opened", szFileName );
-	   ERROR( szBuff );
+	   THROW_ERROR( szBuff );
        }
    } 
 
@@ -295,7 +295,7 @@ void write_matrix( const char* szFileName,       /* filename */
    {
        char szBuff[80];
        sprintf( szBuff, "Outputfile %s cannot be closed", szFileName );
-       ERROR( szBuff );
+       THROW_ERROR( szBuff );
    };
 
    free( tmp );
@@ -321,7 +321,7 @@ void read_matrix( const char* szFileName,       /* filename */
        {
 	   char szBuff[80];
 	   sprintf( szBuff, "Can not read file %s !!!", szFileName );
-	   ERROR( szBuff );
+	   THROW_ERROR( szBuff );
        }
 
 
@@ -337,7 +337,7 @@ void read_matrix( const char* szFileName,       /* filename */
        /*orig bug:
        sscanf( szBuff, "Inputfile %s cannot be closed", szFileName );*/
        sprintf( szBuff, "Inputfile %s cannot be closed", szFileName );
-       ERROR( szBuff );
+       THROW_ERROR( szBuff );
    };
 
    free( tmp );
@@ -358,8 +358,8 @@ double **matrix( int nrl, int nrh, int ncl, int nch )
    double **pArray  = (double **) malloc((size_t)( nrow * sizeof(double*)) );
    double  *pMatrix = (double *)  malloc((size_t)( nrow * ncol * sizeof( double )));
 
-   if( pArray  == 0)  ERROR("Storage cannot be allocated");
-   if( pMatrix == 0)  ERROR("Storage cannot be allocated");
+   if( pArray  == 0)  THROW_ERROR("Storage cannot be allocated");
+   if( pMatrix == 0)  THROW_ERROR("Storage cannot be allocated");
 
    /* first entry of the array points to the value corrected by the 
       beginning of the column */
@@ -407,8 +407,8 @@ int **imatrix( int nrl, int nrh, int ncl, int nch )
    int  *pMatrix = (int *)  malloc((size_t)( nrow * ncol * sizeof( int )));
 
 
-   if( pArray  == 0)  ERROR("Storage cannot be allocated");
-   if( pMatrix == 0)  ERROR("Storage cannot be allocated");
+   if( pArray  == 0)  THROW_ERROR("Storage cannot be allocated");
+   if( pMatrix == 0)  THROW_ERROR("Storage cannot be allocated");
 
    /* first entry of the array points to the value corrected by the 
       beginning of the column */
@@ -453,13 +453,13 @@ int **read_pgm(const char *filename) {
     if ((input = fopen(filename, "rb")) == 0) {
         char szBuff[80];
         sprintf(szBuff, "Can not read file %s !!!", filename);
-        ERROR(szBuff);
+        THROW_ERROR(szBuff);
     }
 
     /* check for the right "magic number" */
     if (fread(line, 1, 3, input) != 3) {
         fclose(input);
-        ERROR("Error Wrong Magic field!");
+        THROW_ERROR("Error Wrong Magic field!");
     }
 
     /* skip the comments */
@@ -487,7 +487,7 @@ int **read_pgm(const char *filename) {
 
             if (value == EOF) {
                 fclose(input);
-                ERROR("read of geometry file failed!");
+                THROW_ERROR("read of geometry file failed!");
             }
             pic[i][j] = value;
         }

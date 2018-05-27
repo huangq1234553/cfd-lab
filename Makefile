@@ -38,16 +38,16 @@ speedup: $(OBJ) $(SPEEDUP_OBJ)
 	$(CC) $(CFLAGS) -o speedup $(OBJ) $(SPEEDUP_OBJ) -lm
 
 runsim:
-	mkdir -p Viz && cp problem.dat Viz/ && mpirun -np 4 ./sim Viz/problem
+	mpirun -np 4 ./sim -q problem.dat --iproc 2 --jproc 2
 
 runspeedup:
 	mkdir -p Viz && cp problem.dat Viz/ && mpirun -np 4 ./speedup Viz/problem
 
 runsimseq:
-	mkdir -p Viz && cp problem_seq.dat Viz/ && mpirun -np 1 ./sim Viz/problem_seq
+	mpirun -np 1 ./sim -q problem.dat --iproc 1 --jproc 1
 
 runsimpar16:
-	mkdir -p Viz && cp problem_par16.dat Viz/ && mpirun -np 16 ./sim Viz/problem_par16
+	mpirun -np 16 ./sim -q problem.dat --iproc 4 --jproc 4
 
 runtests:
 	$(MAKE) -C Tests/ all
@@ -61,8 +61,8 @@ clean-core:
 clean-sim:
 	rm $(SIM_OBJ)
 
-clean-viz:
-	rm Viz/*.vtk
+clean-out:
+	rm Out/*.vtk
 
 clean-tests:
 	rm $(TEST_OBJ)

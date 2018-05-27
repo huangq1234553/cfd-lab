@@ -4,8 +4,9 @@
 #include "sor.h"
 #include "boundary_val.h"
 #include "uvp.h"
-// #include "logger.h"
 #include <mpi.h>
+#include <libgen.h>
+#include <sys/stat.h>
 #include "parallel.h"
 #include "logger.h"
 
@@ -46,13 +47,103 @@
 
 int main(int argc, char **argv)
 {
+    setLoggerStartTime();
     
-    // Handling the problem file name which is passed as 1st argument.
-    char szFileName[256]; // We assume name will not be longer than 256 chars...
-    strcpy(szFileName, argv[1]);
-    strcat(szFileName, ".dat");
-    //
+    char szFileName[256] = ""; // We assume name will not be longer than 256 chars...
     char problem[256];
+    char* inputFolder;
+    char dafaultInputFolder[2] = ".";
+    inputFolder = dafaultInputFolder;
+    char outputFolder[512] = ""; // Please don't use superlong paths here, 512 should be more than enough :P
+    int iprocForce = 0;
+    int jprocForce = 0;
+    
+    int REQUIRED_ARGS_NUM = 0;
+    int requiredArgCount = 0;
+    int i = 1; // Arg counter
+    while (i < argc)
+    {
+        if (strcmp(argv[i],"-o") == 0)
+        {
+            // Setting the output folder -- Here reading the following arg (so format is -o /path/to/folder )
+            strcpy(outputFolder, argv[i + 1]);
+            // Remove trailing slash if present
+            if (outputFolder[strlen(outputFolder) - 1] == '/')
+                outputFolder[strlen(outputFolder) - 1] = 0;
+            ++i; // Extra increment since we read 2 arguments here
+        }
+        else if (strcmp(argv[i],"-q") == 0)
+        {
+            // Set quiet mode: DebugLevel -> PRODUCTION
+            setLoggerDebugLevel(PRODUCTION);
+        }
+        else if (strcmp(argv[i],"--iproc") == 0)
+        {
+            iprocForce = atoi(argv[i+1]);
+            ++i; // Extra increment since we read 2 arguments here
+        }
+        else if (strcmp(argv[i],"--jproc") == 0)
+        {
+            jprocForce = atoi(argv[i+1]);
+            ++i; // Extra increment since we read 2 arguments here
+        }
+        //
+        // All the below is just error catching... (new options must be set above here!)
+        else if (argv[i][0] == '-')
+        {
+            char buf[128];
+            sprintf(buf, "Unrecognized option: %s", argv[i]);
+            THROW_ERROR(buf);
+        }
+        else if (strlen(szFileName)!=0)
+        {
+            char buf[128];
+            sprintf(buf, "Unrecognized argument: %s", argv[i]);
+            THROW_ERROR(buf);
+        }
+        else
+        {
+            strcpy(szFileName, argv[i]);
+            // Now if argument doesn't end with ".dat", append extension to it
+            size_t fnamelen = strlen(szFileName);
+            if (fnamelen > 4 && strcmp(szFileName+fnamelen-4,".dat") != 0)
+            {
+                strcat(szFileName, ".dat");
+            }
+            // Extract folder to be used as input folder
+            char buf[512];
+            char* tmp;
+            strcpy(buf, szFileName);
+            inputFolder = dirname(buf);
+            tmp = basename(buf);
+            strcpy(problem, tmp);
+            problem[strlen(problem)-4] = '\0';
+            ++requiredArgCount;
+        }
+        ++i;
+    }
+    //
+    if (requiredArgCount == REQUIRED_ARGS_NUM)
+    {
+        THROW_ERROR("\nNo arguments passed!\nUSAGE:\t./sim configuration.dat");
+    }
+    // In case no outputFolder is passed, default to inputFolder/Out...
+    if (strlen(outputFolder) == 0)
+    {
+        sprintf(outputFolder, "%s/Out", inputFolder);
+        // ...and create it if not on filesystem
+        struct stat st = {0};
+        if (stat(outputFolder, &st) == -1) {
+            mkdir(outputFolder, 0700);
+        }
+    }
+    // In case just one of --iproc and --jproc is passed, throw error
+    if (max(iprocForce,jprocForce)!=0 && min(iprocForce,jprocForce)<=0)
+    {
+        THROW_ERROR("Options --iproc and --jproc must both be set!");
+        return 1;
+    }
+    //
     char geometry[1024]; // bigger since this can be a full path
     double Re;                /* reynolds number   */
     double UI;                /* velocity x-direction */
@@ -86,7 +177,12 @@ int main(int argc, char **argv)
     read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax, &jmax,
                     &alpha, &omg,
                     &tau, &itermax, &eps, &dt_value, problem, geometry, &iproc, &jproc);
-    strcpy(problem, argv[1]); // Just because we are not currently reading it from config. TODO: fix this properly.
+    // Override iproc and jproc if something was passed from commandline
+    if (iprocForce>0)
+        iproc = iprocForce;
+    if (jprocForce>0)
+        jproc=jprocForce;
+    //
     
     MPI_Status status;
     int my_rank, num_proc;
@@ -97,11 +193,17 @@ int main(int argc, char **argv)
     int rank_l, rank_r, rank_b, rank_t;
     int omg_i, omg_j;
     
+    if (my_rank == 0) {
+        setLoggerOutputFolder(outputFolder);
+        openLogFile(); // Initialize the log file descriptor.
+    }
     // Now check if the declared processor grid (iproc x jproc) and the MPI num processes agree
     if (iproc*jproc != num_proc)
     {
-        // TODO: here log a message also in the log/stdout
-        ERROR("Mismatch between iproc*jproc and MPI number of processes.\n"
+        if (my_rank==0)
+            logMsg("Mismatch between iproc*jproc and MPI number of processes.\n"
+                     "Please review your configuration and command-line to make sure they agree!");
+        THROW_ERROR("Mismatch between iproc*jproc and MPI number of processes.\n"
               "Please review your configuration and command-line to make sure they agree!");
         return 1;
     }
@@ -110,12 +212,6 @@ int main(int argc, char **argv)
                   &omg_i, &omg_j, num_proc);
 
     int imax_local = ir - il, jmax_local = jt - jb;
-
-    if (my_rank == 0) {
-        setLoggerOutputFolder("Out");
-        setLoggerStartTime();
-        openLogFile(); // Initialize the log file descriptor.
-    }
     
     double **P = matrix(0, imax_local + 2, 0, jmax_local + 2);
     double **U = matrix(0, imax_local + 3, 0, jmax_local + 2);
@@ -127,27 +223,24 @@ int main(int argc, char **argv)
     double *bufRecv = (double *) malloc((size_t) (3 * (imax_local + 3) * sizeof(double *)));
     
     init_uvp(UI, VI, PI, imax_local, jmax_local, U, V, P);
-
-    // Todo: This shouldn't be necessary and can probably be removed now
+    
     // Perform one dt calculation prior to parallelized dt calculation in while loop.
     if (tau > 0)
     {
         dt = fmin(fmin((Re / 2 / (1 / pow(dx, 2) + 1 / pow(dy, 2))), fmin(dx / UI, dy / VI)), dt_value);
     }
-
-//    printf("[R%d] Right before writing the viz...\n", my_rank); //debug
+    
     if(my_rank == 0){
-        logEvent(INFO, t, "Writing visualization file n = %d", n);
-        //printf("INFO: Writing visualization file n=%d\n", n);
+        logEvent(PRODUCTION, t, "Writing visualization file n = %d", n);
     }
-    write_vtkFile(problem, n, my_rank, xlength, ylength, il, jb, imax_local+1, jmax_local+1, dx, dy, U, V, P);
+    write_vtkFile(outputFolder, problem, n, my_rank, xlength, ylength, il, jb, imax_local + 1, jmax_local + 1, dx, dy, U, V, P);
     n++;
-//    printf("[R%d] Right after writing the viz...\n", my_rank); //debug
+    
     // Max values for U and V, for dt calculation
     double uMax = UI;
     double vMax = VI;
-// 	// simulation interval 0 to t_end
-    double currentOutputTime = 0; // For chosing when to output
+    
+    double currentOutputTime = 0; // For choosing when to output
     while (t < t_end)
     {
         // ensure boundary conditions for velocity
@@ -189,14 +282,18 @@ int main(int argc, char **argv)
         }
         if (my_rank == 0)
         {
-            logEvent(INFO, t, (char*)"dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res_global);
             if (it == itermax)
             {
                 logEvent(WARNING, t, "Max number of iterations reached on SOR. Probably it did not converge!");
+                logEvent(WARNING, t, (char*)"dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res_global);
+            }
+            else
+            {
+                logEvent(INFO, t, (char*)"dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res_global);
             }
         }
 
-// 		// calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
+ 		// calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
         calculate_uv(dt, dx, dy, imax_local, jmax_local, omg_i, omg_j, iproc, jproc, U, V, F, G, P, &uMax,
                      &vMax); // Here we get the uMax and vMax
         uv_comm(U, V, rank_l, rank_r, rank_b, rank_t, bufSend, bufRecv, &status, imax_local, jmax_local);
@@ -204,22 +301,16 @@ int main(int argc, char **argv)
         // write visualization file for current iteration (only every dt_value step)
         if (t >= currentOutputTime)
         {
-//            logEvent(t, "INFO: Writing visualization file n=%d", n);
             if(my_rank == 0){
-                logEvent(INFO, t, "Writing visualization file n = %d", n);
-                //printf("INFO: Writing visualization file n=%d\n", n);
+                logEvent(PRODUCTION, t, "Writing visualization file n = %d", n);
             }
-            write_vtkFile(problem, n, my_rank, xlength, ylength, il, jb, imax_local+1, jmax_local+1, dx, dy, U, V, P);
+            write_vtkFile(outputFolder, problem, n, my_rank, xlength, ylength, il, jb, imax_local + 1, jmax_local + 1, dx, dy,
+                          U, V, P);
             currentOutputTime += dt_value;
             // update output timestep iteration counter
             n++;
         }
-        // Recap shell output
-        //        printf("[%12.9f] INFO: dt=%f, numSorIterations=%d, sorResidual=%f\n", t, dt, it, res);
-//        logEvent(t, "INFO: dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res);
 
-        // adaptive stepsize control based on stability conditions ensures stability of the method!
-        // dt = tau * min(cond1, cond2, cond3) where tau is a safety factor
         // NOTE: if tau<0, stepsize is not adaptively computed!
         if (tau > 0)
         {
@@ -241,15 +332,14 @@ int main(int argc, char **argv)
     
     // write visualisation file for the last iteration
     if (my_rank == 0) {
-        logEvent(INFO, t, (char*)"Writing visualization file n = %d", n);
+        logEvent(PRODUCTION, t, (char*)"Writing visualization file n = %d", n);
     }
-    write_vtkFile(problem, n, my_rank, xlength, ylength, il, jb, imax_local+1, jmax_local+1, dx, dy, U, V, P);
+    write_vtkFile(outputFolder, problem, n, my_rank, xlength, ylength, il, jb, imax_local + 1, jmax_local + 1, dx, dy, U, V, P);
 
     if (my_rank == 0) {
         // Check value of U[imax/2][7*jmax/8] (task6)
         //printf("Final value for U[imax/2][7*jmax/8] = %16e\n", U[imax / 2][7 * jmax / 8]);
         //logMsg("Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
-        printf("Min dt value used: %16e\n", mindt);
         logMsg("Min dt value used: %16e", mindt);
         closeLogFile(); // Properly close the log file
     }
@@ -268,7 +358,6 @@ int main(int argc, char **argv)
     free(bufRecv);
 
     MPI_Finalize();
-
     
     return 0;
 }

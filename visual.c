@@ -3,22 +3,22 @@
 #include <stdio.h>
 
 
-void write_vtkFile(const char *szProblem, int timeStepNumber, int mpiRank, double xlength, double ylength, int xStart,
-                   int yStart, int imax, int jmax, double dx, double dy, double **U, double **V, double **P)
+void write_vtkFile(const char *outputFolder, const char *szProblem, int timeStepNumber, int mpiRank, double xlength,
+                   double ylength, int xStart, int yStart, int imax, int jmax, double dx, double dy, double **U,
+                   double **V, double **P)
 {
-//printf("[DEBUG][R%d] Step into write_vtkFile(imax=%d,jmax=%d)\n", mpiRank,imax,jmax); //debug
     int i, j;
     char szFileName[80];
+    char szFileFullPath[512];
     FILE *fp = NULL;
-    sprintf(szFileName, "%s.R%i.%i.vtk", szProblem, mpiRank, timeStepNumber);
-//printf("[DEBUG][R%d] Right before opening file %s\n", mpiRank, szFileName); //debug
-    fp = fopen(szFileName, "w");
-//printf("[DEBUG][R%d] Right after opening file\n", mpiRank); //debug
+    sprintf(szFileName, "%s.R%d.%i.vtk", szProblem, mpiRank, timeStepNumber);
+    sprintf(szFileFullPath, "%s/%s", outputFolder, szFileName);
+    fp = fopen(szFileFullPath, "w");
     if (fp == NULL)
     {
         char szBuff[80];
-        sprintf(szBuff, "Failed to open %s", szFileName);
-        ERROR(szBuff);
+        sprintf(szBuff, "Failed to open %s", szFileFullPath);
+        THROW_ERROR(szBuff);
         return;
     }
     
@@ -33,7 +33,6 @@ void write_vtkFile(const char *szProblem, int timeStepNumber, int mpiRank, doubl
     {
         for (i = 0; i < imax + 1; i++)
         {
-//printf("[DEBUG][R%d] Viz[U,V](%d,%d)\n", mpiRank,i,j); //debug
             fprintf(fp, "%f %f 0\n", (U[i + 1][j] + U[i + 1][j + 1]) * 0.5, (V[i][j + 1] + V[i + 1][j + 1]) * 0.5);
         }
     }
@@ -46,7 +45,6 @@ void write_vtkFile(const char *szProblem, int timeStepNumber, int mpiRank, doubl
     {
         for (i = 1; i < imax + 1; i++)
         {
-//printf("[DEBUG][R%d] Viz[P](%d,%d)\n", mpiRank,i,j); //debug
             fprintf(fp, "%f\n", P[i][j]);
         }
     }
@@ -54,8 +52,8 @@ void write_vtkFile(const char *szProblem, int timeStepNumber, int mpiRank, doubl
     if (fclose(fp))
     {
         char szBuff[80];
-        sprintf(szBuff, "Failed to close %s", szFileName);
-        ERROR(szBuff);
+        sprintf(szBuff, "Failed to close %s", szFileFullPath);
+        THROW_ERROR(szBuff);
     }
 }
 
@@ -67,7 +65,7 @@ void write_vtkHeader(FILE *fp, int imax, int jmax,
     {
         char szBuff[80];
         sprintf(szBuff, "Null pointer in write_vtkHeader");
-        ERROR(szBuff);
+        THROW_ERROR(szBuff);
         return;
     }
     

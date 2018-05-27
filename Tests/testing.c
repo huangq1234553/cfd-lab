@@ -15,7 +15,7 @@ void assertEqual(double value, double expectation, const char *testName)
     if (!acceptablyEqual(value, expectation))
     {
         logTestEvent(ERROR, testName, "assertEqual: %f != %f", value, expectation);
-        ERROR("AssertionError");
+        THROW_ERROR("AssertionError");
     }
 }
 

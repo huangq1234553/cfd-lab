@@ -74,7 +74,7 @@ void openLogFile()
     {
         char buf[512];
         sprintf(buf, "Cannot open file %s", LOG_FILE_FULL_PATH);
-        ERROR(buf);
+        THROW_ERROR(buf);
     }
 }
 
@@ -103,14 +103,14 @@ void logEvent(DebugLevel eventDebugLevel, double t, char *fmt, ...)
     double timestamp = getTimeSpentSeconds(LOGGER_START_TIME, getCurrentTimeMillis());
     va_list args;
     va_start(args,fmt);
-    printf("RUN_t: [%06.3f] SIM_t: [%012.9f] %s: ", timestamp, t, DEBUG_STR[eventDebugLevel]);
+    printf("[%06.3f] [simulationTime=%012.9f] %s: ", timestamp, t, DEBUG_STR[eventDebugLevel]);
     //printf("RUNTIME: [%06.3f] %s: ", timestamp, DEBUG_STR[eventDebugLevel]);
     vprintf(fmt, args);
     //printf(" t = %012.9f", t);
     printf("\n");
     va_end(args);
     va_start(args,fmt);
-    fprintf(LOG_FILE, "RUN_t: [%06.3f] SIM_t: [%012.9f] %s: ", timestamp, t, DEBUG_STR[eventDebugLevel]);
+    fprintf(LOG_FILE, "[%06.3f] [simulationTime=%012.9f] %s: ", timestamp, t, DEBUG_STR[eventDebugLevel]);
     //fprintf(LOG_FILE, "RUNTIME: [%06.3f] %s: ", timestamp, DEBUG_STR[eventDebugLevel]);
     vfprintf(LOG_FILE, fmt, args);
     //fprintf(LOG_FILE, " t = %012.9f", t);

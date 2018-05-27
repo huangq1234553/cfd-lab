@@ -42,7 +42,7 @@ void updateMax(double *currentMax, double newValue);
  * Example:
  * ERROR("File not found !");
  */
-#define ERROR(s)    errhandler( __LINE__, __FILE__, s)
+#define THROW_ERROR(s)    errhandler( __LINE__, __FILE__, s)
 
 /**
  * Error handling:
@@ -520,7 +520,7 @@ int **read_pgm(const char *filename);
            if( fh )  \
               fprintf( fh, "%d:%d\n", nCount, n ); \
            else  \
-              ERROR("Fehler beim Dumpen");  \
+              THROW_ERROR("Fehler beim Dumpen");  \
            fclose(fh);  \
 	   ++nCount; \
         }
@@ -559,7 +559,7 @@ int **read_pgm(const char *filename);
            if( fh )  \
               fprintf( fh, "%d:%f\n", nCount, d ); \
            else  \
-              ERROR("Fehler beim Dumpen");  \
+              THROW_ERROR("Fehler beim Dumpen");  \
            fclose(fh);  \
 	   ++nCount; \
         }
@@ -598,7 +598,7 @@ int **read_pgm(const char *filename);
            if( fh )  \
               fprintf( fh, "%d:%s\n", nCount, s ); \
            else  \
-              ERROR("Fehler beim Dumpen");  \
+              THROW_ERROR("Fehler beim Dumpen");  \
            fclose(fh);  \
 	   ++nCount; \
         }
