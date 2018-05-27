@@ -85,7 +85,6 @@ void pressure_comm(double **P, int rank_l, int rank_r, int rank_b, int rank_t, d
             P[0][j] = bufRecv[j - 1];
         }
     }
-    MPI_Barrier(MPI_COMM_WORLD);
     // Send left || Receive right
     
     // Fill bufSend with second-leftmost column for sending
@@ -117,7 +116,6 @@ void pressure_comm(double **P, int rank_l, int rank_r, int rank_b, int rank_t, d
             P[imax + 1][j] = bufRecv[j - 1];
         }
     }
-    MPI_Barrier(MPI_COMM_WORLD);
     
     // Send bottom || Receive top
     
@@ -150,7 +148,6 @@ void pressure_comm(double **P, int rank_l, int rank_r, int rank_b, int rank_t, d
             P[i][jmax + 1] = bufRecv[i - 1];
         }
     }
-    MPI_Barrier(MPI_COMM_WORLD);
     // Send top || Receive bottom
     
     // Fill bufSend with second-topmost column for sending
@@ -237,7 +234,6 @@ void uv_comm(double **U, double **V, int rank_l, int rank_r, int rank_b, int ran
         }
     }
     
-    MPI_Barrier(MPI_COMM_WORLD);
     // Send left || Receive right
     
     count = 0;
@@ -282,7 +278,6 @@ void uv_comm(double **U, double **V, int rank_l, int rank_r, int rank_b, int ran
             V[imax + 2][j] = bufRecv[(j - 1) + (jmax + 1)];
         }
     }
-    MPI_Barrier(MPI_COMM_WORLD);
     // Send bottom || Receive top
     
     count = 0;
@@ -327,7 +322,6 @@ void uv_comm(double **U, double **V, int rank_l, int rank_r, int rank_b, int ran
             V[i][imax + 3] = bufRecv[(i - 1) + (imax + 2)];
         }
     }
-    MPI_Barrier(MPI_COMM_WORLD);
     // Send top || Receive bottom
     
     count = 0;

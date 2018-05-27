@@ -13,6 +13,7 @@ OBJ = 	helper.o\
         parallel.o
 
 SIM_OBJ = main.o
+SPEEDUP_OBJ = speedup.o
 TEST_OBJ = 	 Tests/tests.o\
 			 Tests/testing.o\
 			 Tests/getProcessCoordinates.test.o\
@@ -23,9 +24,9 @@ ALL_OBJ = $(OBJ) $(SIM_OBJ) $(TEST_OBJ)
 
 TEST_OUT_DIR = Tests/Out
 
-.PHONY: sim tests clean-core clean-sim clean-tests
+.PHONY: sim tests speedup clean-core clean-sim clean-tests clean-speedup
 
-all: sim tests
+all: sim tests unittest
 
 sim:  $(OBJ) $(SIM_OBJ)
 	$(CC) $(CFLAGS) -o sim $(OBJ) $(SIM_OBJ) -lm
@@ -33,8 +34,14 @@ sim:  $(OBJ) $(SIM_OBJ)
 tests: $(OBJ) $(TEST_OBJ)
 	$(CC) $(CFLAGS) -o Tests/tests $(OBJ) $(TEST_OBJ) -lm
 
+speedup: $(OBJ) $(SPEEDUP_OBJ)
+	$(CC) $(CFLAGS) -o speedup $(OBJ) $(SPEEDUP_OBJ) -lm
+
 runsim:
 	mkdir -p Viz && cp problem.dat Viz/ && mpirun -np 4 ./sim Viz/problem
+
+runspeedup:
+	mkdir -p Viz && cp problem.dat Viz/ && mpirun -np 4 ./speedup Viz/problem
 
 runsimseq:
 	mkdir -p Viz && cp problem_seq.dat Viz/ && mpirun -np 1 ./sim Viz/problem_seq
@@ -60,11 +67,14 @@ clean-viz:
 clean-tests:
 	rm $(TEST_OBJ)
 
+clean-speedup:
+	rm $(SPEEDUP_OBJ)
+
 clean-tests-output:
 	rm $(TEST_OUT_DIR)/*
 	rmdir $(TEST_OUT_DIR)
 
-clean: clean-core clean-sim clean-tests
+clean: clean-core clean-sim clean-tests clean-speedup
 
 helper.o      : helper.h logger.h
 init.o        : helper.h init.h logger.h
