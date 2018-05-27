@@ -47,11 +47,11 @@
 
 int main(int argc, char **argv)
 {
-    
     // Handling the problem file name which is passed as 1st argument.
     char szFileName[256]; // We assume name will not be longer than 256 chars...
     strcpy(szFileName, argv[1]);
     strcat(szFileName, ".dat");
+    char outputFolder[16] = "SpeedupTestOut";
     //
     char problem[256];
     char geometry[1024]; // bigger since this can be a full path
@@ -103,7 +103,7 @@ int main(int argc, char **argv)
     if (iproc*jproc != num_proc)
     {
         // TODO: here log a message also in the log/stdout
-        ERROR("Mismatch between iproc*jproc and MPI number of processes.\n"
+        THROW_ERROR("Mismatch between iproc*jproc and MPI number of processes.\n"
               "Please review your configuration and command-line to make sure they agree!");
         return 1;
     }
@@ -155,7 +155,7 @@ int main(int argc, char **argv)
             //printf("INFO: Writing visualization file n=%d\n", n);
         }
         // printf("[R%d] Right before writing the viz...\n", my_rank); //debug
-        write_vtkFile(problem_seq, n, my_rank, xlength, ylength, il, jb, imax_local + 1, jmax_local + 1, dx, dy, U, V, P);
+        write_vtkFile(outputFolder, problem_seq, n, my_rank, xlength, ylength, il, jb, imax_local + 1, jmax_local + 1, dx, dy, U, V, P);
         n++;
         // printf("[R%d] Right after writing the viz...\n", my_rank); //debug
         // Max values for U and V, for dt calculation
@@ -211,7 +211,7 @@ int main(int argc, char **argv)
                     logEvent(INFO, t, "Writing visualization file n = %d", n);
                     //printf("INFO: Writing visualization file n=%d\n", n);
                 }
-                write_vtkFile(problem_seq, n, my_rank, xlength, ylength, il, jb, imax_local+1, jmax_local+1, dx, dy, U, V, P);
+                write_vtkFile(outputFolder, problem_seq, n, my_rank, xlength, ylength, il, jb, imax_local+1, jmax_local+1, dx, dy, U, V, P);
                 currentOutputTime += dt_value;
                 // update output timestep iteration counter
                 n++;
@@ -239,7 +239,7 @@ int main(int argc, char **argv)
         }
         // write visualisation file for the last iteration
         // logEvent(t, (char*)"INFO: Writing visualization file n=%d", n);
-        write_vtkFile(problem_seq, n, my_rank, xlength, ylength, il, jb, imax_local + 1, jmax_local + 1, dx, dy, U, V,
+        write_vtkFile(outputFolder, problem_seq, n, my_rank, xlength, ylength, il, jb, imax_local + 1, jmax_local + 1, dx, dy, U, V,
                       P);
         if (my_rank == 0) {
             // Check value of U[imax/2][7*jmax/8] (task6)
@@ -300,7 +300,7 @@ int main(int argc, char **argv)
         //printf("INFO: Writing visualization file n=%d\n", n);
     }
 //    printf("[R%d] Right before writing the viz...\n", my_rank); //debug
-    write_vtkFile(problem, n, my_rank, xlength, ylength, il, jb, imax_local+1, jmax_local+1, dx, dy, U, V, P);
+    write_vtkFile(outputFolder, problem, n, my_rank, xlength, ylength, il, jb, imax_local+1, jmax_local+1, dx, dy, U, V, P);
     n++;
 //    printf("[R%d] Right after writing the viz...\n", my_rank); //debug
     // Max values for U and V, for dt calculation
@@ -367,7 +367,7 @@ int main(int argc, char **argv)
                 logEvent(INFO, t, "Writing visualization file n = %d", n);
                 //printf("INFO: Writing visualization file n=%d\n", n);
             }
-            write_vtkFile(problem, n, my_rank, xlength, ylength, il, jb, imax_local+1, jmax_local+1, dx, dy, U, V, P);
+            write_vtkFile(outputFolder, problem, n, my_rank, xlength, ylength, il, jb, imax_local+1, jmax_local+1, dx, dy, U, V, P);
             currentOutputTime += dt_value;
             // update output timestep iteration counter
             n++;
@@ -398,7 +398,7 @@ int main(int argc, char **argv)
     if (my_rank == 0) {
         logEvent(INFO, t, (char*)"Writing visualization file n = %d", n);
     }
-    write_vtkFile(problem, n, my_rank, xlength, ylength, il, jb, imax_local+1, jmax_local+1, dx, dy, U, V, P);
+    write_vtkFile(outputFolder, problem, n, my_rank, xlength, ylength, il, jb, imax_local+1, jmax_local+1, dx, dy, U, V, P);
 
     // Check value of U[imax/2][7*jmax/8] (task6)
     // logMsg("Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);

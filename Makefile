@@ -41,7 +41,7 @@ runsim:
 	mpirun -np 4 ./sim -q problem.dat --iproc 2 --jproc 2
 
 runspeedup:
-	mkdir -p Viz && cp problem.dat Viz/ && mpirun -np 4 ./speedup Viz/problem
+	mkdir -p SpeedupTestOut && mpirun -np 4 ./speedup problem
 
 runsimseq:
 	mpirun -np 1 ./sim -q problem.dat --iproc 1 --jproc 1
