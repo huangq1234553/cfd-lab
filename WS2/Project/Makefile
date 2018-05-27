@@ -39,6 +39,9 @@ runsim:
 runsimseq:
 	mkdir -p Viz && cp problem_seq.dat Viz/ && mpirun -np 1 ./sim Viz/problem_seq
 
+runsimpar16:
+	mkdir -p Viz && cp problem_par16.dat Viz/ && mpirun -np 16 ./sim Viz/problem_par16
+
 runtests:
 	$(MAKE) -C Tests/ all
 
