@@ -26,7 +26,7 @@ TEST_OUT_DIR = Tests/Out
 
 .PHONY: sim tests speedup clean-core clean-sim clean-tests clean-speedup
 
-all: sim tests unittest
+all: sim tests speedup
 
 sim:  $(OBJ) $(SIM_OBJ)
 	$(CC) $(CFLAGS) -o sim $(OBJ) $(SIM_OBJ) -lm
