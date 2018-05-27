@@ -99,6 +99,21 @@ int main(int argc, char **argv)
     int rank_l, rank_r, rank_b, rank_t;
     int omg_i, omg_j;
 
+        // Now check if the declared processor grid (iproc x jproc) and the MPI num processes agree
+    if (iproc*jproc != num_proc)
+    {
+        // TODO: here log a message also in the log/stdout
+        ERROR("Mismatch between iproc*jproc and MPI number of processes.\n"
+              "Please review your configuration and command-line to make sure they agree!");
+        return 1;
+    }
+    if (my_rank == 0) {
+        setLoggerOutputFolder("Out");
+        setLoggerFileName("speedup.log");
+        setLoggerStartTime();
+        openLogFile(); // Initialize the log file descriptor.
+    }
+
     int iproc_par = iproc;
     int jproc_par = jproc;
     double uMax = UI;
@@ -134,7 +149,11 @@ int main(int argc, char **argv)
         if (tau > 0) {
             dt = fmin(fmin((Re / 2 / (1 / pow(dx, 2) + 1 / pow(dy, 2))), fmin(dx / UI, dy / VI)), dt_value);
         }
-
+    //    printf("[R%d] Right before writing the viz...\n", my_rank); //debug
+        if(my_rank == 0){
+            logEvent(INFO, t, "Writing visualization file n = %d", n);
+            //printf("INFO: Writing visualization file n=%d\n", n);
+        }
         // printf("[R%d] Right before writing the viz...\n", my_rank); //debug
         write_vtkFile(problem_seq, n, my_rank, xlength, ylength, il, jb, imax_local + 1, jmax_local + 1, dx, dy, U, V, P);
         n++;
@@ -173,32 +192,32 @@ int main(int argc, char **argv)
                 res = res / (imax * jmax);
                 res = sqrt(res);
             }
-            if (it == itermax && my_rank == 0) {
-                printf("[%12.9f] WARNING: max number of iterations reached on SOR. Probably it did not converge!\n", t);
-                // logEvent(t, "WARNING: max number of iterations reached on SOR. Probably it did not converge!");
+            if (my_rank == 0)
+            {
+                logEvent(INFO, t, (char*)"dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res_global);
+                if (it == itermax)
+                {
+                    logEvent(WARNING, t, "Max number of iterations reached on SOR. Probably it did not converge!");
+                }
             }
             // calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
             calculate_uv(dt, dx, dy, imax_local, jmax_local, omg_i, omg_j, iproc, jproc, U, V, F, G, P, &uMax,
                          &vMax); // Here we get the uMax and vMax
             // write visualization file for current iteration (only every dt_value step)
-            if (t >= currentOutputTime) {
-                // logEvent(t, "INFO: Writing visualization file n=%d", n);
-                if (my_rank == 0) {
-                    printf("INFO: Writing visualization file n=%d\n", n);
+            if (t >= currentOutputTime)
+            {
+    //            logEvent(t, "INFO: Writing visualization file n=%d", n);
+                if(my_rank == 0){
+                    logEvent(INFO, t, "Writing visualization file n = %d", n);
+                    //printf("INFO: Writing visualization file n=%d\n", n);
                 }
-                write_vtkFile(problem_seq, n, my_rank, xlength, ylength, il, jb, imax_local + 1, jmax_local + 1, dx, dy,
-                              U,
-                              V, P);
+                write_vtkFile(problem_seq, n, my_rank, xlength, ylength, il, jb, imax_local+1, jmax_local+1, dx, dy, U, V, P);
                 currentOutputTime += dt_value;
                 // update output timestep iteration counter
                 n++;
             }
             // Recap shell output
-            //  printf("[%12.9f] INFO: dt=%f, numSorIterations=%d, sorResidual=%f\n", t, dt, it, res);
-            // logEvent(t, "INFO: dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res);
-            if (my_rank == 0 && it == itermax) {
-                printf("INFO: dt=%f, numSorIterations=%d, sorResidual=%f\n", dt, it, res);
-            }
+
 
             // adaptive stepsize control based on stability conditions ensures stability of the method!
             // dt = tau * min(cond1, cond2, cond3) where tau is a safety factor
@@ -214,27 +233,38 @@ int main(int argc, char **argv)
             // advance in time
             t += dt;
         }
-
-            // write visualisation file for the last iteration
-            // logEvent(t, (char*)"INFO: Writing visualization file n=%d", n);
-            write_vtkFile(problem_seq, n, my_rank, xlength, ylength, il, jb, imax_local + 1, jmax_local + 1, dx, dy, U, V,
-                          P);
-
+        // write visualisation file for the last iteration
+        if (my_rank == 0) {
+            logEvent(INFO, t, (char*)"Writing visualization file n = %d", n);
+        }
+        // write visualisation file for the last iteration
+        // logEvent(t, (char*)"INFO: Writing visualization file n=%d", n);
+        write_vtkFile(problem_seq, n, my_rank, xlength, ylength, il, jb, imax_local + 1, jmax_local + 1, dx, dy, U, V,
+                      P);
+        if (my_rank == 0) {
             // Check value of U[imax/2][7*jmax/8] (task6)
-            // logMsg("Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
-            free_matrix(P, 0, imax_local + 2, 0, jmax_local + 2);
-            free_matrix(U, 0, imax_local + 3, 0, jmax_local + 2);
-            free_matrix(V, 0, imax_local + 2, 0, jmax_local + 3);
-            free_matrix(F, 0, imax_local + 3, 0, jmax_local + 2);
-            free_matrix(G, 0, imax_local + 2, 0, jmax_local + 3);
+            //printf("Final value for U[imax/2][7*jmax/8] = %16e\n", U[imax / 2][7 * jmax / 8]);
+            //logMsg("Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
+            printf("Min dt value used: %16e\n", mindt);
+            logMsg("Min dt value used: %16e", mindt);
+        }
 
-            free_matrix(RS, 0, imax_local, 0, jmax_local);
-            free(bufSend);
-            free(bufRecv);
+        // Check value of U[imax/2][7*jmax/8] (task6)
+        // logMsg("Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
+        free_matrix(P, 0, imax_local + 2, 0, jmax_local + 2);
+        free_matrix(U, 0, imax_local + 3, 0, jmax_local + 2);
+        free_matrix(V, 0, imax_local + 2, 0, jmax_local + 3);
+        free_matrix(F, 0, imax_local + 3, 0, jmax_local + 2);
+        free_matrix(G, 0, imax_local + 2, 0, jmax_local + 3);
+
+        free_matrix(RS, 0, imax_local, 0, jmax_local);
+        free(bufSend);
+        free(bufRecv);
     }
     long endTimeSeq = getCurrentTimeMillis();
     MPI_Barrier(MPI_COMM_WORLD);
-    // printf("Executing Parallel: Rank %d\n", my_rank);
+    
+    printf("Executing Parallel: Rank %d\n", my_rank);
 
     iproc = iproc_par;
     jproc = jproc_par;
@@ -265,7 +295,10 @@ int main(int argc, char **argv)
     {
         dt = fmin(fmin((Re / 2 / (1 / pow(dx, 2) + 1 / pow(dy, 2))), fmin(dx / UI, dy / VI)), dt_value);
     }
-
+    if(my_rank == 0){
+        logEvent(INFO, t, "Writing visualization file n = %d", n);
+        //printf("INFO: Writing visualization file n=%d\n", n);
+    }
 //    printf("[R%d] Right before writing the viz...\n", my_rank); //debug
     write_vtkFile(problem, n, my_rank, xlength, ylength, il, jb, imax_local+1, jmax_local+1, dx, dy, U, V, P);
     n++;
@@ -313,10 +346,13 @@ int main(int argc, char **argv)
             res_global = res_global/(imax*jmax);
             res_global = sqrt(res_global);
         }
-        if (it == itermax && my_rank == 0)
+        if (my_rank == 0)
         {
-            printf("[%12.9f] WARNING: max number of iterations reached on SOR. Probably it did not converge!\n", t);
-//             logEvent(t, "WARNING: max number of iterations reached on SOR. Probably it did not converge!");
+            logEvent(INFO, t, (char*)"dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res_global);
+            if (it == itermax)
+            {
+                logEvent(WARNING, t, "Max number of iterations reached on SOR. Probably it did not converge!");
+            }
         }
 // 		// calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
         calculate_uv(dt, dx, dy, imax_local, jmax_local, omg_i, omg_j, iproc, jproc, U, V, F, G, P, &uMax,
@@ -328,21 +364,15 @@ int main(int argc, char **argv)
         {
 //            logEvent(t, "INFO: Writing visualization file n=%d", n);
             if(my_rank == 0){
-               printf("INFO: Writing visualization file n=%d\n", n);
+                logEvent(INFO, t, "Writing visualization file n = %d", n);
+                //printf("INFO: Writing visualization file n=%d\n", n);
             }
             write_vtkFile(problem, n, my_rank, xlength, ylength, il, jb, imax_local+1, jmax_local+1, dx, dy, U, V, P);
             currentOutputTime += dt_value;
             // update output timestep iteration counter
             n++;
         }
-        // Recap shell output
-        //        printf("[%12.9f] INFO: dt=%f, numSorIterations=%d, sorResidual=%f\n", t, dt, it, res);
-//        logEvent(t, "INFO: dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res);
-        if (my_rank == 0 && it == itermax)
-        {
-            printf("INFO: dt=%f, numSorIterations=%d, sorResidual=%f\n", dt, it, res_global);
-        }
-        
+
         // adaptive stepsize control based on stability conditions ensures stability of the method!
         // dt = tau * min(cond1, cond2, cond3) where tau is a safety factor
         // NOTE: if tau<0, stepsize is not adaptively computed!
@@ -365,9 +395,11 @@ int main(int argc, char **argv)
     }
     
     // write visualisation file for the last iteration
-    // logEvent(t, (char*)"INFO: Writing visualization file n=%d", n);
+    if (my_rank == 0) {
+        logEvent(INFO, t, (char*)"Writing visualization file n = %d", n);
+    }
     write_vtkFile(problem, n, my_rank, xlength, ylength, il, jb, imax_local+1, jmax_local+1, dx, dy, U, V, P);
-    
+
     // Check value of U[imax/2][7*jmax/8] (task6)
     // logMsg("Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
     free_matrix(P, 0, imax_local + 2, 0, jmax_local + 2);
@@ -390,6 +422,9 @@ int main(int argc, char **argv)
         printf("Time for parallel execution: %f \n", parTime);
         printf("Speedup %f \n", seqTime/parTime);
         printf("Min dt value used: %16e\n", mindt);
+        logMsg("Min dt value used: %16e", mindt);
+        closeLogFile(); // Properly close the log file
+
     }
     
     // closeLogFile(); // Properly close the log file
