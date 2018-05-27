@@ -134,19 +134,11 @@ int main(int argc, char **argv)
     while (t < t_end)
     {
         // ensure boundary conditions for velocity
-        
         // here we only need to set boundary values if local boundaries coincide with global boundaries
         if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc - 1)
         {
             boundaryvalues(omg_i, omg_j, iproc, jproc, imax_local, jmax_local, U, V);
         }
-        
-//        if (t == 0)
-//        {
-//            write_vtkFile(problem, n, my_rank, xlength, ylength, il, jb, imax_local+1, jmax_local+1, dx, dy, U, V, P);
-//            n++;
-//        }
-
         
         // momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
         calculate_fg(Re, GX, GY, alpha, dt, dx, dy, imax_local, jmax_local, U, V, F, G);
@@ -165,7 +157,7 @@ int main(int argc, char **argv)
         res_global = 1e9;
         while (it < itermax && res_global > eps)
         {
-            
+    
             sor(omg, dx, dy, imax_local + 1, jmax_local + 1, P, RS, &res);
             pressure_comm(P, rank_l, rank_r, rank_b, rank_t, bufSend, bufRecv, &status, imax_local + 1, jmax_local + 1);
             if (omg_i == 0 || omg_i == iproc - 1 || omg_j == 0 || omg_j == jproc - 1)
@@ -205,7 +197,7 @@ int main(int argc, char **argv)
 //        logEvent(t, "INFO: dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res);
         if (my_rank == 0 && it == itermax)
         {
-            printf("INFO: dt=%f, numSorIterations=%d, sorResidual=%f\n", dt, it, res);
+            printf("INFO: dt=%f, numSorIterations=%d, sorResidual=%f\n", dt, it, res_global);
         }
         
         // adaptive stepsize control based on stability conditions ensures stability of the method!

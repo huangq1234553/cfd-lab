@@ -34,7 +34,10 @@ tests: $(OBJ) $(TEST_OBJ)
 	$(CC) $(CFLAGS) -o Tests/tests $(OBJ) $(TEST_OBJ) -lm
 
 runsim:
-	mkdir -p Viz && mpirun -np 4 ./sim Viz/problem
+	mkdir -p Viz && cp problem.dat Viz/ && mpirun -np 4 ./sim Viz/problem
+
+runsimseq:
+	mkdir -p Viz && cp problem_seq.dat Viz/ && mpirun -np 1 ./sim Viz/problem_seq
 
 runtests:
 	$(MAKE) -C Tests/ all
@@ -47,6 +50,9 @@ clean-core:
 
 clean-sim:
 	rm $(SIM_OBJ)
+
+clean-viz:
+	rm Viz/*.vtk
 
 clean-tests:
 	rm $(TEST_OBJ)

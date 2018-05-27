@@ -118,7 +118,8 @@ void boundaryvalues_P(int omg_i, int omg_j, int iproc, int jproc, int imax_local
     }
     if (omg_j == jproc - 1){
         for(i = 1; i <= imax_local; i++) {
-            P[i][jmax_local+1] = P[i][jmax_local];
+//            P[i][jmax_local+1] = P[i][jmax_local];
+            P[i][jmax_local+1] = 0; //debug
         }
     }
 }

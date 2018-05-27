@@ -64,5 +64,5 @@ problem     testProblem
 #       
 #--------------------------------------------
 
-iproc 2
-jproc 2
+iproc 1
+jproc 1
