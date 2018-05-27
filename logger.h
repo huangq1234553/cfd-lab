@@ -42,6 +42,8 @@ void logTestEvent(DebugLevel eventDebugLevel, const char *testName, char *fmt, .
 
 void logMsg(char *fmt, ...);
 
+void flushLogFile();
+
 void closeLogFile();
 
 #endif //SIM_LOGGER_H
