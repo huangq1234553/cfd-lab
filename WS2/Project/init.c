@@ -58,9 +58,9 @@ void init_uvp(
   double **P
 ){
 
-  init_matrix( P, 0, imax + 2   , 0   , jmax + 2, PI);
-    init_matrix(U, 0, imax + 3, 0, jmax + 2, UI);
-    init_matrix(V, 0, imax + 2, 0, jmax + 3, VI);
+  init_matrix(P, 0, imax + 2, 0, jmax + 2, PI);
+  init_matrix(U, 0, imax + 3, 0, jmax + 2, UI);
+  init_matrix(V, 0, imax + 2, 0, jmax + 3, VI);
   
 }
 
