@@ -98,11 +98,19 @@ int main(int argc, char **argv)
     int rank_l, rank_r, rank_b, rank_t;
     int omg_i, omg_j;
     
+    // Now check if the declared processor grid (iproc x jproc) and the MPI num processes agree
+    if (iproc*jproc != num_proc)
+    {
+        // TODO: here log a message also in the log/stdout
+        ERROR("Mismatch between iproc*jproc and MPI number of processes.\n"
+              "Please review your configuration and command-line to make sure they agree!");
+        return 1;
+    }
+    
     init_parallel(iproc, jproc, imax, jmax, my_rank, &il, &ir, &jb, &jt, &rank_l, &rank_r, &rank_b, &rank_t,
                   &omg_i, &omg_j, num_proc);
     
     int imax_local = ir - il, jmax_local = jt - jb;
-    
     
     double **P = matrix(0, imax_local + 2, 0, jmax_local + 2);
     double **U = matrix(0, imax_local + 3, 0, jmax_local + 2);
