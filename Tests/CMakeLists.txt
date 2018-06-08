@@ -9,7 +9,11 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wall -pedantic -Werror -Wno-write-strings")
 
 # Set the normal target
-set(TEST_SOURCE_FILES testing.c uvComm.test.c getProcessCoordinates.test.c getProcessNeighbours.test.c pressureComm.test.c)
+set(TEST_SOURCE_FILES testing.c
+        getProcessCoordinates.test.c
+        getProcessNeighbours.test.c getProcessNeighbours.2x3.test.c getProcessNeighbours.3x2.test.c
+        uvComm.test.c uvComm.2x3.test.c uvComm.3x2.test.c
+        pressureComm.test.c pressureComm.2x3.test.c pressureComm.3x2.test.c)
 add_executable(tests tests.c ${TEST_SOURCE_FILES})
 target_link_libraries(tests core ${MPI_C_LIBRARIES} m)
 

@@ -18,8 +18,14 @@ TEST_OBJ = 	 Tests/tests.o\
 			 Tests/testing.o\
 			 Tests/getProcessCoordinates.test.o\
 			 Tests/getProcessNeighbours.test.o\
+			 Tests/getProcessNeighbours.2x3.test.o\
+			 Tests/getProcessNeighbours.3x2.test.o\
 			 Tests/uvComm.test.o\
-			 Tests/pressureComm.test.o
+			 Tests/uvComm.2x3.test.o\
+			 Tests/uvComm.3x2.test.o\
+			 Tests/pressureComm.test.o\
+			 Tests/pressureComm.2x3.test.o\
+			 Tests/pressureComm.3x2.test.o
 ALL_OBJ = $(OBJ) $(SIM_OBJ) $(TEST_OBJ)
 
 TEST_OUT_DIR = Tests/Out

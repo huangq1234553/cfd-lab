@@ -6,7 +6,7 @@
 #include "testing.h"
 #include "../logger.h"
 
-static char *TEST_NAME = "getProcessNeighbours.test";
+static char *TEST_NAME = "getProcessNeighbours.2x3.test";
 
 static int processesPerRow, processesPerColumn, omegaI, omegaJ;
 static int rankLExpected, rankRExpected, rankBExpected, rankTExpected;
@@ -29,26 +29,32 @@ static void teardown()
 {
 }
 
-int getProcessNeighboursTest(int mpiRank, int mpiNumProc)
+int getProcessNeighboursTest23(int mpiRank, int mpiNumProc)
 {
-    // Now assume we are in a 2x2 grid, so let's check we have enough MPI processes
-    assert(mpiNumProc >= 4);
+    // Now assume we are in a 2x3 grid, so let's check we have enough MPI processes
+    assert(mpiNumProc >= 6);
     // Barrier to make sure all processes are in sync here
     MPI_Barrier(MPI_COMM_WORLD);
     // Now setup the expectations
     switch (mpiRank)
     {
         case 0:
-            setup(2, 2, 0, 0, MPI_PROC_NULL, 1, MPI_PROC_NULL, 2);
+            setup(2, 3, 0, 0, MPI_PROC_NULL, 1, MPI_PROC_NULL, 2);
             break;
         case 1:
-            setup(2, 2, 1, 0, 0, MPI_PROC_NULL, MPI_PROC_NULL, 3);
+            setup(2, 3, 1, 0, 0, MPI_PROC_NULL, MPI_PROC_NULL, 3);
             break;
         case 2:
-            setup(2, 2, 0, 1, MPI_PROC_NULL, 3, 0, MPI_PROC_NULL);
+            setup(2, 3, 0, 1, MPI_PROC_NULL, 3, 0, 4);
             break;
         case 3:
-            setup(2, 2, 1, 1, 2, MPI_PROC_NULL, 1, MPI_PROC_NULL);
+            setup(2, 3, 1, 1, 2, MPI_PROC_NULL, 1, 5);
+            break;
+        case 4:
+            setup(2, 3, 0, 2, MPI_PROC_NULL, 5, 2, MPI_PROC_NULL);
+            break;
+        case 5:
+            setup(2, 3, 1, 2, 4, MPI_PROC_NULL, 3, MPI_PROC_NULL);
             break;
         default:
             MPI_Barrier(MPI_COMM_WORLD); // Sync at exit

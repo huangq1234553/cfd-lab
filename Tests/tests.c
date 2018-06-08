@@ -43,8 +43,14 @@ int main(int argc, char **argv)
     }
     int failures = getProcessCoordinatesTest(mpiRank, mpiNumProc);
     failures += getProcessNeighboursTest(mpiRank, mpiNumProc);
+    failures += getProcessNeighboursTest23(mpiRank, mpiNumProc);
+    failures += getProcessNeighboursTest32(mpiRank, mpiNumProc);
     failures += uvCommTest(mpiRank, mpiNumProc);
+    failures += uvCommTest23(mpiRank, mpiNumProc);
+    failures += uvCommTest32(mpiRank, mpiNumProc);
     failures += pressureCommTest(mpiRank, mpiNumProc);
+    failures += pressureCommTest23(mpiRank, mpiNumProc);
+    failures += pressureCommTest32(mpiRank, mpiNumProc);
 
 //  Now gather the sum of all failed tests
     int globalFailures = 0;

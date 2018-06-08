@@ -6,5 +6,7 @@
 #define SIM_GETPROCESSNEIGHBOURS_TEST_H
 
 int getProcessNeighboursTest(int mpiRank, int mpiNumProc);
+int getProcessNeighboursTest23(int mpiRank, int mpiNumProc);
+int getProcessNeighboursTest32(int mpiRank, int mpiNumProc);
 
 #endif //SIM_GETPROCESSNEIGHBOURS_TEST_H

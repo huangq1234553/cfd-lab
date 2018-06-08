@@ -3,7 +3,7 @@
 .PHONY: all compile
 
 all:
-	mpirun -np 4 ./tests && cat Out/*.log
+	mpirun -np 6 ./tests && cat Out/*.log
 
 compile:
 	$(MAKE) -C ../ tests
