@@ -32,8 +32,6 @@ typedef struct BoundaryInfo
 {
     double *valuesDirichletU;
     double *valuesDirichletV;
-    double *valuesNeumannU;
-    double *valuesNeumannV;
     double *valuesDirichletT;
     double coeff; // This is dx*qN/k or dy*qn/k depending on the boundary
 } BoundaryInfo;

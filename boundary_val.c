@@ -243,7 +243,7 @@ void setCenterBoundaryValues(int imax, int jmax, double **Q, int **Flags, int i,
 {
     int C = Flags[i][j];
     // proceed if obstacle
-    if (isObstacle(C))
+    if (isObstacle(C) && !isCoupling(C))
     {
         if (isCorner(C))
         {
@@ -264,9 +264,9 @@ void freeAllBoundaryInfo(BoundaryInfo boundaryInfo[4])
 {
     for (int i=0; i<4; ++i)
     {
-        free(boundaryInfo[i].valuesU);
-        free(boundaryInfo[i].valuesV);
-        free(boundaryInfo[i].valuesT);
+        free(boundaryInfo[i].valuesDirichletU);
+        free(boundaryInfo[i].valuesDirichletV);
+        free(boundaryInfo[i].valuesDirichletT);
     }
 }
 
