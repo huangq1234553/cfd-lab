@@ -26,6 +26,7 @@
  */
 //typedef enum Direction {CENTER=1, TOP=16, BOT=8, LEFT=4, RIGHT=2} Direction;
 typedef enum Direction {CENTER=0, TOP=4, BOT=3, LEFT=2, RIGHT=1} Direction;
+typedef enum BoundaryTypeBit {NSBIT=5, FSBIT=6, IFBIT=7, OFBIT=8, CBIT=9, TBIT=10} BoundaryTypeBit;
 typedef enum Optional {REQUIRED, OPTIONAL} Optional;
 extern clock_t last_timer_reset;   
 
