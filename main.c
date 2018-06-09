@@ -44,8 +44,6 @@
  * - calculate_uv() Calculate the velocity at the next time step.
  */
 
-// TODO: check if geometry is not forbidden!
-
 double performSimulation(const char *outputFolder, const char *problem, double Re, double GX, double GY, double t_end,
                          double xlength, double ylength, double dt, double dx, double dy, int imax, int jmax,
                          double alpha, double omg, double tau, int itermax, double eps, double dt_value, int n,
@@ -53,7 +51,8 @@ double performSimulation(const char *outputFolder, const char *problem, double R
                          BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V, double **F,
                          double **G, double **RS, double **P, double **T, bool computeTemperatureSwitch);
 
-int main(int argc, char** argv){
+int main(int argc, char **argv)
+{
     // As first thing, initialize logger start time
     setLoggerStartTime();
     
@@ -64,41 +63,43 @@ int main(int argc, char** argv){
     char inputFolder[512] = "";
     char outputFolder[512] = ""; // Please don't use superlong paths here, 512 should be more than enough :P
 //    strcpy(outputFolder, "./"); // Default is CWD
-
+    
     int requiredArgCount = 0;
     int i = 1; // Arg counter
     while (i < argc)
     {
-        if (strcmp(argv[i],"--compact") == 0)
+        if (strcmp(argv[i], "--compact") == 0)
         {
             runningMode = COMPACT;
         }
-        else if (strcmp(argv[i],"--notemp") == 0)
+        else if (strcmp(argv[i], "--notemp") == 0)
         {
             computeTemperatureSwitch = 0;
         }
-        else if (strcmp(argv[i],"-o") == 0)
+        else if (strcmp(argv[i], "-o") == 0)
         {
             // Setting the output folder -- Here reading the following arg (so format is -o /path/to/folder )
             strcpy(outputFolder, argv[i + 1]);
             // Remove trailing slash if present
             if (outputFolder[strlen(outputFolder) - 1] == '/')
+            {
                 outputFolder[strlen(outputFolder) - 1] = 0;
+            }
             ++i; // Extra increment since we read 2 arguments here
         }
-        else if (strcmp(argv[i],"-q") == 0)
+        else if (strcmp(argv[i], "-q") == 0)
         {
             // Set quiet mode: DebugLevel -> PRODUCTION
             setLoggerDebugLevel(PRODUCTION);
         }
-        // All the below is just error catching... (new options must be set above here!)
+            // All the below is just error catching... (new options must be set above here!)
         else if (argv[i][0] == '-')
         {
             char buf[128];
             sprintf(buf, "Unrecognized option: %s", argv[i]);
             ERROR(buf);
         }
-        else if (strlen(szFileName)!=0)
+        else if (strlen(szFileName) != 0)
         {
             char buf[128];
             sprintf(buf, "Unrecognized argument: %s", argv[i]);
@@ -109,7 +110,7 @@ int main(int argc, char** argv){
             strcpy(szFileName, argv[i]);
             // Now if argument doesn't end with ".dat", append extension to it
             size_t fnamelen = strlen(szFileName);
-            if (fnamelen > 4 && strcmp(szFileName+fnamelen-4,".dat") != 0)
+            if (fnamelen > 4 && strcmp(szFileName + fnamelen - 4, ".dat") != 0)
             {
                 strcat(szFileName, ".dat");
             }
@@ -131,7 +132,8 @@ int main(int argc, char** argv){
         sprintf(outputFolder, "%s/Out", inputFolder);
         // ...and create it if not on filesystem
         struct stat st = {0};
-        if (stat(outputFolder, &st) == -1) {
+        if (stat(outputFolder, &st) == -1)
+        {
             mkdir(outputFolder, 0700);
         }
     }
@@ -139,9 +141,9 @@ int main(int argc, char** argv){
     setLoggerOutputFolder(outputFolder);
     openLogFile(); // Initialize the log file descriptor.
     //
-	char problem[256];
+    char problem[256];
     char geometry[512]; // bigger since this can be a full path
-	double Re;                /* reynolds number   */
+    double Re;                /* reynolds number   */
     double UI;                /* velocity x-direction */
     double VI;                /* velocity y-direction */
     double PI;                /* pressure */
@@ -153,32 +155,36 @@ int main(int argc, char** argv){
     double dt;                /* time step */
     double dx;                /* length of a cell x-dir. */
     double dy;                /* length of a cell y-dir. */
-    int  imax;                /* number of cells x-direction*/
-    int  jmax;                /* number of cells y-direction*/
+    int imax;                /* number of cells x-direction*/
+    int jmax;                /* number of cells y-direction*/
     double alpha;             /* uppwind differencing factor*/
     double omg;               /* relaxation factor */
     double tau;               /* safety factor for time step*/
-	int  itermax;			  /* max. number of iterations  */
+    int itermax;              /* max. number of iterations  */
     double eps;               /* accuracy bound for pressure*/
     double dt_value;          /* time for output */
-	int n = 0;				  /* timestep iteration counter */
-	double res = 10;		  /* residual */
-	double t = 0;			  /* initial time */
-	int it = 0;					  /* sor iteration counter */
-	double mindt=10000;       /* arbitrary counter that keeps track of minimum dt value in calculation */
-	int noFluidCells;		  /* number of fluid cells in simulation */
-	double beta; 			  /* coefficient of thermal expansion */
-	double TI; 				  /* initial temperature */
-	double T_h; 				  /* hot surface boundary condition */
-	double T_c; 			      /* cold surface boundary condition */
-	double Pr; 				  /* Prandtl number */
+    int n = 0;                  /* timestep iteration counter */
+    double res = 10;          /* residual */
+    double t = 0;              /* initial time */
+    int it = 0;                      /* sor iteration counter */
+    double mindt = 10000;       /* arbitrary counter that keeps track of minimum dt value in calculation */
+    int noFluidCells;          /* number of fluid cells in simulation */
+    double beta;              /* coefficient of thermal expansion */
+    double TI;                  /* initial temperature */
+    double T_h;                  /* hot surface boundary condition */
+    double T_c;                  /* cold surface boundary condition */
+    double Pr;                  /* Prandtl number */
+    // Params for preCICE coupling
+    double x_origin = 0.0, y_origin = 0.0;
+    char *precice_config = NULL, *participant_name = NULL, *mesh_name = NULL, *read_data_name = NULL, *write_data_name = NULL;
     
     BoundaryInfo boundaryInfo[4];
     
     read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax, &jmax,
                     &alpha, &omg,
-                    &tau, &itermax, &eps, &dt_value, problem, geometry, boundaryInfo,
-                    &beta, &TI, &T_h, &T_c, &Pr);
+                    &tau, &itermax, &eps, &dt_value, problem, geometry, boundaryInfo, &beta, &TI, &T_h, &T_c, &Pr,
+                    &x_origin, &y_origin,
+                    precice_config, participant_name, mesh_name, read_data_name, write_data_name);
     
     // In case geometry was given as a filename only, prepend it with inputFolder path, just in case it is not CWD.
     if (strstr(geometry, "/") == NULL)
@@ -189,17 +195,17 @@ int main(int argc, char** argv){
         logMsg("Using geometry file: %s", geometry);
     }
     
-    double dt_check = fmin(dt,dt_value);
+    double dt_check = fmin(dt, dt_value);
     
-    int** Flags = imatrix(0, imax+1, 0, jmax+1);
-    double** U = matrix(0, imax+1, 0, jmax+1);
-    double** V = matrix(0, imax+1, 0, jmax+1);
-    double** F = matrix(0, imax+1, 0, jmax+1);
-    double** G = matrix(0, imax+1, 0, jmax+1);
-    double** RS = matrix(0, imax+1, 0, jmax+1);
-    double** P = matrix(0, imax+1, 0, jmax+1);
-    double** T = matrix(0, imax+1, 0, jmax+1);
-
+    int **Flags = imatrix(0, imax + 1, 0, jmax + 1);
+    double **U = matrix(0, imax + 1, 0, jmax + 1);
+    double **V = matrix(0, imax + 1, 0, jmax + 1);
+    double **F = matrix(0, imax + 1, 0, jmax + 1);
+    double **G = matrix(0, imax + 1, 0, jmax + 1);
+    double **RS = matrix(0, imax + 1, 0, jmax + 1);
+    double **P = matrix(0, imax + 1, 0, jmax + 1);
+    double **T = matrix(0, imax + 1, 0, jmax + 1);
+    
     // create flag array to determine boundary conditions
     if (runningMode == COMPACT)
     {
@@ -217,18 +223,18 @@ int main(int argc, char** argv){
     {
         logMsg("NoTemp mode: Temperature is not computed");
     }
-
+    
     init_flag(problem, geometry, imax, jmax, Flags, &noFluidCells, runningMode);
-
+    
     // initialise velocities and pressure
     init_uvpt(UI, VI, PI, TI, imax, jmax, U, V, P, T, Flags);
-    
+
 //    // Debug
 //    logEvent(PRODUCTION, t, "Writing visualization file n=%d", n);
 //    write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T);
 //    n++;
 //
-	// simulation interval 0 to t_end
+    // simulation interval 0 to t_end
     long simulationStartTime = getCurrentTimeMillis();
     mindt = performSimulation(outputFolder, problem, Re, GX, GY, t_end, xlength, ylength, dt, dx, dy, imax, jmax,
                               alpha, omg, tau, itermax, eps, dt_value, n, res, t, it, mindt, noFluidCells, beta, Pr,
@@ -240,19 +246,19 @@ int main(int argc, char** argv){
     logMsg("Min dt value used: %16e", mindt);
     logMsg("Total time spent in simulation: %.3f s", getTimeSpentSeconds(simulationStartTime, simulationEndTime));
     
-    free_imatrix( Flags, 0, imax+1, 0, jmax+1);
-    free_matrix( U, 0, imax+1, 0, jmax+1);
-	free_matrix( V, 0, imax+1, 0, jmax+1);
-	free_matrix( F, 0, imax+1, 0, jmax+1);
-	free_matrix( G, 0, imax+1, 0, jmax+1);
-	free_matrix( RS, 0, imax+1, 0, jmax+1);
-	free_matrix( P, 0, imax+1, 0, jmax+1);
-	free_matrix( T, 0, imax+1, 0, jmax+1);
+    free_imatrix(Flags, 0, imax + 1, 0, jmax + 1);
+    free_matrix(U, 0, imax + 1, 0, jmax + 1);
+    free_matrix(V, 0, imax + 1, 0, jmax + 1);
+    free_matrix(F, 0, imax + 1, 0, jmax + 1);
+    free_matrix(G, 0, imax + 1, 0, jmax + 1);
+    free_matrix(RS, 0, imax + 1, 0, jmax + 1);
+    free_matrix(P, 0, imax + 1, 0, jmax + 1);
+    free_matrix(T, 0, imax + 1, 0, jmax + 1);
     freeAllBoundaryInfo(boundaryInfo);
     
     closeLogFile(); // Properly close the log file
-
-	return 0;
+    
+    return 0;
 }
 
 double performSimulation(const char *outputFolder, const char *problem, double Re, double GX, double GY, double t_end,
@@ -264,8 +270,9 @@ double performSimulation(const char *outputFolder, const char *problem, double R
 {
     double currentOutputTime = 0; // For chosing when to output
     long interVisualizationExecTimeStart = getCurrentTimeMillis();
-    while(t < t_end){
-    
+    while (t < t_end)
+    {
+        
         // adaptive stepsize control based on stability conditions ensures stability of the method!
         // dt = tau * min(cond1, cond2, cond3) where tau is a safety factor
         // NOTE: if tau<0, stepsize is not adaptively computed!
@@ -279,22 +286,25 @@ double performSimulation(const char *outputFolder, const char *problem, double R
                 mindt = dt;
             }
         }
-    
+        
         // ensure boundary conditions for velocity
         // Special boundary condition are addressed here by using the boundaryInfo data.
         // These special boundary values are configured at configuration time in read_parameters(). Still TODO !
         boundaryval(imax, jmax, U, V, T, Flags, boundaryInfo);
-    
+        
         // calculate T using energy equation in 2D with boussinesq approximation
-        if (beta != 0 && computeTemperatureSwitch) // If beta==0 we won't add the temperature term in F and G, so we don't need to compute it!
+        if (beta != 0 &&
+            computeTemperatureSwitch)
+        { // If beta==0 we won't add the temperature term in F and G, so we don't need to compute it!
             calculate_T(Re, Pr, dt, dx, dy, alpha, imax, jmax, T, U, V, Flags);
-    
+        }
+        
         // momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
         calculate_fg(Re, GX, GY, alpha, beta, dt, dx, dy, imax, jmax, U, V, F, G, T, Flags);
-    
+        
         // momentum equations M1 and M2 are plugged into continuity equation C to produce PPE - depends on F and G - RS is the rhs of the implicit pressure update scheme
         calculate_rs(dt, dx, dy, imax, jmax, F, G, RS, Flags);
-    
+        
         // solve the system of eqs arising from implicit pressure uptate scheme using succesive overrelaxation solver
         it = 0;
         res = 1e9;
@@ -305,7 +315,7 @@ double performSimulation(const char *outputFolder, const char *problem, double R
         }
         // calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
         calculate_uv(dt, dx, dy, imax, jmax, U, V, F, G, P, Flags);
-    
+        
         // write visualization file for current iteration (only every dt_value step)
         if (t >= currentOutputTime)
         {
@@ -324,7 +334,7 @@ double performSimulation(const char *outputFolder, const char *problem, double R
         {
             logEvent(WARNING, t, "Max number of iterations reached on SOR. Probably it did not converge!");
             logEvent(WARNING, t, "dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res);
-    
+            
         }
         else
         {

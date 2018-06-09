@@ -14,16 +14,18 @@ void setDefaultStringIfRequired(char *variable, const char *defaultValue)
 int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, double *PI, double *GX, double *GY,
                     double *t_end, double *xlength, double *ylength, double *dt, double *dx, double *dy, int *imax,
                     int *jmax, double *alpha, double *omg, double *tau, int *itermax, double *eps, double *dt_value,
-                    char *problem, char *geometry, BoundaryInfo boundaryInfo[4],
-                    double *beta, double *TI, double *T_h, double *T_c,
-                    double *Pr)    /* path/filename to geometry file */
+                    char *problem, char *geometry, BoundaryInfo boundaryInfo[4], double *beta, double *TI, double *T_h,
+                    double *T_c, double *Pr, double *x_origin, double *y_origin, char *precice_config,
+                    char *participant_name, char *mesh_name, char *read_data_name, char *write_data_name)    /* path/filename to geometry file */
 {
     READ_DOUBLE(szFileName, *xlength, REQUIRED);
     READ_DOUBLE(szFileName, *ylength, REQUIRED);
     
     READ_DOUBLE(szFileName, *Re, REQUIRED);
-    if (*Re == 0.0) // Re cannot be 0, setting a sane default
+    if (*Re == 0.0)
+    { // Re cannot be 0, setting a sane default
         *Re = 1.0;
+    }
     READ_DOUBLE(szFileName, *t_end, REQUIRED);
     READ_DOUBLE(szFileName, *dt, REQUIRED);
     
@@ -34,7 +36,9 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
     READ_DOUBLE(szFileName, *eps, REQUIRED);
     READ_DOUBLE(szFileName, *tau, REQUIRED);
     if (*tau == 0.0)
+    {
         *tau = 1.0;
+    }
     READ_DOUBLE(szFileName, *alpha, REQUIRED);
     
     READ_INT   (szFileName, *itermax, REQUIRED);
@@ -51,8 +55,10 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
 //    READ_DOUBLE(szFileName, *T_h, OPTIONAL);  // NOT REQUIRED
 //    READ_DOUBLE(szFileName, *T_c, OPTIONAL);  // NOT REQUIRED
     READ_DOUBLE(szFileName, *Pr, OPTIONAL);
-    if (*Pr == 0.0) // Pr cannot be 0, setting a sane default
+    if (*Pr == 0.0)
+    { // Pr cannot be 0, setting a sane default
         *Pr = 1.0;
+    }
     
     READ_STRING(szFileName, problem, REQUIRED);
     READ_STRING(szFileName, geometry, REQUIRED);
@@ -60,11 +66,22 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
     *dx = *xlength / (double) (*imax);
     *dy = *ylength / (double) (*jmax);
     
-
+    // Additional config parameters for preCICE integration
+    Optional PRECICE_VARS_REQUIREMENT = OPTIONAL; // TODO: this should be controlled by a cmdline flag or a config param
+    READ_DOUBLE(szFileName, *x_origin, PRECICE_VARS_REQUIREMENT);
+    READ_DOUBLE(szFileName, *y_origin, PRECICE_VARS_REQUIREMENT);
+    
+    READ_STRING(szFileName, precice_config, PRECICE_VARS_REQUIREMENT);
+    READ_STRING(szFileName, participant_name, PRECICE_VARS_REQUIREMENT);
+    READ_STRING(szFileName, mesh_name, PRECICE_VARS_REQUIREMENT);
+    READ_STRING(szFileName, read_data_name, PRECICE_VARS_REQUIREMENT);
+    READ_STRING(szFileName, write_data_name, PRECICE_VARS_REQUIREMENT);
+    
     return 1;
 }
 
-void read_boundary_parameters_compact_mode(const char *szFileName, BoundaryInfo *boundaryInfo, double dx, double dy){
+void read_boundary_parameters_compact_mode(const char *szFileName, BoundaryInfo *boundaryInfo, double dx, double dy)
+{
     // Now read boundary-related variables
     char left_boundary_type[16];
     char left_boundary_temp_type[16];
@@ -94,61 +111,69 @@ void read_boundary_parameters_compact_mode(const char *szFileName, BoundaryInfo 
     double bottom_boundary_T;
     double bottom_boundary_qN;
     double bottom_boundary_k;
-
+    
     char *boundaryTypeDefault = "NOSLIP";
     char *boundaryTempTypeDefault = "NEUMANN";
-
+    
     READ_STRING(szFileName, left_boundary_type, OPTIONAL);
     setDefaultStringIfRequired(left_boundary_type, boundaryTypeDefault);
     READ_STRING(szFileName, left_boundary_temp_type, OPTIONAL);
     setDefaultStringIfRequired(left_boundary_temp_type, boundaryTempTypeDefault);
-
+    
     READ_STRING(szFileName, right_boundary_type, OPTIONAL);
     setDefaultStringIfRequired(right_boundary_type, boundaryTypeDefault);
     READ_STRING(szFileName, right_boundary_temp_type, OPTIONAL);
     setDefaultStringIfRequired(right_boundary_temp_type, boundaryTempTypeDefault);
-
+    
     READ_STRING(szFileName, top_boundary_type, OPTIONAL);
     setDefaultStringIfRequired(top_boundary_type, boundaryTypeDefault);
     READ_STRING(szFileName, top_boundary_temp_type, OPTIONAL);
     setDefaultStringIfRequired(top_boundary_temp_type, boundaryTempTypeDefault);
-
+    
     READ_STRING(szFileName, bottom_boundary_type, OPTIONAL);
     setDefaultStringIfRequired(bottom_boundary_type, boundaryTypeDefault);
     READ_STRING(szFileName, bottom_boundary_temp_type, OPTIONAL);
     setDefaultStringIfRequired(bottom_boundary_temp_type, boundaryTempTypeDefault);
-
+    
     READ_DOUBLE(szFileName, left_boundary_U, OPTIONAL);
     READ_DOUBLE(szFileName, left_boundary_V, OPTIONAL);
     READ_DOUBLE(szFileName, left_boundary_T, OPTIONAL);
     READ_DOUBLE(szFileName, left_boundary_qN, OPTIONAL);
     READ_DOUBLE(szFileName, left_boundary_k, OPTIONAL);
     if (left_boundary_k == 0.0)
+    {
         left_boundary_k = 1;
-
+    }
+    
     READ_DOUBLE(szFileName, right_boundary_U, OPTIONAL);
     READ_DOUBLE(szFileName, right_boundary_V, OPTIONAL);
     READ_DOUBLE(szFileName, right_boundary_T, OPTIONAL);
     READ_DOUBLE(szFileName, right_boundary_qN, OPTIONAL);
     READ_DOUBLE(szFileName, right_boundary_k, OPTIONAL);
     if (right_boundary_k == 0.0)
+    {
         right_boundary_k = 1;
-
+    }
+    
     READ_DOUBLE(szFileName, top_boundary_U, OPTIONAL);
     READ_DOUBLE(szFileName, top_boundary_V, OPTIONAL);
     READ_DOUBLE(szFileName, top_boundary_T, OPTIONAL);
     READ_DOUBLE(szFileName, top_boundary_qN, OPTIONAL);
     READ_DOUBLE(szFileName, top_boundary_k, OPTIONAL);
     if (top_boundary_k == 0.0)
+    {
         top_boundary_k = 1;
-
+    }
+    
     READ_DOUBLE(szFileName, bottom_boundary_U, OPTIONAL);
     READ_DOUBLE(szFileName, bottom_boundary_V, OPTIONAL);
     READ_DOUBLE(szFileName, bottom_boundary_T, OPTIONAL);
     READ_DOUBLE(szFileName, bottom_boundary_qN, OPTIONAL);
     READ_DOUBLE(szFileName, bottom_boundary_k, OPTIONAL);
     if (bottom_boundary_k == 0.0)
+    {
         bottom_boundary_k = 1;
+    }
     
     configureBoundary(boundaryInfo, LEFTBOUNDARY, left_boundary_type, left_boundary_temp_type, left_boundary_U,
                       left_boundary_V,
@@ -162,13 +187,14 @@ void read_boundary_parameters_compact_mode(const char *szFileName, BoundaryInfo 
     configureBoundary(boundaryInfo, BOTTOMBOUNDARY, bottom_boundary_type, bottom_boundary_temp_type,
                       bottom_boundary_U, bottom_boundary_V,
                       bottom_boundary_T, bottom_boundary_qN, bottom_boundary_k, dy);
-
+    
     // TODO: add support for more complex profiles and/or autogeneration of parabolic one. Do this into the new boundary_configurator.c file
-
+    
 }
 
 void read_boundary_parameters_extended_mode(const char *szFileName, BoundaryInfo *boundaryInfo, double dx, double dy,
-                                            int imax, int jmax, char *geometryFileName){
+                                            int imax, int jmax, char *geometryFileName)
+{
     // Now read boundary-related variables
     char left_boundary_type[16];
     char left_boundary_temp_type[16];
@@ -198,73 +224,85 @@ void read_boundary_parameters_extended_mode(const char *szFileName, BoundaryInfo
     double bottom_boundary_T;
     double bottom_boundary_qN;
     double bottom_boundary_k;
-
-    int** pic = NULL;
+    
+    int **pic = NULL;
     pic = read_pgm(geometryFileName);
-
+    
     getVelocityBoundaryTypesFromExtendedGeometryFile(pic, imax, jmax,
                                                      left_boundary_type,
                                                      right_boundary_type,
                                                      top_boundary_type,
                                                      bottom_boundary_type);
-
+    
     char *boundaryTempTypeDefault = "NEUMANN";
-
+    
     READ_STRING(szFileName, left_boundary_temp_type, OPTIONAL);
     setDefaultStringIfRequired(left_boundary_temp_type, boundaryTempTypeDefault);
-
+    
     READ_STRING(szFileName, right_boundary_temp_type, OPTIONAL);
     setDefaultStringIfRequired(right_boundary_temp_type, boundaryTempTypeDefault);
-
+    
     READ_STRING(szFileName, top_boundary_temp_type, OPTIONAL);
     setDefaultStringIfRequired(top_boundary_temp_type, boundaryTempTypeDefault);
-
+    
     READ_STRING(szFileName, bottom_boundary_temp_type, OPTIONAL);
     setDefaultStringIfRequired(bottom_boundary_temp_type, boundaryTempTypeDefault);
-
+    
     READ_DOUBLE(szFileName, left_boundary_U, OPTIONAL);
     READ_DOUBLE(szFileName, left_boundary_V, OPTIONAL);
     READ_DOUBLE(szFileName, left_boundary_T, OPTIONAL);
     READ_DOUBLE(szFileName, left_boundary_qN, OPTIONAL);
     READ_DOUBLE(szFileName, left_boundary_k, OPTIONAL);
     if (left_boundary_k == 0.0)
+    {
         left_boundary_k = 1;
-
+    }
+    
     READ_DOUBLE(szFileName, right_boundary_U, OPTIONAL);
     READ_DOUBLE(szFileName, right_boundary_V, OPTIONAL);
     READ_DOUBLE(szFileName, right_boundary_T, OPTIONAL);
     READ_DOUBLE(szFileName, right_boundary_qN, OPTIONAL);
     READ_DOUBLE(szFileName, right_boundary_k, OPTIONAL);
     if (right_boundary_k == 0.0)
+    {
         right_boundary_k = 1;
-
+    }
+    
     READ_DOUBLE(szFileName, top_boundary_U, OPTIONAL);
     READ_DOUBLE(szFileName, top_boundary_V, OPTIONAL);
     READ_DOUBLE(szFileName, top_boundary_T, OPTIONAL);
     READ_DOUBLE(szFileName, top_boundary_qN, OPTIONAL);
     READ_DOUBLE(szFileName, top_boundary_k, OPTIONAL);
     if (top_boundary_k == 0.0)
+    {
         top_boundary_k = 1;
-
+    }
+    
     READ_DOUBLE(szFileName, bottom_boundary_U, OPTIONAL);
     READ_DOUBLE(szFileName, bottom_boundary_V, OPTIONAL);
     READ_DOUBLE(szFileName, bottom_boundary_T, OPTIONAL);
     READ_DOUBLE(szFileName, bottom_boundary_qN, OPTIONAL);
     READ_DOUBLE(szFileName, bottom_boundary_k, OPTIONAL);
     if (bottom_boundary_k == 0.0)
+    {
         bottom_boundary_k = 1;
-
-    configureBoundary(boundaryInfo, LEFTBOUNDARY, left_boundary_type, left_boundary_temp_type, left_boundary_U, left_boundary_V,
+    }
+    
+    configureBoundary(boundaryInfo, LEFTBOUNDARY, left_boundary_type, left_boundary_temp_type, left_boundary_U,
+                      left_boundary_V,
                       left_boundary_T, left_boundary_qN, left_boundary_k, dx);
-    configureBoundary(boundaryInfo, RIGHTBOUNDARY, right_boundary_type, right_boundary_temp_type, right_boundary_U, right_boundary_V,
+    configureBoundary(boundaryInfo, RIGHTBOUNDARY, right_boundary_type, right_boundary_temp_type, right_boundary_U,
+                      right_boundary_V,
                       right_boundary_T, right_boundary_qN, right_boundary_k, dy);
-    configureBoundary(boundaryInfo, TOPBOUNDARY, top_boundary_type, top_boundary_temp_type, top_boundary_U, top_boundary_V,
+    configureBoundary(boundaryInfo, TOPBOUNDARY, top_boundary_type, top_boundary_temp_type, top_boundary_U,
+                      top_boundary_V,
                       top_boundary_T, top_boundary_qN, top_boundary_k, dx);
-    configureBoundary(boundaryInfo, BOTTOMBOUNDARY, bottom_boundary_type, bottom_boundary_temp_type, bottom_boundary_U, bottom_boundary_V,
+    configureBoundary(boundaryInfo, BOTTOMBOUNDARY, bottom_boundary_type, bottom_boundary_temp_type, bottom_boundary_U,
+                      bottom_boundary_V,
                       bottom_boundary_T, bottom_boundary_qN, bottom_boundary_k, dy);
-
+    
     // TODO: add support for more complex profiles and/or autogeneration of parabolic one. Do this into the new boundary_configurator.c file
-
+    
 }
 
 void init_uvpt(double UI, double VI, double PI, double TI, int imax, int jmax, double **U, double **V, double **P,
@@ -320,7 +358,8 @@ void setGeometry(int imax, int jmax, int **Flag, RunningMode *runningMode, int *
         {
             for (int j = 1; j < jmax + 1; j++)
             {
-                Flag[i][j] = (pic[i][j] != 4); // NOTE: here we just want the cell not to be fluid, we don't care about the actual declared boundary type.
+                Flag[i][j] = (pic[i][j] !=
+                              4); // NOTE: here we just want the cell not to be fluid, we don't care about the actual declared boundary type.
             }
         }
     }
@@ -381,7 +420,8 @@ void init_flag(
 {
     int **pic = NULL;
     
-    pic = read_pgm(geometry); // NOTE: when running in compact mode this is covering just the inner part of the image, so it is imax*jmax
+    pic = read_pgm(
+            geometry); // NOTE: when running in compact mode this is covering just the inner part of the image, so it is imax*jmax
     setGeometry(imax, jmax, Flag, &runningMode, pic);
     
     //
