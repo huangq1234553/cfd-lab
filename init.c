@@ -292,9 +292,14 @@ void read_boundary_parameters_extended_mode(const char *szFileName, BoundaryInfo
 
 void configureBoundary(BoundaryInfo *boundaryInfo, BoundarySide boundarySide, double dirichletU, double dirichletV,
                        double temp, double qN, double k, double h){
-    boundaryInfo[boundarySide].valuesDirichletU = calloc((size_t) dirichletU, sizeof(double));
-    boundaryInfo[boundarySide].valuesDirichletV = calloc((size_t) dirichletV, sizeof(double));
-    boundaryInfo[boundarySide].valuesDirichletT = calloc((size_t) temp, sizeof(double));
+    boundaryInfo[boundarySide].valuesDirichletU = calloc(1, sizeof(double));
+    boundaryInfo[boundarySide].valuesDirichletV = calloc(1, sizeof(double));
+    boundaryInfo[boundarySide].valuesDirichletT = calloc(1, sizeof(double));
+
+    *(boundaryInfo[boundarySide].valuesDirichletU) = dirichletU;
+    *(boundaryInfo[boundarySide].valuesDirichletV) = dirichletV;
+    *(boundaryInfo[boundarySide].valuesDirichletT) = temp;
+
     boundaryInfo[boundarySide].coeff = h * qN / k;
 }
 
