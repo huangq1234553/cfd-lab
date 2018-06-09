@@ -56,6 +56,9 @@ void read_boundary_parameters_extended_mode(const char *szFileName, BoundaryInfo
                                             int imax,
                                             int jmax, char *geometryFileName);
 
+void configureBoundary(BoundaryInfo *boundaryInfo, BoundarySide boundarySide, double dirichletU, double dirichletV,
+                       double temp, double qN, double k, double h);
+
 /**
  * The arrays U,V and P are initialized to the constant values UI, VI and PI on
  * the whole domain.
