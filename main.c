@@ -238,7 +238,7 @@ int main(int argc, char **argv)
     }
     
     init_flag(problem, geometry, imax, jmax, Flags, &noFluidCells, &noCouplingCells, runningMode);
-    THROW_ERROR("Forcing exit for DEBUG");
+//    THROW_ERROR("Forcing exit for DEBUG");
     
     // initialise velocities and pressure
     init_uvpt(UI, VI, PI, TI, imax, jmax, U, V, P, T, Flags);
