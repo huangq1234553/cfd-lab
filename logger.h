@@ -29,7 +29,7 @@ DebugLevel getLoggerDebugLevel();
 void openLogFile();
 void logRawString(char *fmt, ...);
 void logEvent(DebugLevel eventDebugLevel, double t, char *fmt, ...);
-void logMsg(char *fmt, ...);
+void logMsg(DebugLevel eventDebugLevel, char *fmt, ...);
 void closeLogFile();
 
 #endif //SIM_LOGGER_H

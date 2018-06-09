@@ -1,0 +1,95 @@
+#--------------------------------------------
+#            size of the domain             
+#--------------------------------------------
+xlength		80.0
+ylength		58.0
+
+#--------------------------------------------
+#            number of cells
+#--------------------------------------------
+imax		80.0
+jmax		58.0
+
+#--------------------------------------------
+#               time steps
+#--------------------------------------------
+dt		    0.5
+#t_end		50.0
+t_end		100.0
+tau	 	    0.5
+
+#--------------------------------------------
+#               output
+#--------------------------------------------
+#dt_value    0.5
+dt_value    1
+
+#--------------------------------------------
+#               pressure
+#--------------------------------------------
+itermax		500
+eps		    0.001
+omg		    1.7
+alpha		0.9
+
+#--------------------------------------------
+#               reynoldsnumber
+#--------------------------------------------
+Re		    500
+
+#--------------------------------------------
+#               temperature
+#--------------------------------------------
+beta		0.0
+TI 			0.0
+T_h 		1.0
+T_c 		0.0
+Pr 			1.0
+
+#--------------------------------------------
+#               gravitation
+#--------------------------------------------
+GX		    0
+GY		    0
+
+#--------------------------------------------
+#         initialization pressure
+#--------------------------------------------
+PI		    0
+
+#--------------------------------------------
+#       initialization velocity
+#--------------------------------------------
+UI		    0
+VI		    0
+
+#--------------------------------------------
+#       problem description
+#       and path to geometry file
+#--------------------------------------------
+problem     testProblem
+geometry    F1-heat-exchange_82x60.pgm
+
+#--------------------------------------------
+#       boundary description
+#       accepted types are:
+#       NOSLIP, MOVINGWALL, FREESLIP, INFLOW, OUTFLOW
+#       Default is NOSLIP
+#       Default value is 0
+#--------------------------------------------
+#top_boundary_type       MOVINGWALL
+#top_boundary_U          -1
+#left_boundary_type      INFLOW
+#left_boundary_U         1
+#left_boundary_V         0
+#right_boundary_type     OUTFLOW
+#bottom_boundary_type    OUTFLOW
+#top_boundary_type       OUTFLOW
+
+#TODO: Add Temp boundary settings
+#NOTE: the heat flux sign should be set positive along i and j.
+#bottom_boundary_temp_type DIRICHLET
+#bottom_boundary_T         10
+#left_boundary_qN        10
+#left_boundary_k         10
+

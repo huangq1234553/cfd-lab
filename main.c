@@ -64,6 +64,9 @@ int main(int argc, char **argv)
     char outputFolder[512] = ""; // Please don't use superlong paths here, 512 should be more than enough :P
 //    strcpy(outputFolder, "./"); // Default is CWD
     
+    //
+    // BEGIN command line flags management
+    //
     int requiredArgCount = 0;
     int i = 1; // Arg counter
     while (i < argc)
@@ -92,18 +95,23 @@ int main(int argc, char **argv)
             // Set quiet mode: DebugLevel -> PRODUCTION
             setLoggerDebugLevel(PRODUCTION);
         }
+        else if (strcmp(argv[i], "--debug") == 0)
+        {
+            // Set debug mode: DebugLevel -> DEBUG
+            setLoggerDebugLevel(DEBUG);
+        }
             // All the below is just error catching... (new options must be set above here!)
         else if (argv[i][0] == '-')
         {
             char buf[128];
             sprintf(buf, "Unrecognized option: %s", argv[i]);
-            ERROR(buf);
+            THROW_ERROR(buf);
         }
         else if (strlen(szFileName) != 0)
         {
             char buf[128];
             sprintf(buf, "Unrecognized argument: %s", argv[i]);
-            ERROR(buf);
+            THROW_ERROR(buf);
         }
         else
         {
@@ -124,7 +132,7 @@ int main(int argc, char **argv)
     //
     if (requiredArgCount == 0)
     {
-        ERROR("\nNo arguments passed!\nUSAGE:\t./sim configuration.dat");
+        THROW_ERROR("\nNo arguments passed!\nUSAGE:\t./sim configuration.dat");
     }
     // In case no outputFolder is passed, default to inputFolder/Out...
     if (strlen(outputFolder) == 0)
@@ -137,6 +145,8 @@ int main(int argc, char **argv)
             mkdir(outputFolder, 0700);
         }
     }
+    //
+    // END command line flags management
     //
     setLoggerOutputFolder(outputFolder);
     openLogFile(); // Initialize the log file descriptor.
@@ -169,6 +179,7 @@ int main(int argc, char **argv)
     int it = 0;                      /* sor iteration counter */
     double mindt = 10000;       /* arbitrary counter that keeps track of minimum dt value in calculation */
     int noFluidCells;          /* number of fluid cells in simulation */
+    int noCouplingCells;       /* number of coupling cells in simulation */
     double beta;              /* coefficient of thermal expansion */
     double TI;                  /* initial temperature */
     double T_h;                  /* hot surface boundary condition */
@@ -176,7 +187,8 @@ int main(int argc, char **argv)
     double Pr;                  /* Prandtl number */
     // Params for preCICE coupling
     double x_origin = 0.0, y_origin = 0.0;
-    char *precice_config = NULL, *participant_name = NULL, *mesh_name = NULL, *read_data_name = NULL, *write_data_name = NULL;
+    char precice_config[512], participant_name[128], mesh_name[128],
+            read_data_name[128], write_data_name[128];
     
     BoundaryInfo boundaryInfo[4];
     
@@ -192,7 +204,7 @@ int main(int argc, char **argv)
         char buf[512];
         sprintf((char *) buf, "%s/%s", inputFolder, geometry);
         strcpy(geometry, buf);
-        logMsg("Using geometry file: %s", geometry);
+        logMsg(PRODUCTION, "Using geometry file: %s", geometry);
     }
     
     double dt_check = fmin(dt, dt_value);
@@ -209,22 +221,23 @@ int main(int argc, char **argv)
     // create flag array to determine boundary conditions
     if (runningMode == COMPACT)
     {
-        logMsg("Running in compact mode");
+        logMsg(PRODUCTION, "Running in compact mode");
         read_boundary_parameters_compact_mode(szFileName, boundaryInfo, dx, dy);
     }
     else
     {
-        logMsg("Running in extended mode");
+        logMsg(PRODUCTION, "Running in extended mode");
         read_boundary_parameters_extended_mode(szFileName, boundaryInfo, dx, dy, imax, jmax, geometry);
     }
     
     // Log if temperature is being computed or not
     if (!computeTemperatureSwitch)
     {
-        logMsg("NoTemp mode: Temperature is not computed");
+        logMsg(PRODUCTION, "NoTemp mode: Temperature is not computed");
     }
     
-    init_flag(problem, geometry, imax, jmax, Flags, &noFluidCells, runningMode);
+    init_flag(problem, geometry, imax, jmax, Flags, &noFluidCells, &noCouplingCells, runningMode);
+    THROW_ERROR("Forcing exit for DEBUG");
     
     // initialise velocities and pressure
     init_uvpt(UI, VI, PI, TI, imax, jmax, U, V, P, T, Flags);
@@ -242,9 +255,9 @@ int main(int argc, char **argv)
                               Flags, U, V, F, G, RS, P, T, computeTemperatureSwitch);
     long simulationEndTime = getCurrentTimeMillis();
     // Check value of U[imax/2][7*jmax/8] (task6)
-    logMsg("Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
-    logMsg("Min dt value used: %16e", mindt);
-    logMsg("Total time spent in simulation: %.3f s", getTimeSpentSeconds(simulationStartTime, simulationEndTime));
+    logMsg(PRODUCTION, "Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
+    logMsg(PRODUCTION, "Min dt value used: %16e", mindt);
+    logMsg(PRODUCTION, "Total time spent in simulation: %.3f s", getTimeSpentSeconds(simulationStartTime, simulationEndTime));
     
     free_imatrix(Flags, 0, imax + 1, 0, jmax + 1);
     free_matrix(U, 0, imax + 1, 0, jmax + 1);

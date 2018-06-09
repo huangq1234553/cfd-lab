@@ -59,7 +59,7 @@ configureVelocityBoundary(BoundaryInfo *boundaryInfo, const BoundarySide boundar
     }
     else
     {
-        ERROR("Invalid velocity boundary type!");
+        THROW_ERROR("Invalid velocity boundary type!");
     }
 }
 
@@ -118,7 +118,7 @@ void configureTemperatureBoundary(BoundaryInfo *boundaryInfo, const BoundarySide
     }
     else
     {
-        ERROR("Invalid temperature boundary type!");
+        THROW_ERROR("Invalid temperature boundary type!");
     }
 }
 

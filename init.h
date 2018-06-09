@@ -66,15 +66,8 @@ void configureBoundary(BoundaryInfo *boundaryInfo, BoundarySide boundarySide, do
 void init_uvpt(double UI, double VI, double PI, double TI, int imax, int jmax, double **U, double **V, double **P,
                double **T, int **Flags);
 
-void init_flag(
-  char* problem,
-  char* geometry,
-  int imax,
-  int jmax,
-  int** Flag,
-  int* counter,
-  RunningMode runningMode
-);
+void init_flag(char *problem, char *geometry, int imax, int jmax, int **Flag, int *fluidCellsCounter,
+               int *couplingCellsCounter, RunningMode runningMode);
 
 
 

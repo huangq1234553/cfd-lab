@@ -46,6 +46,11 @@ int isFluid(int flag){
     return !((flag>>CENTER)&1);
 }
 
+// Returns 1 (True) if the cell is coupling
+int isCoupling(int flag){
+    return ((flag>>CBIT)&1);
+}
+
 // Returns 1 (True) if the neighbouring cell in the indicated direction is an obstacle
 int isNeighbourObstacle(int flag, Direction direction){
     return (flag>>direction)&1;
@@ -89,18 +94,18 @@ void geometryCheck(int** Flag, int imax, int jmax){
             else if( ( isFluid(Flag[i][j + 1]) && isFluid(Flag[i][j - 1]) ) ||
                  ( isFluid(Flag[i - 1][j]) && isFluid(Flag[i + 1][j]) )  )
             {
-                logMsg("Forbidden Geometry present at (%d,%d)", i, j);
+                logMsg(ERROR, "Forbidden Geometry present at (%d,%d)", i, j);
                 isForbidden++;
             }
         }
     }
     if(isForbidden == 0){
-        logMsg("Geometry has no forbidden configurations!");
+        logMsg(PRODUCTION, "Geometry has no forbidden configurations!");
     }
     else
     {
-        logMsg("%d forbidden geometries found!",isForbidden);
-        ERROR("Forbidden geometries!");
+        logMsg(ERROR, "%d forbidden geometries found!",isForbidden);
+        THROW_ERROR("Forbidden geometries!");
     }
 }
 
@@ -148,7 +153,7 @@ void errhandler( int nLine, const char *szFile, const char *szString )
 	sprintf( szTmp, " %s  File: %s   Variable: %s  Line: %d", szMessage, szFileName, szVarName, nLine ); \
     else \
 	sprintf( szTmp, " %s  File: %s   Variable: %s ", szMessage, szFileName, szVarName); \
-    ERROR( szTmp ); \
+    THROW_ERROR( szTmp ); \
   }
     
 
@@ -231,9 +236,9 @@ void read_string(const char *szFileName, const char *szVarName, char *pVariable,
 {
     char* szValue = NULL;	/* string containg the read variable value */
 
-    if( szVarName  == 0 )  ERROR("null pointer given as variable name" );
-    if( szFileName == 0 )  ERROR("null pointer given as filename" );
-    if( pVariable  == 0 )  ERROR("null pointer given as variable" );
+    if( szVarName  == 0 )  THROW_ERROR("null pointer given as variable name" );
+    if( szFileName == 0 )  THROW_ERROR("null pointer given as filename" );
+    if( pVariable  == 0 )  THROW_ERROR("null pointer given as variable" );
 
     if( szVarName[0] == '*' )
 	szValue = find_string(szFileName, szVarName + 1, optional);
@@ -248,7 +253,7 @@ void read_string(const char *szFileName, const char *szVarName, char *pVariable,
     else // If not found default to 0
         strcpy(pVariable, "NULLSTRING");
     
-    logMsg( "File: %s\t\t%s%s= %s", szFileName,
+    logMsg(PRODUCTION, "File: %s\t\t%s%s= %s", szFileName,
             szVarName,
             &("               "[min_int( strlen(szVarName), 15)]),
             pVariable );
@@ -258,9 +263,9 @@ void read_int(const char *szFileName, const char *szVarName, int *pVariable, Opt
 {
     char* szValue = NULL;	/* string containing the read variable value */
 
-    if( szVarName  == 0 )  ERROR("null pointer given as varable name" );
-    if( szFileName == 0 )  ERROR("null pointer given as filename" );
-    if( pVariable  == 0 )  ERROR("null pointer given as variable" );
+    if( szVarName  == 0 )  THROW_ERROR("null pointer given as varable name" );
+    if( szFileName == 0 )  THROW_ERROR("null pointer given as filename" );
+    if( pVariable  == 0 )  THROW_ERROR("null pointer given as variable" );
 
     if( szVarName[0] == '*' )
 	szValue = find_string(szFileName, szVarName + 1, optional);
@@ -275,7 +280,7 @@ void read_int(const char *szFileName, const char *szVarName, int *pVariable, Opt
     else // If not found default to 0
         *pVariable = 0;
     
-    logMsg( "File: %s\t\t%s%s= %d", szFileName,
+    logMsg(PRODUCTION, "File: %s\t\t%s%s= %d", szFileName,
             szVarName,
             &("               "[min_int( strlen(szVarName), 15)]),
             *pVariable );
@@ -285,9 +290,9 @@ void read_double(const char *szFileName, const char *szVarName, double *pVariabl
 {
     char* szValue = NULL;	/* String mit dem eingelesenen Variablenwert */
 
-    if( szVarName  == 0 )  ERROR("null pointer given as varable name" );
-    if( szFileName == 0 )  ERROR("null pointer given as filename" );
-    if( pVariable  == 0 )  ERROR("null pointer given as variable" );
+    if( szVarName  == 0 )  THROW_ERROR("null pointer given as varable name" );
+    if( szFileName == 0 )  THROW_ERROR("null pointer given as filename" );
+    if( pVariable  == 0 )  THROW_ERROR("null pointer given as variable" );
 
     if( szVarName[0] == '*' )
 	szValue = find_string(szFileName, szVarName + 1, optional);
@@ -302,7 +307,7 @@ void read_double(const char *szFileName, const char *szVarName, double *pVariabl
     else // If not found default to 0
         *pVariable = 0.0;
     
-    logMsg( "File: %s\t\t%s%s= %f", szFileName,
+    logMsg(PRODUCTION, "File: %s\t\t%s%s= %f", szFileName,
             szVarName,
             &("               "[min_int( strlen(szVarName), 15)]),
             *pVariable );
@@ -338,7 +343,7 @@ void write_matrix( const char* szFileName,       /* filename */
        {
 	   char szBuff[80];
 	   sprintf( szBuff, "Outputfile %s cannot be created", szFileName );
-	   ERROR( szBuff );
+	   THROW_ERROR( szBuff );
        }
        
 /*       fprintf( fh,"%f\n%f\n%d\n%d\n%d\n%d\n", xlength, ylength, nrl, nrh, ncl, nch ); */
@@ -350,7 +355,7 @@ void write_matrix( const char* szFileName,       /* filename */
        {
 	   char szBuff[80];
 	   sprintf( szBuff, "Outputfile %s cannot be opened", szFileName );
-	   ERROR( szBuff );
+	   THROW_ERROR( szBuff );
        }
    } 
 
@@ -364,7 +369,7 @@ void write_matrix( const char* szFileName,       /* filename */
    {
        char szBuff[80];
        sprintf( szBuff, "Outputfile %s cannot be closed", szFileName );
-       ERROR( szBuff );
+       THROW_ERROR( szBuff );
    };
 
    free( tmp );
@@ -390,7 +395,7 @@ void read_matrix( const char* szFileName,       /* filename */
        {
 	   char szBuff[80];
 	   sprintf( szBuff, "Can not read file %s !!!", szFileName );
-	   ERROR( szBuff );
+	   THROW_ERROR( szBuff );
        }
 
 
@@ -406,7 +411,7 @@ void read_matrix( const char* szFileName,       /* filename */
        /*orig bug:
        sscanf( szBuff, "Inputfile %s cannot be closed", szFileName );*/
        sprintf( szBuff, "Inputfile %s cannot be closed", szFileName );
-       ERROR( szBuff );
+       THROW_ERROR( szBuff );
    };
 
    free( tmp );
@@ -427,8 +432,8 @@ double **matrix( int nrl, int nrh, int ncl, int nch )
    double **pArray  = (double **) malloc((size_t)( nrow * sizeof(double*)) );
    double  *pMatrix = (double *)  malloc((size_t)( nrow * ncol * sizeof( double )));
 
-   if( pArray  == 0)  ERROR("Storage cannot be allocated");
-   if( pMatrix == 0)  ERROR("Storage cannot be allocated");
+   if( pArray  == 0)  THROW_ERROR("Storage cannot be allocated");
+   if( pMatrix == 0)  THROW_ERROR("Storage cannot be allocated");
 
    /* first entry of the array points to the value corrected by the 
       beginning of the column */
@@ -476,8 +481,8 @@ int **imatrix( int nrl, int nrh, int ncl, int nch )
    int  *pMatrix = (int *)  malloc((size_t)( nrow * ncol * sizeof( int )));
 
 
-   if( pArray  == 0)  ERROR("Storage cannot be allocated");
-   if( pMatrix == 0)  ERROR("Storage cannot be allocated");
+   if( pArray  == 0)  THROW_ERROR("Storage cannot be allocated");
+   if( pMatrix == 0)  THROW_ERROR("Storage cannot be allocated");
 
    /* first entry of the array points to the value corrected by the 
       beginning of the column */
@@ -513,6 +518,7 @@ void init_imatrix( int **m, int nrl, int nrh, int ncl, int nch, int a)
 
 
 int **read_pgm(const char *filename) {
+    logMsg(DEBUG, "read_pgm(): filename = %s", filename); //debug
     FILE *input = NULL;
     char line[1024];
     int levels;
@@ -522,13 +528,13 @@ int **read_pgm(const char *filename) {
     if ((input = fopen(filename, "rb")) == 0) {
         char szBuff[80];
         sprintf(szBuff, "Can not read file %s !!!", filename);
-        ERROR(szBuff);
+        THROW_ERROR(szBuff);
     }
 
     /* check for the right "magic number" */
     if (fread(line, 1, 3, input) != 3) {
         fclose(input);
-        ERROR("Error Wrong Magic field!");
+        THROW_ERROR("Error Wrong Magic field!");
     }
 
     /* skip the comments */
@@ -539,7 +545,7 @@ int **read_pgm(const char *filename) {
     /* read the width and height */
     sscanf(line, "%d %d\n", &xsize, &ysize);
 
-    printf("Image size: %d x %d\n", xsize, ysize);
+    logMsg(PRODUCTION, "Image size: %d x %d", xsize, ysize);
 
     /* read # of gray levels */
     fgets(line, sizeof line, input);
@@ -547,7 +553,7 @@ int **read_pgm(const char *filename) {
 
     /* allocate memory for image */
     pic = imatrix(0, xsize-1, 0, ysize-1);
-    printf("Image initialised...\n");
+    logMsg(PRODUCTION, "Image initialised...");
 
     for (int j = ysize-1; j >= 0; --j) {
         for (int i = 0; i < xsize; ++i) {
@@ -556,7 +562,7 @@ int **read_pgm(const char *filename) {
 
             if (value == EOF) {
                 fclose(input);
-                ERROR("read of geometry file failed!");
+                THROW_ERROR("read of geometry file failed!");
             }
             pic[i][j] = value;
         }

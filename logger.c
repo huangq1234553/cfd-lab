@@ -62,7 +62,7 @@ void openLogFile()
     {
         char buf[512];
         sprintf(buf, "Cannot open file %s", LOG_FILE_FULL_PATH);
-        ERROR(buf);
+        THROW_ERROR(buf);
     }
 }
 
@@ -102,19 +102,23 @@ void logEvent(DebugLevel eventDebugLevel, double t, char *fmt, ...)
     va_end(args);
 }
 
-void logMsg(char *fmt, ...)
+void logMsg(DebugLevel eventDebugLevel, char *fmt, ...)
 {
     // Newline at the end of the message is included.
+    // If this trace is too low level for current debug level, skip it.
+    if (eventDebugLevel < DEBUG_LEVEL)
+        return;
+    //
     double timestamp = getTimeSpentSeconds(LOGGER_START_TIME, getCurrentTimeMillis());
     va_list args;
     va_start(args,fmt);
-    printf("[%06.3f] ", timestamp);
+    printf("[%06.3f] %s ", timestamp, DEBUG_STR[eventDebugLevel]);
     printf("---> ");
     vprintf(fmt, args);
     printf("\n");
     va_end(args);
     va_start(args,fmt);
-    fprintf(LOG_FILE, "[%06.3f] ", timestamp);
+    fprintf(LOG_FILE, "[%06.3f] %s ", timestamp, DEBUG_STR[eventDebugLevel]);
     fprintf(LOG_FILE, "---> ");
     vfprintf(LOG_FILE, fmt, args);
     fprintf(LOG_FILE, "\n");

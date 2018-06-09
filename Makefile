@@ -42,6 +42,9 @@ tests:
 	./sim Tests/NaturalConvection/NaturalConvection.dat --compact -q
 	./sim Tests/RayleighBernardConvection/RayleighBenardConvection1.dat --compact -q
 
+debugtest:
+	./sim DebugTest/precice_test_scenario.dat --debug
+
 helper.o            : helper.h logger.h
 init.o              : helper.h init.h boundary_configurator.h logger.h
 boundary_val.o      : helper.h boundary_val.h logger.h

@@ -11,7 +11,8 @@ typedef enum GeometryPixelValue
     FREESLIP_PIXEL = 1,
     OUTFLOW_PIXEL = 2,
     INFLOW_PIXEL = 3,
-    FLUID_PIXEL = 4,
+    COUPLING_PIXEL = 4,
+    FLUID_PIXEL = 6,
 } GeometryPixelValue;
 
 void mapVelocityPixelValueToBoundaryTypeStr(GeometryPixelValue pixel, char* boundaryTypeStr);
