@@ -5,7 +5,7 @@ set(CMAKE_C_STANDARD 99)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wall -pedantic -Werror")
 
-set(SOURCE_FILES main.c boundary_val.c helper.c init.c sor.c uvp.c visual.c logger.c boundary_configurator.c timing.c)
+set(SOURCE_FILES main.c boundary_val.c helper.c init.c sor.c uvp.c visual.c logger.c boundary_configurator.c timing.c precice_adapter.c)
 add_executable(sim ${SOURCE_FILES})
 target_link_libraries(sim m)
 

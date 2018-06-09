@@ -1,3 +1,11 @@
+INCLUDES = \
+	-I. \
+	-I$(PRECICE_ROOT)/src/precice
+
+LIBS = \
+	-L$(PRECICE_ROOT)/build/last -lprecice\
+	-lm
+
 CC = gcc
 CFLAGS = -Wall -pedantic -Werror
 .c.o:  ; $(CC) -c $(CFLAGS) $<
@@ -11,14 +19,15 @@ OBJ = 	helper.o\
       	visual.o\
       	logger.o\
       	boundary_configurator.o\
-      	timing.o
+      	timing.o\
+      	precice_adapter.o
 
 
 all:  $(OBJ)
-	$(CC) $(CFLAGS) -o sim $(OBJ)  -lm
+	$(CC) $(CFLAGS) -o sim $(OBJ) $(LIBS)
 
 %.o : %.c
-	$(CC) -c $(CFLAGS) $*.c -o $*.o
+	$(CC) -c $(CFLAGS) $*.c -o $*.o $(LIBS)
 
 clean:
 	rm $(OBJ)
@@ -33,11 +42,12 @@ tests:
 	./sim Tests/NaturalConvection/NaturalConvection.dat --compact -q
 	./sim Tests/RayleighBernardConvection/RayleighBenardConvection1.dat --compact -q
 
-helper.o      : helper.h logger.h
-init.o        : helper.h init.h boundary_configurator.h logger.h
-boundary_val.o: helper.h boundary_val.h logger.h
-uvp.o         : helper.h uvp.h logger.h
-visual.o      : helper.h logger.h
-logger.o      : timing.o
+helper.o            : helper.h logger.h
+init.o              : helper.h init.h boundary_configurator.h logger.h
+boundary_val.o      : helper.h boundary_val.h logger.h
+uvp.o               : helper.h uvp.h logger.h
+visual.o            : helper.h logger.h
+logger.o            : logger.h timing.h
+precice_adapter.o 	: precice_adapter.h
 
-main.o        : helper.h init.h boundary_val.h uvp.h visual.h sor.h logger.h boundary_configurator.h timing.h
+main.o        : helper.h init.h boundary_val.h uvp.h visual.h sor.h logger.h boundary_configurator.h timing.h precice_adapter.h
