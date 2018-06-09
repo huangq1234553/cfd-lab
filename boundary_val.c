@@ -49,7 +49,7 @@ void setLeftBoundaryValues(int imax, int jmax, double **U, double **V, double **
                 V[0][j] = V[1][j];
             }
             // Set temperature boundary values
-            if (Flag >> TBIT & 1) {
+            if (Flag >> TBIT & DIRICHLET) {
                 T[0][j] = 2 * (boundaryInfo[LEFTBOUNDARY].valuesDirichletT)[0] - T[1][j];
             } else {
                 T[0][j] = T[1][j] + boundaryInfo[LEFTBOUNDARY].coeff;
@@ -81,7 +81,7 @@ void setRightBoundaryValues(int imax, int jmax, double **U, double **V, double *
                 V[imax + 1][j] = V[imax][j];
             }
 
-            if (Flag >> TBIT & 1) {
+            if (Flag >> TBIT & DIRICHLET) {
                 T[imax + 1][j] = 2 * (boundaryInfo[RIGHTBOUNDARY].valuesDirichletT)[0] - T[imax][j];
             } else {
                 T[imax + 1][j] = T[imax][j] + boundaryInfo[RIGHTBOUNDARY].coeff;
@@ -115,7 +115,7 @@ void setTopBoundaryValues(int imax, int jmax, double **U, double **V, double **T
                 V[i][jmax] = V[imax][jmax-1];
             }
 
-            if (Flag >> TBIT & 1) {
+            if (Flag >> TBIT & DIRICHLET) {
                 T[i][jmax+1] = 2 * (boundaryInfo[TOPBOUNDARY].valuesDirichletT)[0] - T[i][jmax];
             } else {
                 T[i][jmax+1] = T[i][jmax] + boundaryInfo[TOPBOUNDARY].coeff;
@@ -149,7 +149,7 @@ void setBottomBoundaryValues(int imax, int jmax, double **U, double **V, double 
                 V[i][0] = V[i][1];
             }
 
-            if (Flag >> TBIT & 1) {
+            if (Flag >> TBIT & DIRICHLET) {
                 T[i][0] = 2 * (boundaryInfo[TOPBOUNDARY].valuesDirichletT)[0] - T[i][1];
             } else {
                 T[i][0] = T[i][0] + boundaryInfo[BOTTOMBOUNDARY].coeff;
