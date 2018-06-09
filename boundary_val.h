@@ -1,6 +1,8 @@
 #ifndef __RANDWERTE_H__
 #define __RANDWERTE_H__
 
+#include <stdbool.h>
+
 /*
  * Auxiliary data structures to handle the boundary values.
  */
@@ -64,6 +66,6 @@ void setBottomBoundaryValues(int imax, int jmax, double **U, double **V, double 
 
 void setEdgeBoundaryValues(int imax, int jmax, double **U, double **V, int **Flags, int i, int j);
 
-void setCenterBoundaryValues(int imax, int jmax, double **Q, int **Flags, int i, int j);
+void setCenterBoundaryValues(int imax, int jmax, double **Q, int **Flags, int i, int j, bool isCoupled);
 
 #endif

@@ -81,7 +81,7 @@ void sor(double omg, double dx, double dy, int imax, int jmax, double **P, doubl
     {
         for (int j = 1; j <= jmax; j++)
         {
-            setCenterBoundaryValues(imax, jmax, P, Flags, i, j);
+            setCenterBoundaryValues(imax, jmax, P, Flags, i, j, false);
         }
     }
 }

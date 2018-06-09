@@ -17,7 +17,7 @@ void boundaryval(int imax, int jmax, double **U, double **V, double **T, int **F
         for (int j = 1; j <= jmax; ++j)
         {
             setEdgeBoundaryValues(imax, jmax, U, V, Flags, i, j);
-            setCenterBoundaryValues(imax, jmax, T, Flags, i, j);
+            setCenterBoundaryValues(imax, jmax, T, Flags, i, j, true);
         }
     }
 }
@@ -239,11 +239,11 @@ void setEdgeBoundaryValues(int imax, int jmax, double **U, double **V, int  **Fl
     }
 }
 
-void setCenterBoundaryValues(int imax, int jmax, double **Q, int **Flags, int i, int j)
+void setCenterBoundaryValues(int imax, int jmax, double **Q, int **Flags, int i, int j, bool isCoupled)
 {
     int C = Flags[i][j];
     // proceed if obstacle
-    if (isObstacle(C) && !isCoupling(C))
+    if (isObstacle(C) && !(isCoupling(C) && isCoupled))
     {
         if (isCorner(C))
         {
