@@ -80,7 +80,7 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
     return 1;
 }
 
-void read_boundary_parameters_compact_mode(const char *szFileName, BoundaryInfo *boundaryInfo, double dx, double dy)
+/*void read_boundary_parameters_compact_mode(const char *szFileName, BoundaryInfo *boundaryInfo, double dx, double dy)
 {
     // Now read boundary-related variables
     char left_boundary_type[16];
@@ -190,37 +190,40 @@ void read_boundary_parameters_compact_mode(const char *szFileName, BoundaryInfo 
     
     // TODO: add support for more complex profiles and/or autogeneration of parabolic one. Do this into the new boundary_configurator.c file
     
-}
+}*/
 
 void read_boundary_parameters_extended_mode(const char *szFileName, BoundaryInfo *boundaryInfo, double dx, double dy,
                                             int imax, int jmax, char *geometryFileName)
 {
     // Now read boundary-related variables
-    char left_boundary_type[16];
-    char left_boundary_temp_type[16];
-    char right_boundary_type[16];
-    char right_boundary_temp_type[16];
-    char top_boundary_type[16];
-    char top_boundary_temp_type[16];
-    char bottom_boundary_type[16];
-    char bottom_boundary_temp_type[16];
-    double left_boundary_U;
-    double left_boundary_V;
+    double left_boundary_dirichlet_U;
+    double left_boundary_dirichlet_V;
+    double left_boundary_neumann_U;
+    double left_boundary_neumann_V;
     double left_boundary_T;
     double left_boundary_qN;
     double left_boundary_k;
-    double right_boundary_U;
-    double right_boundary_V;
+
+    double right_boundary_dirichlet_U;
+    double right_boundary_dirichlet_V;
+    double right_boundary_neumann_U;
+    double right_boundary_neumann_V;
     double right_boundary_T;
     double right_boundary_qN;
     double right_boundary_k;
-    double top_boundary_U;
-    double top_boundary_V;
+
+    double top_boundary_dirichlet_U;
+    double top_boundary_dirichlet_V;
+    double top_boundary_neumann_U;
+    double top_boundary_neumann_V;
     double top_boundary_T;
     double top_boundary_qN;
     double top_boundary_k;
-    double bottom_boundary_U;
-    double bottom_boundary_V;
+
+    double bottom_boundary_dirichlet_U;
+    double bottom_boundary_dirichlet_V;
+    double bottom_boundary_neumann_U;
+    double bottom_boundary_neumann_V;
     double bottom_boundary_T;
     double bottom_boundary_qN;
     double bottom_boundary_k;
@@ -228,28 +231,28 @@ void read_boundary_parameters_extended_mode(const char *szFileName, BoundaryInfo
     int **pic = NULL;
     pic = read_pgm(geometryFileName);
     
-    getVelocityBoundaryTypesFromExtendedGeometryFile(pic, imax, jmax,
+/*    getVelocityBoundaryTypesFromExtendedGeometryFile(pic, imax, jmax,
                                                      left_boundary_type,
                                                      right_boundary_type,
                                                      top_boundary_type,
                                                      bottom_boundary_type);
-    
-    char *boundaryTempTypeDefault = "NEUMANN";
+
     
     READ_STRING(szFileName, left_boundary_temp_type, OPTIONAL);
     setDefaultStringIfRequired(left_boundary_temp_type, boundaryTempTypeDefault);
-    
+
     READ_STRING(szFileName, right_boundary_temp_type, OPTIONAL);
     setDefaultStringIfRequired(right_boundary_temp_type, boundaryTempTypeDefault);
-    
+
     READ_STRING(szFileName, top_boundary_temp_type, OPTIONAL);
     setDefaultStringIfRequired(top_boundary_temp_type, boundaryTempTypeDefault);
-    
+
     READ_STRING(szFileName, bottom_boundary_temp_type, OPTIONAL);
-    setDefaultStringIfRequired(bottom_boundary_temp_type, boundaryTempTypeDefault);
-    
-    READ_DOUBLE(szFileName, left_boundary_U, OPTIONAL);
-    READ_DOUBLE(szFileName, left_boundary_V, OPTIONAL);
+    setDefaultStringIfRequired(bottom_boundary_temp_type, boundaryTempTypeDefault);*/
+    READ_DOUBLE(szFileName, left_boundary_dirichlet_U, OPTIONAL);
+    READ_DOUBLE(szFileName, left_boundary_dirichlet_V, OPTIONAL);
+    READ_DOUBLE(szFileName, left_boundary_neumann_U, OPTIONAL);
+    READ_DOUBLE(szFileName, left_boundary_neumann_V, OPTIONAL);
     READ_DOUBLE(szFileName, left_boundary_T, OPTIONAL);
     READ_DOUBLE(szFileName, left_boundary_qN, OPTIONAL);
     READ_DOUBLE(szFileName, left_boundary_k, OPTIONAL);
@@ -258,8 +261,10 @@ void read_boundary_parameters_extended_mode(const char *szFileName, BoundaryInfo
         left_boundary_k = 1;
     }
     
-    READ_DOUBLE(szFileName, right_boundary_U, OPTIONAL);
-    READ_DOUBLE(szFileName, right_boundary_V, OPTIONAL);
+    READ_DOUBLE(szFileName, right_boundary_dirichlet_U, OPTIONAL);
+    READ_DOUBLE(szFileName, right_boundary_dirichlet_V, OPTIONAL);
+    READ_DOUBLE(szFileName, right_boundary_neumann_U, OPTIONAL);
+    READ_DOUBLE(szFileName, right_boundary_neumann_V, OPTIONAL);
     READ_DOUBLE(szFileName, right_boundary_T, OPTIONAL);
     READ_DOUBLE(szFileName, right_boundary_qN, OPTIONAL);
     READ_DOUBLE(szFileName, right_boundary_k, OPTIONAL);
@@ -268,8 +273,10 @@ void read_boundary_parameters_extended_mode(const char *szFileName, BoundaryInfo
         right_boundary_k = 1;
     }
     
-    READ_DOUBLE(szFileName, top_boundary_U, OPTIONAL);
-    READ_DOUBLE(szFileName, top_boundary_V, OPTIONAL);
+    READ_DOUBLE(szFileName, top_boundary_dirichlet_U, OPTIONAL);
+    READ_DOUBLE(szFileName, top_boundary_dirichlet_V, OPTIONAL);
+    READ_DOUBLE(szFileName, top_boundary_neumann_U, OPTIONAL);
+    READ_DOUBLE(szFileName, top_boundary_neumann_V, OPTIONAL);
     READ_DOUBLE(szFileName, top_boundary_T, OPTIONAL);
     READ_DOUBLE(szFileName, top_boundary_qN, OPTIONAL);
     READ_DOUBLE(szFileName, top_boundary_k, OPTIONAL);
@@ -278,8 +285,10 @@ void read_boundary_parameters_extended_mode(const char *szFileName, BoundaryInfo
         top_boundary_k = 1;
     }
     
-    READ_DOUBLE(szFileName, bottom_boundary_U, OPTIONAL);
-    READ_DOUBLE(szFileName, bottom_boundary_V, OPTIONAL);
+    READ_DOUBLE(szFileName, bottom_boundary_dirichlet_U, OPTIONAL);
+    READ_DOUBLE(szFileName, bottom_boundary_dirichlet_V, OPTIONAL);
+    READ_DOUBLE(szFileName, bottom_boundary_neumann_U, OPTIONAL);
+    READ_DOUBLE(szFileName, bottom_boundary_neumann_V, OPTIONAL);
     READ_DOUBLE(szFileName, bottom_boundary_T, OPTIONAL);
     READ_DOUBLE(szFileName, bottom_boundary_qN, OPTIONAL);
     READ_DOUBLE(szFileName, bottom_boundary_k, OPTIONAL);
@@ -288,21 +297,27 @@ void read_boundary_parameters_extended_mode(const char *szFileName, BoundaryInfo
         bottom_boundary_k = 1;
     }
     
-    configureBoundary(boundaryInfo, LEFTBOUNDARY, left_boundary_type, left_boundary_temp_type, left_boundary_U,
-                      left_boundary_V,
-                      left_boundary_T, left_boundary_qN, left_boundary_k, dx);
-    configureBoundary(boundaryInfo, RIGHTBOUNDARY, right_boundary_type, right_boundary_temp_type, right_boundary_U,
-                      right_boundary_V,
-                      right_boundary_T, right_boundary_qN, right_boundary_k, dy);
-    configureBoundary(boundaryInfo, TOPBOUNDARY, top_boundary_type, top_boundary_temp_type, top_boundary_U,
-                      top_boundary_V,
-                      top_boundary_T, top_boundary_qN, top_boundary_k, dx);
-    configureBoundary(boundaryInfo, BOTTOMBOUNDARY, bottom_boundary_type, bottom_boundary_temp_type, bottom_boundary_U,
-                      bottom_boundary_V,
-                      bottom_boundary_T, bottom_boundary_qN, bottom_boundary_k, dy);
+    configureBoundary(boundaryInfo, LEFTBOUNDARY, left_boundary_dirichlet_U, left_boundary_dirichlet_V, left_boundary_neumann_U,
+                      left_boundary_neumann_V, left_boundary_T, left_boundary_qN, left_boundary_k, dx);
+    configureBoundary(boundaryInfo, RIGHTBOUNDARY, right_boundary_dirichlet_U, right_boundary_dirichlet_V, right_boundary_neumann_U,
+                      right_boundary_neumann_V, right_boundary_T, right_boundary_qN, right_boundary_k, dy);
+    configureBoundary(boundaryInfo, TOPBOUNDARY, top_boundary_dirichlet_U, top_boundary_dirichlet_V, top_boundary_neumann_U,
+                      top_boundary_neumann_V, top_boundary_T, top_boundary_qN, top_boundary_k, dx);
+    configureBoundary(boundaryInfo, BOTTOMBOUNDARY, bottom_boundary_dirichlet_U, bottom_boundary_dirichlet_V, bottom_boundary_neumann_U,
+                      bottom_boundary_neumann_V, bottom_boundary_T, bottom_boundary_qN, bottom_boundary_k, dy);
     
     // TODO: add support for more complex profiles and/or autogeneration of parabolic one. Do this into the new boundary_configurator.c file
     
+}
+
+void configureBoundary(BoundaryInfo *boundaryInfo, BoundarySide boundarySide, double dirichletU, double dirichletV, double neumannU, double neumannV,
+                       double temp, double qN, double k, double h){
+    *(boundaryInfo[boundarySide].valuesDirichletU) = dirichletU;
+    *(boundaryInfo[boundarySide].valuesDirichletV) = dirichletV;
+    *(boundaryInfo[boundarySide].valuesNeumannU) = neumannU;
+    *(boundaryInfo[boundarySide].valuesNeumannV) = neumannV;
+    *(boundaryInfo[boundarySide].valuesDirichletT) = temp;
+    boundaryInfo[boundarySide].coeff = h * qN / k;
 }
 
 void init_uvpt(double UI, double VI, double PI, double TI, int imax, int jmax, double **U, double **V, double **P,

@@ -51,7 +51,7 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
                     double *T_c, double *Pr, double *x_origin, double *y_origin, char *precice_config,
                     char *participant_name, char *mesh_name, char *read_data_name, char *write_data_name);
 
-void read_boundary_parameters_compact_mode(const char *szFileName, BoundaryInfo *boundaryInfo, double dx, double dy);
+//void read_boundary_parameters_compact_mode(const char *szFileName, BoundaryInfo *boundaryInfo, double dx, double dy);
 void read_boundary_parameters_extended_mode(const char *szFileName, BoundaryInfo *boundaryInfo, double dx, double dy,
                                             int imax,
                                             int jmax, char *geometryFileName);

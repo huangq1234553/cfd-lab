@@ -12,39 +12,35 @@ typedef enum BoundarySide
     RIGHTBOUNDARY
 } BoundarySide;
 
-typedef enum BoundaryType
-{
-    DIRICHLET,
-    NEUMANN
-} BoundaryType;
-
-typedef enum HLBoundaryType
-{
-    NOSLIP,
-    FREESLIP,
-    MOVINGWALL,
-    INFLOW,
-    OUTFLOW
-} HLBoundaryType;
+// To be removed down the road
+//typedef enum BoundaryType
+//{
+//    DIRICHLET,
+//    NEUMANN
+//} BoundaryType;
+//
+//typedef enum HLBoundaryType
+//{
+//    NOSLIP,
+//    FREESLIP,
+//    MOVINGWALL,
+//    INFLOW,
+//    OUTFLOW
+//} HLBoundaryType;
 
 typedef struct BoundaryInfo
 {
-    HLBoundaryType hlBoundaryType;
-    BoundaryType typeU;
-    BoundaryType typeV;
-    BoundaryType typeT;
-    char constU; // 1 means the value to apply is uniform.
-    char constV; // 1 means the value to apply is uniform.
-    char constT; // 1 means the value to apply is uniform.
-    double *valuesU;
-    double *valuesV;
-    double *valuesT;
+    double *valuesDirichletU;
+    double *valuesDirichletV;
+    double *valuesNeumannU;
+    double *valuesNeumannV;
+    double *valuesDirichletT;
     double coeff; // This is dx*qN/k or dy*qn/k depending on the boundary
 } BoundaryInfo;
 
-// Initialize a BoundaryInfo object
-void initBoundaryInfo(BoundaryInfo *boundaryInfo, HLBoundaryType hlBoundaryType, BoundaryType typeU, BoundaryType typeV,
-                      int numValuesU, int numValuesV);
+//// Initialize a BoundaryInfo object
+//void initBoundaryInfo(BoundaryInfo *boundaryInfo, HLBoundaryType hlBoundaryType, BoundaryType typeU, BoundaryType typeV,
+//                      int numValuesU, int numValuesV);
 
 void freeAllBoundaryInfo(BoundaryInfo boundaryInfo[4]);
 

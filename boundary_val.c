@@ -25,120 +25,67 @@ void boundaryval(int imax, int jmax, double **U, double **V, double **T, int **F
 void setLeftBoundaryValues(int imax, int jmax, double **U, double **V, double **T, int **Flags,
                            BoundaryInfo *boundaryInfo)
 {
+    int Flag;
     for (int j = 1; j <= jmax; j++)
     {
         // Set the velocity boundary values
-        int rightNeighbourIsFluid = isNeighbourFluid(Flags[0][j],RIGHT);
-        // U values
-        if (boundaryInfo[LEFTBOUNDARY].typeU == DIRICHLET
-            && rightNeighbourIsFluid)
-        {
-            if (boundaryInfo[LEFTBOUNDARY].constU)
-            {
-                U[0][j] = *(boundaryInfo[LEFTBOUNDARY].valuesU);
-            }
-            else
-            {
-                U[0][j] = (boundaryInfo[LEFTBOUNDARY].valuesU)[j - 1];
-            }
+        Flag = Flags[0][j];
+        int rightNeighbourIsObstacle = isNeighbourObstacle(Flags[0][j],RIGHT);
+        if(rightNeighbourIsObstacle){
+            ;
         }
-        else
-        {
-            U[0][j] = U[1][j];
-        }
-        // V values
-        if (boundaryInfo[LEFTBOUNDARY].typeV == DIRICHLET
-            && rightNeighbourIsFluid)
-        {
-            if (boundaryInfo[LEFTBOUNDARY].constV)
-            {
-                V[0][j] = 2 * (boundaryInfo[LEFTBOUNDARY].valuesV)[0] - V[1][j];
+        else {
+            if (Flag >> NSBIT & 1 || Flag >> CBIT & 1) {
+                U[0][j] = 0;
+                V[0][j] = -V[1][j];
+            } else if (Flag >> FSBIT & 1) {
+                U[0][j] = 0;
+                V[0][j] = V[1][j];
+            } else if (Flag >> IFBIT & 1) {
+                U[0][j] = (boundaryInfo[LEFTBOUNDARY].valuesDirichletU)[0];
+                V[0][j] = 2 * (boundaryInfo[LEFTBOUNDARY].valuesDirichletV)[0] - V[1][j];
+            } else {
+                U[0][j] = U[1][j];
+                V[0][j] = V[1][j];
             }
-            else
-            {
-                V[0][j] = 2 * (boundaryInfo[LEFTBOUNDARY].valuesV)[j - 1] - V[1][j];
+            // Set temperature boundary values
+            if (Flag >> TBIT & 1) {
+                T[0][j] = 2 * (boundaryInfo[LEFTBOUNDARY].valuesDirichletT)[0] - T[1][j];
+            } else {
+                T[0][j] = T[1][j] + boundaryInfo[LEFTBOUNDARY].coeff;
             }
-        }
-        else
-        {
-            V[0][j] = V[1][j];
-        }
-        // Set temperature boundary values
-        if (boundaryInfo[LEFTBOUNDARY].typeT == DIRICHLET
-                && rightNeighbourIsFluid)
-        {
-            if (boundaryInfo[LEFTBOUNDARY].constT)
-            {
-                T[0][j] = 2 * (boundaryInfo[LEFTBOUNDARY].valuesT)[0] - T[1][j];
-            }
-            else
-            {
-                T[0][j] = 2 * (boundaryInfo[LEFTBOUNDARY].valuesT)[j - 1] - T[1][j];
-            }
-        }
-        else
-        {
-            T[0][j] = T[1][j] + boundaryInfo[LEFTBOUNDARY].coeff;
         }
     }
 }
 
 void setRightBoundaryValues(int imax, int jmax, double **U, double **V, double **T, int **Flags,
-                            BoundaryInfo *boundaryInfo)
-{
-    for (int j = 1; j <= jmax; j++)
-    {
-        //boundaryInfo[3] == RIGHT
-        int leftNeighbourIsFluid = isNeighbourFluid(Flags[imax+1][j],LEFT);
-        if (boundaryInfo[RIGHTBOUNDARY].typeU == DIRICHLET
-                && leftNeighbourIsFluid)
-        {
-            if (boundaryInfo[RIGHTBOUNDARY].constU)
-            {
-                U[imax][j] = *(boundaryInfo[RIGHTBOUNDARY].valuesU);
-            }
-            else
-            {
-                U[imax][j] = (boundaryInfo[RIGHTBOUNDARY].valuesU)[j - 1];
-            }
+                            BoundaryInfo *boundaryInfo) {
+    int Flag;
+    for (int j = 1; j <= jmax; j++) {
+        Flag = Flags[imax + 1][j];
+        int leftNeighbourIsObstacle = isNeighbourObstacle(Flags[imax + 1][j], LEFT);
+        if (leftNeighbourIsObstacle) { ;
         }
-        else
-        {
-            U[imax][j] = U[imax - 1][j];
-        }
-        
-        if (boundaryInfo[RIGHTBOUNDARY].typeV == DIRICHLET
-                && leftNeighbourIsFluid)
-        {
-            if (boundaryInfo[RIGHTBOUNDARY].constV)
-            {
-                V[imax + 1][j] = 2 * (boundaryInfo[RIGHTBOUNDARY].valuesV)[0] - V[imax][j];
+        else {
+            if (Flag >> NSBIT & 1 || Flag >> CBIT & 1) {
+                U[imax][j] = 0;
+                V[imax + 1][j] = -V[imax][j];
+            } else if (Flag >> FSBIT & 1) {
+                U[imax][j] = 0;
+                V[imax + 1][j] = V[imax][j];
+            } else if (Flag >> IFBIT & 1) {
+                U[imax][j] = (boundaryInfo[RIGHTBOUNDARY].valuesDirichletU)[0];
+                V[imax][j] = 2 * (boundaryInfo[RIGHTBOUNDARY].valuesDirichletV)[0] - V[imax][j];
+            } else {
+                U[imax][j] = U[imax - 1][j];
+                V[imax + 1][j] = V[imax][j];
             }
-            else
-            {
-                V[imax + 1][j] = 2 * (boundaryInfo[RIGHTBOUNDARY].valuesV)[j - 1] - V[imax][j];
+
+            if (Flag >> TBIT & 1) {
+                T[imax + 1][j] = 2 * (boundaryInfo[RIGHTBOUNDARY].valuesDirichletT)[0] - T[imax][j];
+            } else {
+                T[imax + 1][j] = T[imax][j] + boundaryInfo[RIGHTBOUNDARY].coeff;
             }
-        }
-        else
-        {
-            V[imax + 1][j] = V[imax][j];
-        }
-        // Set temperature boundary values
-        if (boundaryInfo[RIGHTBOUNDARY].typeT == DIRICHLET
-            && leftNeighbourIsFluid)
-        {
-            if (boundaryInfo[RIGHTBOUNDARY].constT)
-            {
-                T[imax+1][j] = 2 * (boundaryInfo[RIGHTBOUNDARY].valuesT)[0] - T[imax][j];
-            }
-            else
-            {
-                T[imax+1][j] = 2 * (boundaryInfo[RIGHTBOUNDARY].valuesT)[j - 1] - T[imax][j];
-            }
-        }
-        else
-        {
-            T[imax+1][j] = T[imax][j] - boundaryInfo[RIGHTBOUNDARY].coeff; // Note: this minus is to keep our convention for coeff sign
         }
     }
 }
@@ -146,59 +93,33 @@ void setRightBoundaryValues(int imax, int jmax, double **U, double **V, double *
 void setTopBoundaryValues(int imax, int jmax, double **U, double **V, double **T, int **Flags,
                           BoundaryInfo *boundaryInfo)
 {
+    int Flag;
     for (int i = 1; i <= imax; i++)
     {
-        //boundaryInfo[0] == TOP
-        int bottomNeighbourIsFluid = isNeighbourFluid(Flags[i][jmax+1],BOT);
-        if (boundaryInfo[TOPBOUNDARY].typeV == DIRICHLET
-                && bottomNeighbourIsFluid)
-        {
-            if (boundaryInfo[TOPBOUNDARY].constV)
-            {
-                V[i][jmax] = *(boundaryInfo[TOPBOUNDARY].valuesV);
-            }
-            else
-            {
-                V[i][jmax] = (boundaryInfo[TOPBOUNDARY].valuesV)[i - 1];
-            }
+        Flag = Flags[i][jmax+1];
+        int bottomNeighbourIsObstacle = isNeighbourObstacle(Flags[i][jmax+1],BOT);
+        if (bottomNeighbourIsObstacle) { ;
         }
-        else
-        {
-            V[i][jmax] = V[i][jmax - 1];
-        }
-        
-        if (boundaryInfo[TOPBOUNDARY].typeU == DIRICHLET
-                && bottomNeighbourIsFluid)
-        {
-            if (boundaryInfo[TOPBOUNDARY].constU)
-            {
-                U[i][jmax + 1] = 2 * (boundaryInfo[TOPBOUNDARY].valuesU)[0] - U[i][jmax];
+        else {
+            if (Flag >> NSBIT & 1 || Flag >> CBIT & 1) {
+                U[i][jmax+1] = -U[i][jmax];
+                V[i][jmax] = 0;
+            } else if (Flag >> FSBIT & 1) {
+                U[i][jmax+1] = U[i][jmax];
+                V[i][jmax] = 0;
+            } else if (Flag >> IFBIT & 1) {
+                U[i][jmax+1] = 2 * (boundaryInfo[TOPBOUNDARY].valuesDirichletU)[0] - U[i][jmax];
+                V[i][jmax] = (boundaryInfo[TOPBOUNDARY].valuesDirichletV)[0] ;
+            } else {
+                U[i][jmax+1] = U[i][jmax];
+                V[i][jmax] = V[imax][jmax-1];
             }
-            else
-            {
-                U[i][jmax + 1] = 2 * (boundaryInfo[TOPBOUNDARY].valuesU)[i - 1] - U[i][jmax];
+
+            if (Flag >> TBIT & 1) {
+                T[i][jmax+1] = 2 * (boundaryInfo[TOPBOUNDARY].valuesDirichletT)[0] - T[i][jmax];
+            } else {
+                T[i][jmax+1] = T[i][jmax] + boundaryInfo[TOPBOUNDARY].coeff;
             }
-        }
-        else
-        {
-            U[i][jmax + 1] = U[i][jmax];
-        }
-        // Set temperature boundary values
-        if (boundaryInfo[TOPBOUNDARY].typeT == DIRICHLET
-            && bottomNeighbourIsFluid)
-        {
-            if (boundaryInfo[TOPBOUNDARY].constT)
-            {
-                T[i][jmax+1] = 2 * (boundaryInfo[TOPBOUNDARY].valuesT)[0] - T[i][jmax];
-            }
-            else
-            {
-                T[i][jmax+1] = 2 * (boundaryInfo[TOPBOUNDARY].valuesT)[i - 1] - T[i][jmax];
-            }
-        }
-        else
-        {
-            T[i][jmax+1] = T[i][jmax] - boundaryInfo[TOPBOUNDARY].coeff; // Note: this minus is to keep our convention for coeff sign
         }
     }
 }
@@ -206,65 +127,38 @@ void setTopBoundaryValues(int imax, int jmax, double **U, double **V, double **T
 void setBottomBoundaryValues(int imax, int jmax, double **U, double **V, double **T, int **Flags,
                              BoundaryInfo *boundaryInfo)
 {
+    int Flag;
     for (int i = 1; i <= imax; i++)
     {
-        //boundaryInfo[1] == BOTTOM
-        int topNeighbourIsFluid = isNeighbourFluid(Flags[i][0],TOP);
-        if (boundaryInfo[BOTTOMBOUNDARY].typeV == DIRICHLET
-                && topNeighbourIsFluid)
-        {
-            if (boundaryInfo[BOTTOMBOUNDARY].constV)
-            {
-                V[i][0] = *(boundaryInfo[BOTTOMBOUNDARY].valuesV);
-            }
-            else
-            {
-                V[i][0] = (boundaryInfo[BOTTOMBOUNDARY].valuesV)[i - 1];
-            }
+        Flag = Flags[i][0];
+        int topNeighbourIsObstacle = isNeighbourObstacle(Flags[i][0],TOP);
+        if (topNeighbourIsObstacle) { ;
         }
-        else
-        {
-            V[i][0] = V[i][1];
-        }
-        
-        if (boundaryInfo[BOTTOMBOUNDARY].typeU == DIRICHLET
-                && topNeighbourIsFluid)
-        {
-            if (boundaryInfo[BOTTOMBOUNDARY].constU)
-            {
-                U[i][0] = 2 * (boundaryInfo[BOTTOMBOUNDARY].valuesU)[0] - U[i][1];
+        else {
+            if (Flag >> NSBIT & 1 || Flag >> CBIT & 1) {
+                U[i][0] = -U[i][1];
+                V[i][0] = 0;
+            } else if (Flag >> FSBIT & 1) {
+                U[i][0] = U[i][1];
+                V[i][0] = 0;
+            } else if (Flag >> IFBIT & 1) {
+                U[i][0] = 2 * (boundaryInfo[TOPBOUNDARY].valuesDirichletU)[0] - U[i][1];
+                V[i][0] = (boundaryInfo[TOPBOUNDARY].valuesDirichletV)[0] ;
+            } else {
+                U[i][0] = U[i][1];
+                V[i][0] = V[i][1];
             }
-            else
-            {
-                U[i][0] = 2 * (boundaryInfo[BOTTOMBOUNDARY].valuesU)[i - 1] - U[i][1];
+
+            if (Flag >> TBIT & 1) {
+                T[i][0] = 2 * (boundaryInfo[TOPBOUNDARY].valuesDirichletT)[0] - T[i][1];
+            } else {
+                T[i][0] = T[i][0] + boundaryInfo[BOTTOMBOUNDARY].coeff;
             }
-        }
-        else
-        {
-            U[i][0] = U[i][1];
-        }
-        // Set temperature boundary values
-        if (boundaryInfo[BOTTOMBOUNDARY].typeT == DIRICHLET
-            && topNeighbourIsFluid)
-        {
-            if (boundaryInfo[BOTTOMBOUNDARY].constT)
-            {
-                T[i][0] = 2 * (boundaryInfo[BOTTOMBOUNDARY].valuesT)[0] - T[i][1];
-            }
-            else
-            {
-                T[i][0] = 2 * (boundaryInfo[BOTTOMBOUNDARY].valuesT)[i - 1] - T[i][1];
-            }
-        }
-        else
-        {
-            double tmp = T[i][1] + boundaryInfo[BOTTOMBOUNDARY].coeff;
-            T[i][0] = tmp;
         }
     }
 }
 
-void initBoundaryInfo(BoundaryInfo *boundaryInfo, HLBoundaryType hlBoundaryType, BoundaryType typeU, BoundaryType typeV,
+/*void initBoundaryInfo(BoundaryInfo *boundaryInfo, HLBoundaryType hlBoundaryType, BoundaryType typeU, BoundaryType typeV,
                       int numValuesU, int numValuesV)
 {
     boundaryInfo->typeU = typeU;
@@ -294,7 +188,7 @@ void initBoundaryInfo(BoundaryInfo *boundaryInfo, HLBoundaryType hlBoundaryType,
     boundaryInfo->constT = 1;
     boundaryInfo->valuesT = calloc(1, sizeof(double));
     boundaryInfo->coeff = 0;
-}
+}*/
 
 void setEdgeBoundaryValues(int imax, int jmax, double **U, double **V, int  **Flags, int i, int j)
 {
