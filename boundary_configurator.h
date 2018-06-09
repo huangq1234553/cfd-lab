@@ -17,20 +17,20 @@ typedef enum GeometryPixelValue
 
 void mapVelocityPixelValueToBoundaryTypeStr(GeometryPixelValue pixel, char* boundaryTypeStr);
 
-void getVelocityBoundaryTypesFromExtendedGeometryFile(int** geometry, int imax, int jmax,
-                                                      char* leftBoundaryType, char* rightBoundaryType,
-                                                      char* topBoundaryType, char* bottomBoundaryType);
+//void getVelocityBoundaryTypesFromExtendedGeometryFile(int** geometry, int imax, int jmax,
+//                                                      char* leftBoundaryType, char* rightBoundaryType,
+//                                                      char* topBoundaryType, char* bottomBoundaryType);
+//
+//void configureVelocityBoundary(BoundaryInfo *boundaryInfo, const BoundarySide boundarySide,
+//                               const char *boundaryTypeStr,
+//                               const double u, const double v);
+//
+//void configureTemperatureBoundary(BoundaryInfo *boundaryInfo, const BoundarySide boundarySide,
+//                                  const char *boundaryTempTypeStr,
+//                                  const double temperature, const double qN, const double k, const double h);
 
-void configureVelocityBoundary(BoundaryInfo *boundaryInfo, const BoundarySide boundarySide,
-                               const char *boundaryTypeStr,
-                               const double u, const double v);
-
-void configureTemperatureBoundary(BoundaryInfo *boundaryInfo, const BoundarySide boundarySide,
-                                  const char *boundaryTempTypeStr,
-                                  const double temperature, const double qN, const double k, const double h);
-
-void configureBoundary(BoundaryInfo *boundaryInfo, const BoundarySide boundarySide, const char *boundaryTypeStr,
-                       const char *boundaryTempTypeStr, double u, double v, double temp, double qN, double k,
-                       double h);
+//void configureBoundary(BoundaryInfo *boundaryInfo, const BoundarySide boundarySide, const char *boundaryTypeStr,
+//                       const char *boundaryTempTypeStr, double u, double v, double temp, double qN, double k,
+//                       double h);
 
 #endif //SIM_BOUNDARY_CONFIGURATOR_H

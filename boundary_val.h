@@ -12,12 +12,13 @@ typedef enum BoundarySide
     RIGHTBOUNDARY
 } BoundarySide;
 
+typedef enum BoundaryType
+{
+    DIRICHLET=0,
+    NEUMANN=1
+} BoundaryType;
+
 // To be removed down the road
-//typedef enum BoundaryType
-//{
-//    DIRICHLET,
-//    NEUMANN
-//} BoundaryType;
 //
 //typedef enum HLBoundaryType
 //{

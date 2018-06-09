@@ -221,8 +221,9 @@ int main(int argc, char **argv)
     // create flag array to determine boundary conditions
     if (runningMode == COMPACT)
     {
-        logMsg(PRODUCTION, "Running in compact mode");
-        read_boundary_parameters_compact_mode(szFileName, boundaryInfo, dx, dy);
+//        logMsg(PRODUCTION, "Running in compact mode");
+//        read_boundary_parameters_compact_mode(szFileName, boundaryInfo, dx, dy);
+        THROW_ERROR("NO COMPACT MODE ANYMORE, SORRY! :(");
     }
     else
     {

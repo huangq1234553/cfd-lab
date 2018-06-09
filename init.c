@@ -80,117 +80,117 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
     return 1;
 }
 
-void read_boundary_parameters_compact_mode(const char *szFileName, BoundaryInfo *boundaryInfo, double dx, double dy)
-{
-    // Now read boundary-related variables
-    char left_boundary_type[16];
-    char left_boundary_temp_type[16];
-    char right_boundary_type[16];
-    char right_boundary_temp_type[16];
-    char top_boundary_type[16];
-    char top_boundary_temp_type[16];
-    char bottom_boundary_type[16];
-    char bottom_boundary_temp_type[16];
-    double left_boundary_U;
-    double left_boundary_V;
-    double left_boundary_T;
-    double left_boundary_qN;
-    double left_boundary_k;
-    double right_boundary_U;
-    double right_boundary_V;
-    double right_boundary_T;
-    double right_boundary_qN;
-    double right_boundary_k;
-    double top_boundary_U;
-    double top_boundary_V;
-    double top_boundary_T;
-    double top_boundary_qN;
-    double top_boundary_k;
-    double bottom_boundary_U;
-    double bottom_boundary_V;
-    double bottom_boundary_T;
-    double bottom_boundary_qN;
-    double bottom_boundary_k;
-    
-    char *boundaryTypeDefault = "NOSLIP";
-    char *boundaryTempTypeDefault = "NEUMANN";
-    
-    READ_STRING(szFileName, left_boundary_type, OPTIONAL);
-    setDefaultStringIfRequired(left_boundary_type, boundaryTypeDefault);
-    READ_STRING(szFileName, left_boundary_temp_type, OPTIONAL);
-    setDefaultStringIfRequired(left_boundary_temp_type, boundaryTempTypeDefault);
-    
-    READ_STRING(szFileName, right_boundary_type, OPTIONAL);
-    setDefaultStringIfRequired(right_boundary_type, boundaryTypeDefault);
-    READ_STRING(szFileName, right_boundary_temp_type, OPTIONAL);
-    setDefaultStringIfRequired(right_boundary_temp_type, boundaryTempTypeDefault);
-    
-    READ_STRING(szFileName, top_boundary_type, OPTIONAL);
-    setDefaultStringIfRequired(top_boundary_type, boundaryTypeDefault);
-    READ_STRING(szFileName, top_boundary_temp_type, OPTIONAL);
-    setDefaultStringIfRequired(top_boundary_temp_type, boundaryTempTypeDefault);
-    
-    READ_STRING(szFileName, bottom_boundary_type, OPTIONAL);
-    setDefaultStringIfRequired(bottom_boundary_type, boundaryTypeDefault);
-    READ_STRING(szFileName, bottom_boundary_temp_type, OPTIONAL);
-    setDefaultStringIfRequired(bottom_boundary_temp_type, boundaryTempTypeDefault);
-    
-    READ_DOUBLE(szFileName, left_boundary_U, OPTIONAL);
-    READ_DOUBLE(szFileName, left_boundary_V, OPTIONAL);
-    READ_DOUBLE(szFileName, left_boundary_T, OPTIONAL);
-    READ_DOUBLE(szFileName, left_boundary_qN, OPTIONAL);
-    READ_DOUBLE(szFileName, left_boundary_k, OPTIONAL);
-    if (left_boundary_k == 0.0)
-    {
-        left_boundary_k = 1;
-    }
-    
-    READ_DOUBLE(szFileName, right_boundary_U, OPTIONAL);
-    READ_DOUBLE(szFileName, right_boundary_V, OPTIONAL);
-    READ_DOUBLE(szFileName, right_boundary_T, OPTIONAL);
-    READ_DOUBLE(szFileName, right_boundary_qN, OPTIONAL);
-    READ_DOUBLE(szFileName, right_boundary_k, OPTIONAL);
-    if (right_boundary_k == 0.0)
-    {
-        right_boundary_k = 1;
-    }
-    
-    READ_DOUBLE(szFileName, top_boundary_U, OPTIONAL);
-    READ_DOUBLE(szFileName, top_boundary_V, OPTIONAL);
-    READ_DOUBLE(szFileName, top_boundary_T, OPTIONAL);
-    READ_DOUBLE(szFileName, top_boundary_qN, OPTIONAL);
-    READ_DOUBLE(szFileName, top_boundary_k, OPTIONAL);
-    if (top_boundary_k == 0.0)
-    {
-        top_boundary_k = 1;
-    }
-    
-    READ_DOUBLE(szFileName, bottom_boundary_U, OPTIONAL);
-    READ_DOUBLE(szFileName, bottom_boundary_V, OPTIONAL);
-    READ_DOUBLE(szFileName, bottom_boundary_T, OPTIONAL);
-    READ_DOUBLE(szFileName, bottom_boundary_qN, OPTIONAL);
-    READ_DOUBLE(szFileName, bottom_boundary_k, OPTIONAL);
-    if (bottom_boundary_k == 0.0)
-    {
-        bottom_boundary_k = 1;
-    }
-    
-    configureBoundary(boundaryInfo, LEFTBOUNDARY, left_boundary_type, left_boundary_temp_type, left_boundary_U,
-                      left_boundary_V,
-                      left_boundary_T, left_boundary_qN, left_boundary_k, dx);
-    configureBoundary(boundaryInfo, RIGHTBOUNDARY, right_boundary_type, right_boundary_temp_type,
-                      right_boundary_U, right_boundary_V,
-                      right_boundary_T, right_boundary_qN, right_boundary_k, dy);
-    configureBoundary(boundaryInfo, TOPBOUNDARY, top_boundary_type, top_boundary_temp_type, top_boundary_U,
-                      top_boundary_V,
-                      top_boundary_T, top_boundary_qN, top_boundary_k, dx);
-    configureBoundary(boundaryInfo, BOTTOMBOUNDARY, bottom_boundary_type, bottom_boundary_temp_type,
-                      bottom_boundary_U, bottom_boundary_V,
-                      bottom_boundary_T, bottom_boundary_qN, bottom_boundary_k, dy);
-    
-    // TODO: add support for more complex profiles and/or autogeneration of parabolic one. Do this into the new boundary_configurator.c file
-    
-}
+//void read_boundary_parameters_compact_mode(const char *szFileName, BoundaryInfo *boundaryInfo, double dx, double dy)
+//{
+//    // Now read boundary-related variables
+//    char left_boundary_type[16];
+//    char left_boundary_temp_type[16];
+//    char right_boundary_type[16];
+//    char right_boundary_temp_type[16];
+//    char top_boundary_type[16];
+//    char top_boundary_temp_type[16];
+//    char bottom_boundary_type[16];
+//    char bottom_boundary_temp_type[16];
+//    double left_boundary_U;
+//    double left_boundary_V;
+//    double left_boundary_T;
+//    double left_boundary_qN;
+//    double left_boundary_k;
+//    double right_boundary_U;
+//    double right_boundary_V;
+//    double right_boundary_T;
+//    double right_boundary_qN;
+//    double right_boundary_k;
+//    double top_boundary_U;
+//    double top_boundary_V;
+//    double top_boundary_T;
+//    double top_boundary_qN;
+//    double top_boundary_k;
+//    double bottom_boundary_U;
+//    double bottom_boundary_V;
+//    double bottom_boundary_T;
+//    double bottom_boundary_qN;
+//    double bottom_boundary_k;
+//
+//    char *boundaryTypeDefault = "NOSLIP";
+//    char *boundaryTempTypeDefault = "NEUMANN";
+//
+//    READ_STRING(szFileName, left_boundary_type, OPTIONAL);
+//    setDefaultStringIfRequired(left_boundary_type, boundaryTypeDefault);
+//    READ_STRING(szFileName, left_boundary_temp_type, OPTIONAL);
+//    setDefaultStringIfRequired(left_boundary_temp_type, boundaryTempTypeDefault);
+//
+//    READ_STRING(szFileName, right_boundary_type, OPTIONAL);
+//    setDefaultStringIfRequired(right_boundary_type, boundaryTypeDefault);
+//    READ_STRING(szFileName, right_boundary_temp_type, OPTIONAL);
+//    setDefaultStringIfRequired(right_boundary_temp_type, boundaryTempTypeDefault);
+//
+//    READ_STRING(szFileName, top_boundary_type, OPTIONAL);
+//    setDefaultStringIfRequired(top_boundary_type, boundaryTypeDefault);
+//    READ_STRING(szFileName, top_boundary_temp_type, OPTIONAL);
+//    setDefaultStringIfRequired(top_boundary_temp_type, boundaryTempTypeDefault);
+//
+//    READ_STRING(szFileName, bottom_boundary_type, OPTIONAL);
+//    setDefaultStringIfRequired(bottom_boundary_type, boundaryTypeDefault);
+//    READ_STRING(szFileName, bottom_boundary_temp_type, OPTIONAL);
+//    setDefaultStringIfRequired(bottom_boundary_temp_type, boundaryTempTypeDefault);
+//
+//    READ_DOUBLE(szFileName, left_boundary_U, OPTIONAL);
+//    READ_DOUBLE(szFileName, left_boundary_V, OPTIONAL);
+//    READ_DOUBLE(szFileName, left_boundary_T, OPTIONAL);
+//    READ_DOUBLE(szFileName, left_boundary_qN, OPTIONAL);
+//    READ_DOUBLE(szFileName, left_boundary_k, OPTIONAL);
+//    if (left_boundary_k == 0.0)
+//    {
+//        left_boundary_k = 1;
+//    }
+//
+//    READ_DOUBLE(szFileName, right_boundary_U, OPTIONAL);
+//    READ_DOUBLE(szFileName, right_boundary_V, OPTIONAL);
+//    READ_DOUBLE(szFileName, right_boundary_T, OPTIONAL);
+//    READ_DOUBLE(szFileName, right_boundary_qN, OPTIONAL);
+//    READ_DOUBLE(szFileName, right_boundary_k, OPTIONAL);
+//    if (right_boundary_k == 0.0)
+//    {
+//        right_boundary_k = 1;
+//    }
+//
+//    READ_DOUBLE(szFileName, top_boundary_U, OPTIONAL);
+//    READ_DOUBLE(szFileName, top_boundary_V, OPTIONAL);
+//    READ_DOUBLE(szFileName, top_boundary_T, OPTIONAL);
+//    READ_DOUBLE(szFileName, top_boundary_qN, OPTIONAL);
+//    READ_DOUBLE(szFileName, top_boundary_k, OPTIONAL);
+//    if (top_boundary_k == 0.0)
+//    {
+//        top_boundary_k = 1;
+//    }
+//
+//    READ_DOUBLE(szFileName, bottom_boundary_U, OPTIONAL);
+//    READ_DOUBLE(szFileName, bottom_boundary_V, OPTIONAL);
+//    READ_DOUBLE(szFileName, bottom_boundary_T, OPTIONAL);
+//    READ_DOUBLE(szFileName, bottom_boundary_qN, OPTIONAL);
+//    READ_DOUBLE(szFileName, bottom_boundary_k, OPTIONAL);
+//    if (bottom_boundary_k == 0.0)
+//    {
+//        bottom_boundary_k = 1;
+//    }
+//
+//    configureBoundary(boundaryInfo, LEFTBOUNDARY, left_boundary_type, left_boundary_temp_type, left_boundary_U,
+//                      left_boundary_V,
+//                      left_boundary_T, left_boundary_qN, left_boundary_k, dx);
+//    configureBoundary(boundaryInfo, RIGHTBOUNDARY, right_boundary_type, right_boundary_temp_type,
+//                      right_boundary_U, right_boundary_V,
+//                      right_boundary_T, right_boundary_qN, right_boundary_k, dy);
+//    configureBoundary(boundaryInfo, TOPBOUNDARY, top_boundary_type, top_boundary_temp_type, top_boundary_U,
+//                      top_boundary_V,
+//                      top_boundary_T, top_boundary_qN, top_boundary_k, dx);
+//    configureBoundary(boundaryInfo, BOTTOMBOUNDARY, bottom_boundary_type, bottom_boundary_temp_type,
+//                      bottom_boundary_U, bottom_boundary_V,
+//                      bottom_boundary_T, bottom_boundary_qN, bottom_boundary_k, dy);
+//
+//    // TODO: add support for more complex profiles and/or autogeneration of parabolic one. Do this into the new boundary_configurator.c file
+//
+//}
 
 void read_boundary_parameters_extended_mode(const char *szFileName, BoundaryInfo *boundaryInfo, double dx, double dy,
                                             int imax, int jmax, char *geometryFileName)
@@ -360,18 +360,23 @@ void setGeometry(int imax, int jmax, int **Flag, RunningMode *runningMode, int *
     }
     else // running in EXTENDED mode
     {
-        for (int i = 1; i < imax + 1; i++)
+        for (int i = 0; i <= imax + 1; i++)
         {
-            for (int j = 1; j < jmax + 1; j++)
+            for (int j = 0; j <= jmax + 1; j++)
             {
-                Flag[i][j] = (pic[i][j] !=
-                              4); // NOTE: here we just want the cell not to be fluid, we don't care about the actual declared boundary type.
+                Flag[i][j] = (1 << CENTER) * (pic[i][j] != FLUID_PIXEL)
+                             + (1 << NSBIT) * (pic[i][j] == NOSLIP_PIXEL)
+                             + (1 << FSBIT) * (pic[i][j] == FREESLIP_PIXEL)
+                             + (1 << OFBIT) * (pic[i][j] == OUTFLOW_PIXEL)
+                             + (1 << IFBIT) * (pic[i][j] == INFLOW_PIXEL)
+                             + (1 << CBIT) * (pic[i][j] == COUPLING_PIXEL)
+                             + (1 << TBIT) * (NEUMANN); // NEUMANN by default
             }
         }
     }
 }
 
-void setFlagsOnBoundary(int imax, int jmax, int **Flag)
+void setFlagsOnBoundary(int imax, int jmax, int **Flag, int *couplingCellsCounter)
 {
     // Set the outer boundary flags
     for (int j = 1; j < jmax + 1; ++j)
@@ -384,6 +389,8 @@ void setFlagsOnBoundary(int imax, int jmax, int **Flag)
                              + (1 << BOT) * 1
                              + (1 << LEFT) * isObstacle(Flag[imax][j])
                              + (1 << RIGHT) * 1;
+        (*couplingCellsCounter) += isCoupling(Flag[0][j]);
+        (*couplingCellsCounter) += isCoupling(Flag[imax + 1][j]);
     }
     for (int i = 1; i < imax + 1; ++i)
     {
@@ -395,12 +402,15 @@ void setFlagsOnBoundary(int imax, int jmax, int **Flag)
                              + (1 << BOT) * isObstacle(Flag[i][jmax])
                              + (1 << LEFT) * 1
                              + (1 << RIGHT) * 1;
+        (*couplingCellsCounter) += isCoupling(Flag[i][0]);
+        (*couplingCellsCounter) += isCoupling(Flag[i][jmax+1]);
+    
     }
 }
 
-void setFlagsOnDomain(int imax, int jmax, int **Flag, int *counter)
+void setFlagsOnDomain(int imax, int jmax, int **Flag, int *fluidCellsCounter, int *couplingCellsCounter)
 {
-    *counter = 0;
+    *fluidCellsCounter = 0;
     for (int j = jmax; j > 0; j--)
     {
         for (int i = 1; i < imax + 1; i++)
@@ -409,33 +419,28 @@ void setFlagsOnDomain(int imax, int jmax, int **Flag, int *counter)
                           + (1 << BOT) * isObstacle(Flag[i][j - 1])
                           + (1 << LEFT) * isObstacle(Flag[i - 1][j])
                           + (1 << RIGHT) * isObstacle(Flag[i + 1][j]);
-            (*counter) += isFluid(Flag[i][j]);
+            (*fluidCellsCounter) += isFluid(Flag[i][j]);
+            (*couplingCellsCounter) += isCoupling(Flag[i][j]);
         }
     }
 }
 
-void init_flag(
-        char *problem,
-        char *geometry,
-        int imax,
-        int jmax,
-        int **Flag,
-        int *counter,
-        RunningMode runningMode
-)
+void init_flag(char *problem, char *geometry, int imax, int jmax, int **Flag, int *fluidCellsCounter,
+               int *couplingCellsCounter, RunningMode runningMode)
 {
     int **pic = NULL;
     
     pic = read_pgm(
-            geometry); // NOTE: when running in compact mode this is covering just the inner part of the image, so it is imax*jmax
+            geometry); // NOTE: when running in compact mode this is covering just the inner part of the image, so it is imax*jmax //TODO remove compact mode
     setGeometry(imax, jmax, Flag, &runningMode, pic);
     
     //
-    setFlagsOnBoundary(imax, jmax, Flag);
+    setFlagsOnBoundary(imax, jmax, Flag, couplingCellsCounter);
     // Set the inner domain flags
-    setFlagsOnDomain(imax, jmax, Flag, counter);
+    setFlagsOnDomain(imax, jmax, Flag, fluidCellsCounter, couplingCellsCounter);
     
-    logMsg("Total fluid cells in domain: %d", (*counter));
+    logMsg(PRODUCTION, "Total fluid cells in domain: %d", (*fluidCellsCounter));
+    logMsg(PRODUCTION, "Total coupling cells in domain: %d", (*couplingCellsCounter));
     geometryCheck(Flag, imax, jmax);
     free_imatrix(pic, 0, imax + 1, 0, jmax + 1);
 }
