@@ -249,26 +249,22 @@ int main(int argc, char **argv)
     
     init_flag(problem, geometry, imax, jmax, Flags, &noFluidCells, &noCouplingCells, runningMode);
 
-    init_special_flag(imax, jmax, Flags, LEFTBOUNDARY, TBIT, DIRICHLET);
-    init_special_flag(imax, jmax, Flags, RIGHTBOUNDARY, TBIT, DIRICHLET);
-//    for(int j=jmax+1; j>=0; j--){
-//        for(int i=0; i<=imax+1; i++){
-//            printf("%2.1d ", isCoupling(Flags[i][j]));
-//        }
-//        printf("\n\n");
-//    }
-//    THROW_ERROR("Forcing exit for DEBUG");
-    
-//     initialise velocities and pressure
+    // init_special_flag(imax, jmax, Flags, LEFTBOUNDARY, TBIT, DIRICHLET);
+    // init_special_flag(imax, jmax, Flags, RIGHTBOUNDARY, TBIT, DIRICHLET);
+
+    // for(int j=jmax+1; j >=0; j--){
+    //     for(int i=0; i <=imax+1; i++){
+    //         printf("%d ", Flags[i][j]>>TBIT&1);
+    //     }
+    //     printf("\n");
+    // }
+
+    // init_special_flag(imax, jmax, Flags, RIGHTBOUNDARY, TBIT, DIRICHLET);
+
     init_uvpt(UI, VI, PI, TI, imax, jmax, U, V, P, T, Flags);
 
 
-//    // Debug
-//    logEvent(PRODUCTION, t, "Writing visualization file n=%d", n);
-//    write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
-//    n++;
-//
-    // simulation interval 0 to t_end
+
     long simulationStartTime = getCurrentTimeMillis();
     mindt = performSimulation(outputFolder, problem, Re, GX, GY, t_end, xlength, ylength, dt, dx, dy, imax, jmax, alpha,
                               omg, tau, itermax, eps, dt_value, n, res, t, it, mindt, noFluidCells, beta, Pr,
@@ -310,6 +306,8 @@ double performSimulation(const char *outputFolder, const char *problem, double R
                          char *mesh_name, char *read_data_name, char *write_data_name, int num_coupling_cells,
                          double **T_cp, double **U_cp, double **V_cp)
 {
+    // printf("%d\n", num_coupling_cells);
+    
     precicec_createSolverInterface(participant_name, precice_config, 0, 1);
      int dim = precicec_getDimensions();
     double currentOutputTime = 0; // For chosing when to output
@@ -332,6 +330,8 @@ double performSimulation(const char *outputFolder, const char *problem, double R
 
     // call precicec_initialize()
     double precice_dt = precicec_initialize();
+
+
 
     // initialize data at coupling interface
     precice_write_temperature(imax, jmax, num_coupling_cells, temperatureCoupled, vertexIDs, temperatureID, T, Flags);
@@ -359,7 +359,6 @@ double performSimulation(const char *outputFolder, const char *problem, double R
                 mindt = dt;
             }
         }
-        
         // ensure boundary conditions for velocity
         // Special boundary condition are addressed here by using the boundaryInfo data.
         boundaryval(imax, jmax, U, V, T, Flags, boundaryInfo);

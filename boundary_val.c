@@ -49,10 +49,12 @@ void setLeftBoundaryValues(int imax, int jmax, double **U, double **V, double **
                 V[0][j] = V[1][j];
             }
             // Set temperature boundary values
-            if (Flag >> TBIT & DIRICHLET) {
-                T[0][j] = 2 * (boundaryInfo[LEFTBOUNDARY].valuesDirichletT)[0] - T[1][j];
-            } else {
-                T[0][j] = T[1][j] + boundaryInfo[LEFTBOUNDARY].coeff;
+            if(!isCoupling(Flag)){
+                if ((Flag >> TBIT&1) == DIRICHLET) {
+                    T[0][j] = 2 * (boundaryInfo[LEFTBOUNDARY].valuesDirichletT)[0] - T[1][j];
+                } else {
+                    T[0][j] = T[1][j] + boundaryInfo[LEFTBOUNDARY].coeff;
+                }
             }
         }
     }
@@ -80,11 +82,12 @@ void setRightBoundaryValues(int imax, int jmax, double **U, double **V, double *
                 U[imax][j] = U[imax - 1][j];
                 V[imax + 1][j] = V[imax][j];
             }
-
-            if (Flag >> TBIT & DIRICHLET) {
-                T[imax + 1][j] = 2 * (boundaryInfo[RIGHTBOUNDARY].valuesDirichletT)[0] - T[imax][j];
-            } else {
-                T[imax + 1][j] = T[imax][j] + boundaryInfo[RIGHTBOUNDARY].coeff;
+            if(!isCoupling(Flag)){
+                if ((Flag >> TBIT&1) ==  DIRICHLET) {
+                    T[imax + 1][j] = 2 * (boundaryInfo[RIGHTBOUNDARY].valuesDirichletT)[0] - T[imax][j];
+                } else {
+                    T[imax + 1][j] = T[imax][j] + boundaryInfo[RIGHTBOUNDARY].coeff;
+                }
             }
         }
     }
@@ -114,11 +117,12 @@ void setTopBoundaryValues(int imax, int jmax, double **U, double **V, double **T
                 U[i][jmax+1] = U[i][jmax];
                 V[i][jmax] = V[imax][jmax-1];
             }
-
-            if (Flag >> TBIT & DIRICHLET) {
-                T[i][jmax+1] = 2 * (boundaryInfo[TOPBOUNDARY].valuesDirichletT)[0] - T[i][jmax];
-            } else {
-                T[i][jmax+1] = T[i][jmax] + boundaryInfo[TOPBOUNDARY].coeff;
+            if(!isCoupling(Flag)){
+                if ((Flag >> TBIT&1) == DIRICHLET) {
+                    T[i][jmax+1] = 2 * (boundaryInfo[TOPBOUNDARY].valuesDirichletT)[0] - T[i][jmax];
+                } else {
+                    T[i][jmax+1] = T[i][jmax] + boundaryInfo[TOPBOUNDARY].coeff;
+                }
             }
         }
     }
@@ -142,17 +146,18 @@ void setBottomBoundaryValues(int imax, int jmax, double **U, double **V, double 
                 U[i][0] = U[i][1];
                 V[i][0] = 0;
             } else if (Flag >> IFBIT & 1) {
-                U[i][0] = 2 * (boundaryInfo[TOPBOUNDARY].valuesDirichletU)[0] - U[i][1];
-                V[i][0] = (boundaryInfo[TOPBOUNDARY].valuesDirichletV)[0] ;
+                U[i][0] = 2 * (boundaryInfo[BOTTOMBOUNDARY].valuesDirichletU)[0] - U[i][1];
+                V[i][0] = (boundaryInfo[BOTTOMBOUNDARY].valuesDirichletV)[0] ;
             } else {
                 U[i][0] = U[i][1];
                 V[i][0] = V[i][1];
             }
-
-            if (Flag >> TBIT & DIRICHLET) {
-                T[i][0] = 2 * (boundaryInfo[TOPBOUNDARY].valuesDirichletT)[0] - T[i][1];
-            } else {
-                T[i][0] = T[i][0] + boundaryInfo[BOTTOMBOUNDARY].coeff;
+            if(!isCoupling(Flag)){
+                if ((Flag >> TBIT &1) == DIRICHLET) {
+                    T[i][0] = 2 * (boundaryInfo[BOTTOMBOUNDARY].valuesDirichletT)[0] - T[i][1];
+                } else {
+                    T[i][0] = T[i][0] + boundaryInfo[BOTTOMBOUNDARY].coeff;
+                }
             }
         }
     }

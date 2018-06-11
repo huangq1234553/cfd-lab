@@ -27,15 +27,15 @@ dt_value    1
 #--------------------------------------------
 #               pressure
 #--------------------------------------------
-itermax		500
+itermax		100
 eps		    0.001
 omg		    1.7
-alpha		0.9
+alpha		0.5
 
 #--------------------------------------------
 #               reynoldsnumber
 #--------------------------------------------
-Re		    500
+Re		    100
 
 #--------------------------------------------
 #               temperature
@@ -77,19 +77,5 @@ geometry    emptyCavity.pgm
 #       Default is NOSLIP
 #       Default value is 0
 #--------------------------------------------
-#top_boundary_type       MOVINGWALL
-#top_boundary_U          -1
-#left_boundary_type      INFLOW
-#left_boundary_U         1
-#left_boundary_V         0
-#right_boundary_type     OUTFLOW
-#bottom_boundary_type    OUTFLOW
-#top_boundary_type       OUTFLOW
 
-#TODO: Add Temp boundary settings
-#NOTE: the heat flux sign should be set positive along i and j.
-bottom_boundary_temp_type DIRICHLET
-bottom_boundary_T         10
-#left_boundary_qN        10
-#left_boundary_k         10
-
+top_boundary_dirichlet_U = 1.0

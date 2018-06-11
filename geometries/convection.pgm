@@ -2,8 +2,8 @@ P2
 # 0 - no-slip
 # 1 - free-slip
 # 2 - outflow
-# 4 - inflow
-# 4 - coupling
+# 3 - inflow
+# 0 - coupling
 # 6 - fluid
 42 42
 6

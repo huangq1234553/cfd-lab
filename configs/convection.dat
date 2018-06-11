@@ -59,7 +59,7 @@ dt_value        0.01
 #--------------------------------------------
 #               pressure
 #--------------------------------------------
-itermax		2500
+itermax		250
 eps		    0.0001
 omg		    1.7
 alpha		0.5
@@ -86,3 +86,5 @@ PI		0
 UI		0
 VI		0
 
+left_boundary_T 	323
+right_boundary_T	283

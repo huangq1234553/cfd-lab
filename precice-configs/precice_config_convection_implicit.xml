@@ -45,7 +45,7 @@
         <max-iterations value="50"/>
         <exchange data="Temperature" mesh="Fluid-Mesh" from="Fluid" to="Solid"/>
         <exchange data="Heat-Flux" mesh="Fluid-Mesh" from="Solid" to="Fluid" initialize="true"/>
-        <relative-convergence-measure data="Temperature"  mesh="Fluid-Mesh" limit="1"/>
+        <relative-convergence-measure data="Heat-Flux"  mesh="Fluid-Mesh" limit="1-e2"/>
         <!-- <relative-convergence-measure data="Heat-Flux" mesh="Fluid-Mesh" limit="1e-2"/> -->
         <extrapolation-order value="0"/>
         <!-- <post-processing:IQN-ILS>

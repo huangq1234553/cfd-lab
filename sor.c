@@ -9,9 +9,9 @@ void sor(double omg, double dx, double dy, int imax, int jmax, double **P, doubl
     double rloc;
     
     /* SOR iteration */
-    for (int i = 1; i <= imax; i++)
+    for (int j = 1; j <= jmax; j++)
     {
-        for (int j = 1; j <= jmax; j++)
+        for (int i = 1; i <= imax; i++)
         {
             int cell = Flags[i][j];
             // proceed if fluid
