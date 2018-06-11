@@ -1,6 +1,7 @@
 #include <libgen.h>
 #include <sys/stat.h>
 #include <stdbool.h>
+// #include <cmumps_root.h>
 #include "helper.h"
 #include "visual.h"
 #include "init.h"
@@ -8,7 +9,10 @@
 #include "uvp.h"
 #include "logger.h"
 #include "timing.h"
-
+#include "adapters/c/SolverInterfaceC.h"
+#include "adapters/c/Constants.h"
+#include "precice_adapter.h"
+#include <string.h>
 
 /**
  * The main operation reads the configuration file, initializes the scenario and
@@ -49,7 +53,10 @@ double performSimulation(const char *outputFolder, const char *problem, double R
                          double alpha, double omg, double tau, int itermax, double eps, double dt_value, int n,
                          double res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
                          BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V, double **F,
-                         double **G, double **RS, double **P, double **T, bool computeTemperatureSwitch);
+                         double **G, double **RS, double **P, double **T, bool computeTemperatureSwitch,
+                         double x_origin, double y_origin, char *precice_config, char *participant_name,
+                         char *mesh_name, char *read_data_name, char *write_data_name, int noCouplingCells,
+                         double **T_cp, double **U_cp, double **V_cp);
 
 int main(int argc, char **argv)
 {
@@ -179,7 +186,7 @@ int main(int argc, char **argv)
     int it = 0;                      /* sor iteration counter */
     double mindt = 10000;       /* arbitrary counter that keeps track of minimum dt value in calculation */
     int noFluidCells;          /* number of fluid cells in simulation */
-    int noCouplingCells;       /* number of coupling cells in simulation */
+    int noCouplingCells = 0;       /* number of coupling cells in simulation */
     double beta;              /* coefficient of thermal expansion */
     double TI;                  /* initial temperature */
     double T_h;                  /* hot surface boundary condition */
@@ -217,6 +224,9 @@ int main(int argc, char **argv)
     double **RS = matrix(0, imax + 1, 0, jmax + 1);
     double **P = matrix(0, imax + 1, 0, jmax + 1);
     double **T = matrix(0, imax + 1, 0, jmax + 1);
+    double **T_cp = matrix(0, imax + 1, 0, jmax + 1);
+    double **U_cp = matrix(0, imax + 1, 0, jmax + 1);
+    double **V_cp = matrix(0, imax + 1, 0, jmax + 1);
     
     // create flag array to determine boundary conditions
     if (runningMode == COMPACT)
@@ -238,22 +248,34 @@ int main(int argc, char **argv)
     }
     
     init_flag(problem, geometry, imax, jmax, Flags, &noFluidCells, &noCouplingCells, runningMode);
+
+    init_special_flag(imax, jmax, Flags, LEFTBOUNDARY, TBIT, DIRICHLET);
+    init_special_flag(imax, jmax, Flags, RIGHTBOUNDARY, TBIT, DIRICHLET);
+//    for(int j=jmax+1; j>=0; j--){
+//        for(int i=0; i<=imax+1; i++){
+//            printf("%2.1d ", isCoupling(Flags[i][j]));
+//        }
+//        printf("\n\n");
+//    }
 //    THROW_ERROR("Forcing exit for DEBUG");
     
-    // initialise velocities and pressure
+//     initialise velocities and pressure
     init_uvpt(UI, VI, PI, TI, imax, jmax, U, V, P, T, Flags);
+
 
 //    // Debug
 //    logEvent(PRODUCTION, t, "Writing visualization file n=%d", n);
-//    write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T);
+//    write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
 //    n++;
 //
     // simulation interval 0 to t_end
     long simulationStartTime = getCurrentTimeMillis();
-    mindt = performSimulation(outputFolder, problem, Re, GX, GY, t_end, xlength, ylength, dt, dx, dy, imax, jmax,
-                              alpha, omg, tau, itermax, eps, dt_value, n, res, t, it, mindt, noFluidCells, beta, Pr,
-                              boundaryInfo, dt_check,
-                              Flags, U, V, F, G, RS, P, T, computeTemperatureSwitch);
+    mindt = performSimulation(outputFolder, problem, Re, GX, GY, t_end, xlength, ylength, dt, dx, dy, imax, jmax, alpha,
+                              omg, tau, itermax, eps, dt_value, n, res, t, it, mindt, noFluidCells, beta, Pr,
+                              boundaryInfo, dt_check, Flags,
+                              U, V, F, G, RS, P, T, computeTemperatureSwitch, x_origin, y_origin, precice_config,
+                              participant_name, mesh_name, read_data_name, write_data_name, noCouplingCells, T_cp, U_cp,
+                              V_cp);
     long simulationEndTime = getCurrentTimeMillis();
     // Check value of U[imax/2][7*jmax/8] (task6)
     logMsg(PRODUCTION, "Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
@@ -268,6 +290,9 @@ int main(int argc, char **argv)
     free_matrix(RS, 0, imax + 1, 0, jmax + 1);
     free_matrix(P, 0, imax + 1, 0, jmax + 1);
     free_matrix(T, 0, imax + 1, 0, jmax + 1);
+    free_matrix(T_cp, 0, imax + 1, 0, jmax + 1);
+    free_matrix(U_cp, 0, imax + 1, 0, jmax + 1);
+    free_matrix(V_cp, 0, imax + 1, 0, jmax + 1);
     freeAllBoundaryInfo(boundaryInfo);
     
     closeLogFile(); // Properly close the log file
@@ -280,20 +305,54 @@ double performSimulation(const char *outputFolder, const char *problem, double R
                          double alpha, double omg, double tau, int itermax, double eps, double dt_value, int n,
                          double res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
                          BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V, double **F,
-                         double **G, double **RS, double **P, double **T, bool computeTemperatureSwitch)
+                         double **G, double **RS, double **P, double **T, bool computeTemperatureSwitch,
+                         double x_origin, double y_origin, char *precice_config, char *participant_name,
+                         char *mesh_name, char *read_data_name, char *write_data_name, int num_coupling_cells,
+                         double **T_cp, double **U_cp, double **V_cp)
 {
+    precicec_createSolverInterface(participant_name, precice_config, 0, 1);
+     int dim = precicec_getDimensions();
     double currentOutputTime = 0; // For chosing when to output
     long interVisualizationExecTimeStart = getCurrentTimeMillis();
-    while (t < t_end)
+
+
+    // define coupling mesh
+    int meshID = precicec_getMeshID(mesh_name);
+    int* vertexIDs = precice_set_interface_vertices(imax, jmax, dx, dy, x_origin, y_origin,
+            num_coupling_cells, meshID, Flags, dim); // get coupling cell ids
+
+
+    // define Dirichlet part of coupling written by this solver
+    int temperatureID = precicec_getDataID(write_data_name, meshID);
+    double* temperatureCoupled = (double*) malloc(sizeof(double) * num_coupling_cells);
+
+    // define Neumann part of coupling read by this solver
+    int heatFluxID = precicec_getDataID(read_data_name, meshID);
+    double* heatfluxCoupled = (double*) malloc(sizeof(double) * num_coupling_cells);
+
+    // call precicec_initialize()
+    double precice_dt = precicec_initialize();
+
+    // initialize data at coupling interface
+    precice_write_temperature(imax, jmax, num_coupling_cells, temperatureCoupled, vertexIDs, temperatureID, T, Flags);
+    precicec_initialize_data(); // synchronize with OpenFOAM
+    precicec_readBlockScalarData(heatFluxID, num_coupling_cells, vertexIDs, heatfluxCoupled); // read heatfluxCoupled
+
+    while (precicec_isCouplingOngoing())
     {
-        
+        if(precicec_isActionRequired ( precicec_actionWriteIterationCheckpoint() )){
+            write_checkpoint(t, U, V, T, U_cp, V_cp, T_cp, imax, jmax);
+            precicec_fulfilledAction(precicec_actionWriteIterationCheckpoint());
+        }
         // adaptive stepsize control based on stability conditions ensures stability of the method!
         // dt = tau * min(cond1, cond2, cond3) where tau is a safety factor
         // NOTE: if tau<0, stepsize is not adaptively computed!
         if (tau > 0)
         {
             calculate_dt(Re, Pr, tau, &dt, dx, dy, imax, jmax, U, V);
-            dt = fmin(dt, dt_check); // test, to avoid a dt bigger than visualization interval
+            // ensure that time step is always smaller than output timestep
+            dt = fmin(dt, dt_check);
+            dt = fmin(dt, precice_dt);
             // Used to check the minimum time-step for convergence
             if (dt < mindt)
             {
@@ -303,15 +362,11 @@ double performSimulation(const char *outputFolder, const char *problem, double R
         
         // ensure boundary conditions for velocity
         // Special boundary condition are addressed here by using the boundaryInfo data.
-        // These special boundary values are configured at configuration time in read_parameters(). Still TODO !
         boundaryval(imax, jmax, U, V, T, Flags, boundaryInfo);
+        set_coupling_boundary(imax, jmax, dx, dy, heatfluxCoupled, T, Flags);
         
         // calculate T using energy equation in 2D with boussinesq approximation
-        if (beta != 0 &&
-            computeTemperatureSwitch)
-        { // If beta==0 we won't add the temperature term in F and G, so we don't need to compute it!
-            calculate_T(Re, Pr, dt, dx, dy, alpha, imax, jmax, T, U, V, Flags);
-        }
+        calculate_T(Re, Pr, dt, dx, dy, alpha, imax, jmax, T, U, V, Flags);
         
         // momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
         calculate_fg(Re, GX, GY, alpha, beta, dt, dx, dy, imax, jmax, U, V, F, G, T, Flags);
@@ -329,33 +384,38 @@ double performSimulation(const char *outputFolder, const char *problem, double R
         }
         // calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
         calculate_uv(dt, dx, dy, imax, jmax, U, V, F, G, P, Flags);
-        
-        // write visualization file for current iteration (only every dt_value step)
-        if (t >= currentOutputTime)
-        {
-            logEvent(PRODUCTION, t, "Writing visualization file n=%d, executionTime=%.3fs",
-                     n,
-                     getTimeSpentSeconds(interVisualizationExecTimeStart, getCurrentTimeMillis())
-            );
-            write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
-            currentOutputTime += dt_value;
-            // update output timestep iteration counter
-            n++;
-            interVisualizationExecTimeStart = getCurrentTimeMillis();
+
+        precice_write_temperature(imax, jmax, num_coupling_cells, temperatureCoupled, vertexIDs, temperatureID, T, Flags);
+        precice_dt = precicec_advance(dt); // synchronize with OpenFOAM
+        precicec_readBlockScalarData(heatFluxID, num_coupling_cells, vertexIDs, heatfluxCoupled); // read heatfluxCoupled
+
+        if(precicec_isActionRequired (precicec_actionReadIterationCheckpoint())){
+            restore_checkpoint(t, U, V, T, U_cp, V_cp, T_cp, imax, jmax);
+            precicec_fulfilledAction(precicec_actionReadIterationCheckpoint());
         }
-        // Recap shell output
-        if (it == itermax)
-        {
-            logEvent(WARNING, t, "Max number of iterations reached on SOR. Probably it did not converge!");
-            logEvent(WARNING, t, "dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res);
-            
+        else {
+            // write visualization file for current iteration (only every dt_value step)
+            if (t >= currentOutputTime) {
+                logEvent(PRODUCTION, t, "Writing visualization file n=%d, executionTime=%.3fs",
+                         n,
+                         getTimeSpentSeconds(interVisualizationExecTimeStart, getCurrentTimeMillis())
+                );
+                write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
+                currentOutputTime += dt_value;
+                // update output timestep iteration counter
+                n++;
+                interVisualizationExecTimeStart = getCurrentTimeMillis();
+            }
+            // Recap shell output
+            if (it == itermax) {
+                logEvent(WARNING, t, "Max number of iterations reached on SOR. Probably it did not converge!");
+                logEvent(WARNING, t, "dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res);
+            } else {
+                logEvent(INFO, t, "dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res);
+            }
+            // advance in time
+            t += dt;
         }
-        else
-        {
-            logEvent(INFO, t, "dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res);
-        }
-        // advance in time
-        t += dt;
     }
     
     // write visualisation file for the last iteration
@@ -364,6 +424,10 @@ double performSimulation(const char *outputFolder, const char *problem, double R
              getTimeSpentSeconds(interVisualizationExecTimeStart, getCurrentTimeMillis())
     );
     write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
+
+    free(vertexIDs);
+    free(temperatureCoupled);
+    free(heatfluxCoupled);
     return mindt;
 }
 

@@ -7,16 +7,17 @@
 
 
 //#include "Definitions.h"
+#include "adapters/c/SolverInterfaceC.h"
 
-void write_checkpoint(double time, double **U, double **V, double **TEMP, double *time_cp, double **U_cp, double **V_cp,
+void write_checkpoint(double time, double **U, double **V, double **TEMP, double **U_cp, double **V_cp,
                       double **TEMP_cp, int imax, int jmax);
 
-void restore_checkpoint(double *time, double **U, double **V, double **TEMP, double time_cp, double **U_cp,
+void restore_checkpoint(double time, double **U, double **V, double **TEMP, double **U_cp,
                         double **V_cp,
                         double **TEMP_cp, int imax, int jmax);
 
 int *precice_set_interface_vertices(int imax, int jmax, double dx, double dy, double x_origin, double y_origin,
-                                    int num_coupling_cells, int meshID, int **FLAG);
+                                    int num_coupling_cells, int meshID, int **FLAG, int dim);
 
 void precice_write_temperature(int imax, int jmax, int num_coupling_cells, double *temperature, int *vertexIDs,
                                int temperatureID, double **TEMP, int **FLAG);

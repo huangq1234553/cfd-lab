@@ -80,26 +80,26 @@
 //    }
 //}
 
-void mapVelocityPixelValueToBoundaryTypeStr(GeometryPixelValue pixel, char* boundaryTypeStr)
-{
-    switch (pixel)
-    {
-        case NOSLIP_PIXEL:
-            strcpy(boundaryTypeStr, "NOSLIP");
-            break;
-        case FREESLIP_PIXEL:
-            strcpy(boundaryTypeStr, "FREESLIP");
-            break;
-        case INFLOW_PIXEL:
-            strcpy(boundaryTypeStr, "INFLOW");
-            break;
-        case OUTFLOW_PIXEL:
-            strcpy(boundaryTypeStr, "OUTFLOW");
-            break;
-        default:
-        {} // Else skip
-    }
-}
+//void mapVelocityPixelValueToBoundaryTypeStr(GeometryPixelValue pixel, char* boundaryTypeStr)
+//{
+//    switch (pixel)
+//    {
+//        case NOSLIP_PIXEL:
+//            strcpy(boundaryTypeStr, "NOSLIP");
+//            break;
+//        case FREESLIP_PIXEL:
+//            strcpy(boundaryTypeStr, "FREESLIP");
+//            break;
+//        case INFLOW_PIXEL:
+//            strcpy(boundaryTypeStr, "INFLOW");
+//            break;
+//        case OUTFLOW_PIXEL:
+//            strcpy(boundaryTypeStr, "OUTFLOW");
+//            break;
+//        default:
+//        {} // Else skip
+//    }
+//}
 
 //void configureTemperatureBoundary(BoundaryInfo *boundaryInfo, const BoundarySide boundarySide,
 //                                  const char *boundaryTempTypeStr, const double temperature, const double qN,

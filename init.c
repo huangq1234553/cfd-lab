@@ -1,7 +1,7 @@
 #include "helper.h"
 #include "init.h"
 #include "logger.h"
-#include "boundary_configurator.h"
+#include "boundary_val.h"
 
 void setDefaultStringIfRequired(char *variable, const char *defaultValue)
 {
@@ -416,6 +416,32 @@ void setFlagsOnDomain(int imax, int jmax, int **Flag, int *fluidCellsCounter, in
         }
     }
 }
+
+void init_special_flag(int imax, int jmax, int **Flags, BoundarySide boundarySide, BoundaryTypeBit boundaryBit, BoundaryType boundaryType){
+    if(boundarySide == LEFTBOUNDARY){
+        for(int j=0; j<=jmax+1; j++){
+            Flags[0][j] += -((Flags[0][j] >> boundaryBit & 1) << boundaryBit) + (boundaryType << boundaryBit);
+        }
+    }
+    else if(boundarySide == RIGHTBOUNDARY){
+        for(int j=0; j<=jmax+1; j++){
+            Flags[imax+1][j] += -((Flags[imax+1][j] >> boundaryBit & 1) << boundaryBit) + (boundaryType << boundaryBit);
+        }
+    }
+    else if(boundarySide == TOPBOUNDARY){
+        for(int i=0; i<=imax+1; i++){
+            Flags[i][jmax+1] += -((Flags[i][jmax+1] >> boundaryBit & 1) << boundaryBit) + (boundaryType << boundaryBit);
+        }
+
+    }
+    else{
+        for(int i=0; i<=imax+1; i++){
+            Flags[i][0] += -((Flags[i][0] >> boundaryBit & 1) << boundaryBit) + (boundaryType << boundaryBit);
+        }
+
+    }
+}
+
 
 void init_flag(char *problem, char *geometry, int imax, int jmax, int **Flag, int *fluidCellsCounter,
                int *couplingCellsCounter, RunningMode runningMode)

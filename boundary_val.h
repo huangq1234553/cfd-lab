@@ -6,6 +6,16 @@
 /*
  * Auxiliary data structures to handle the boundary values.
  */
+typedef enum GeometryPixelValue
+{
+    NOSLIP_PIXEL = 0,
+    FREESLIP_PIXEL = 1,
+    OUTFLOW_PIXEL = 2,
+    INFLOW_PIXEL = 3,
+    COUPLING_PIXEL = 4,
+    FLUID_PIXEL = 6,
+} GeometryPixelValue;
+
 typedef enum BoundarySide
 {
     TOPBOUNDARY,

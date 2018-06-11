@@ -2,6 +2,7 @@
 #define __INIT_H_
 
 #include "boundary_val.h"
+#include "helper.h"
 
 typedef enum RunningMode { COMPACT=0, EXTENDED=1 } RunningMode;
 
@@ -65,6 +66,9 @@ void configureBoundary(BoundaryInfo *boundaryInfo, BoundarySide boundarySide, do
  */
 void init_uvpt(double UI, double VI, double PI, double TI, int imax, int jmax, double **U, double **V, double **P,
                double **T, int **Flags);
+
+void init_special_flag(int imax, int jmax, int **Flag, BoundarySide boundarySide,
+                       BoundaryTypeBit boundaryBit, BoundaryType boundaryType);
 
 void init_flag(char *problem, char *geometry, int imax, int jmax, int **Flag, int *fluidCellsCounter,
                int *couplingCellsCounter, RunningMode runningMode);

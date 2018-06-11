@@ -90,9 +90,6 @@ top_boundary_U		1.0
 #       Default qN value is 0
 #NOTE: the heat flux sign should be set positive along i and j
 #--------------------------------------------
-#left_boundary_temp_type DIRICHLET
-#left_boundary_T        	 0.5
-
-#right_boundary_temp_type DIRICHLET
-#right_boundary_T         -0.5
+top_boundary_dirichletU = 2.0
+top_boundary_dirichletV = 0.0
 
