@@ -32,6 +32,11 @@ double fmax( double a, double b)
     if( a > b ) return a;
     return b;
 }
+
+short dsign(double x)
+{
+    return (x > 0) - (x < 0);
+}
 /* ----------------------------------------------------------------------- */
 /*                             custom auxiliary functions                  */
 /* ----------------------------------------------------------------------- */
@@ -46,9 +51,29 @@ int isFluid(int flag){
     return !((flag>>CENTER)&1);
 }
 
+int isNoSlip(int flag)
+{
+    return ((flag>>NOSLIP_BIT)&1);
+}
+
+int isFreeSlip(int flag)
+{
+    return ((flag>>FREESLIP_BIT)&1);
+}
+
+int isOutflow(int flag)
+{
+    return ((flag>>OUTFLOW_BIT)&1);
+}
+
+int isInflow(int flag)
+{
+    return ((flag>>INFLOW_BIT)&1);
+}
+
 // Returns 1 (True) if the cell is coupling
 int isCoupling(int flag){
-    return ((flag>>CBIT)&1);
+    return ((flag>>COUPLING_BIT)&1);
 }
 
 // Returns 1 (True) if the neighbouring cell in the indicated direction is an obstacle
@@ -295,7 +320,7 @@ void read_double(const char *szFileName, const char *szVarName, double *pVariabl
     if( pVariable  == 0 )  THROW_ERROR("null pointer given as variable" );
 
     if( szVarName[0] == '*' )
-	szValue = find_string(szFileName, szVarName + 1, optional);
+	    szValue = find_string(szFileName, szVarName + 1, optional);
     else
         szValue = find_string(szFileName, szVarName, optional);
     

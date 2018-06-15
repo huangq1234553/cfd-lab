@@ -139,40 +139,45 @@ void set_coupling_boundary(int imax, int jmax, double dx, double dy, double *hea
     // Iterate over left boundary
     for(int j = 1; j <= jmax; j++){
         if(isCoupling(Flags[0][j])){
-            T[0][j] = T[1][j] + dx*dx*heatflux[count];
+//            T[0][j] = T[1][j] + dx*dx*heatflux[count];
+            T[0][j] = T[1][j] + dx*heatflux[count];
             count += 1;
         }
     }
     // Iterate over right boundary
     for(int j = 1; j <= jmax; j++){
         if(isCoupling(Flags[imax+1][j])){
-            T[imax+1][j] = T[imax][j] + dx*dx*heatflux[count];
+//            T[imax+1][j] = T[imax][j] + dx*dx*heatflux[count];
+            T[imax+1][j] = T[imax][j] + dx*heatflux[count];
             count += 1;
         }
     }
     // Iterate over top boundary
     for(int i = 1; i <= imax; i++){
         if(isCoupling(Flags[i][jmax+1])){
-            T[i][jmax+1] = T[i][jmax] + dy*dy*heatflux[count];
+//            T[i][jmax+1] = T[i][jmax] + dy*dy*heatflux[count];
+            T[i][jmax+1] = T[i][jmax] + dy*heatflux[count];
             count += 1;
         }
     }
     // Iterate over bottom boundary
     for(int i = 1; i <= imax; i++){
         if(isCoupling(Flags[i][0])){
-            T[i][0] = T[i][1] + dy*dy*heatflux[count];
+//            T[i][0] = T[i][1] + dy*dy*heatflux[count];
+            T[i][0] = T[i][1] + dy*heatflux[count];
             count += 1;
         }
     }
 
-    // for(int i=1; i<=imax; i++){
-    //     for(int j=1; j<=jmax; j++){
-    //         if(isCoupling(Flags[i][j])){
-    //             T[i][j] = T[i][j+1] * isNeighbourFluid(Flags[i][j], TOP)
-    //                         + T[i][j-1] * isNeighbourFluid(Flags[i][j], BOT)
-    //                         + dy*dy*heatflux[count];
-    //             count += 1;
-    //         }
-    //     }
-    // }
+     for(int i=1; i<=imax; i++){
+         for(int j=1; j<=jmax; j++){
+             if(isCoupling(Flags[i][j])){
+                 T[i][j] = T[i][j+1] * isNeighbourFluid(Flags[i][j], TOP)
+                             + T[i][j-1] * isNeighbourFluid(Flags[i][j], BOT)
+//                               + dy*dy*heatflux[count];
+                               + dy*heatflux[count];
+                 count += 1;
+             }
+         }
+     }
 }

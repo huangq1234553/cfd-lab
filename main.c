@@ -55,7 +55,7 @@ double performSimulation(const char *outputFolder, const char *problem, double R
                          BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V, double **F,
                          double **G, double **RS, double **P, double **T, bool computeTemperatureSwitch,
                          double x_origin, double y_origin, char *precice_config, char *participant_name,
-                         char *mesh_name, char *read_data_name, char *write_data_name, int noCouplingCells,
+                         char *mesh_name, char *read_data_name, char *write_data_name, int num_coupling_cells,
                          double **T_cp, double **U_cp, double **V_cp);
 
 int main(int argc, char **argv)
@@ -145,13 +145,14 @@ int main(int argc, char **argv)
     if (strlen(outputFolder) == 0)
     {
         sprintf(outputFolder, "%s/Out", inputFolder);
-        // ...and create it if not on filesystem
-        struct stat st = {0};
-        if (stat(outputFolder, &st) == -1)
-        {
-            mkdir(outputFolder, 0700);
-        }
     }
+    // ...and create it if not on filesystem
+    struct stat st = {0};
+    if (stat(outputFolder, &st) == -1)
+    {
+        mkdir(outputFolder, 0700);
+    }
+    
     //
     // END command line flags management
     //
@@ -249,21 +250,19 @@ int main(int argc, char **argv)
     
     init_flag(problem, geometry, imax, jmax, Flags, &noFluidCells, &noCouplingCells, runningMode);
 
-    // init_special_flag(imax, jmax, Flags, LEFTBOUNDARY, TBIT, DIRICHLET);
-    // init_special_flag(imax, jmax, Flags, RIGHTBOUNDARY, TBIT, DIRICHLET);
+    // init_special_flag(imax, jmax, Flags, LEFTBOUNDARY, TEMPERATUREBOUNDARYTYPE_BIT, DIRICHLET);
+    // init_special_flag(imax, jmax, Flags, RIGHTBOUNDARY, TEMPERATUREBOUNDARYTYPE_BIT, DIRICHLET);
 
     // for(int j=jmax+1; j >=0; j--){
     //     for(int i=0; i <=imax+1; i++){
-    //         printf("%d ", Flags[i][j]>>TBIT&1);
+    //         printf("%d ", Flags[i][j]>>TEMPERATUREBOUNDARYTYPE_BIT&1);
     //     }
     //     printf("\n");
     // }
 
-    // init_special_flag(imax, jmax, Flags, RIGHTBOUNDARY, TBIT, DIRICHLET);
+    // init_special_flag(imax, jmax, Flags, RIGHTBOUNDARY, TEMPERATUREBOUNDARYTYPE_BIT, DIRICHLET);
 
     init_uvpt(UI, VI, PI, TI, imax, jmax, U, V, P, T, Flags);
-
-
 
     long simulationStartTime = getCurrentTimeMillis();
     mindt = performSimulation(outputFolder, problem, Re, GX, GY, t_end, xlength, ylength, dt, dx, dy, imax, jmax, alpha,
@@ -309,17 +308,19 @@ double performSimulation(const char *outputFolder, const char *problem, double R
     // printf("%d\n", num_coupling_cells);
     
     precicec_createSolverInterface(participant_name, precice_config, 0, 1);
-     int dim = precicec_getDimensions();
+    int dim = precicec_getDimensions();
     double currentOutputTime = 0; // For chosing when to output
+    double lastOutputTime = -1; // For chosing when to output
     long interVisualizationExecTimeStart = getCurrentTimeMillis();
-
+    
+    short xFlowDirection = dsign(*(boundaryInfo[LEFTBOUNDARY].valuesDirichletU) + *(boundaryInfo[RIGHTBOUNDARY].valuesDirichletU));
+    short yFlowDirection = dsign(*(boundaryInfo[BOTTOMBOUNDARY].valuesDirichletV) + *(boundaryInfo[TOPBOUNDARY].valuesDirichletV));
 
     // define coupling mesh
     int meshID = precicec_getMeshID(mesh_name);
     int* vertexIDs = precice_set_interface_vertices(imax, jmax, dx, dy, x_origin, y_origin,
             num_coupling_cells, meshID, Flags, dim); // get coupling cell ids
-
-
+    
     // define Dirichlet part of coupling written by this solver
     int temperatureID = precicec_getDataID(write_data_name, meshID);
     double* temperatureCoupled = (double*) malloc(sizeof(double) * num_coupling_cells);
@@ -330,9 +331,7 @@ double performSimulation(const char *outputFolder, const char *problem, double R
 
     // call precicec_initialize()
     double precice_dt = precicec_initialize();
-
-
-
+    
     // initialize data at coupling interface
     precice_write_temperature(imax, jmax, num_coupling_cells, temperatureCoupled, vertexIDs, temperatureID, T, Flags);
     precicec_initialize_data(); // synchronize with OpenFOAM
@@ -362,10 +361,13 @@ double performSimulation(const char *outputFolder, const char *problem, double R
         // ensure boundary conditions for velocity
         // Special boundary condition are addressed here by using the boundaryInfo data.
         boundaryval(imax, jmax, U, V, T, Flags, boundaryInfo);
-        set_coupling_boundary(imax, jmax, dx, dy, heatfluxCoupled, T, Flags);
-        
-        // calculate T using energy equation in 2D with boussinesq approximation
-        calculate_T(Re, Pr, dt, dx, dy, alpha, imax, jmax, T, U, V, Flags);
+    
+        if (computeTemperatureSwitch)
+        {
+            set_coupling_boundary(imax, jmax, dx, dy, heatfluxCoupled, T, Flags);
+            // calculate T using energy equation in 2D with boussinesq approximation
+            calculate_T(Re, Pr, dt, dx, dy, alpha, imax, jmax, T, U, V, Flags);
+        }
         
         // momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
         calculate_fg(Re, GX, GY, alpha, beta, dt, dx, dy, imax, jmax, U, V, F, G, T, Flags);
@@ -378,7 +380,7 @@ double performSimulation(const char *outputFolder, const char *problem, double R
         res = 1e9;
         while (it < itermax && res > eps)
         {
-            sor(omg, dx, dy, imax, jmax, P, RS, Flags, &res, noFluidCells);
+            sor(omg, dx, dy, imax, jmax, P, RS, Flags, &res, noFluidCells, U, V, xFlowDirection, yFlowDirection);
             it++;
         }
         // calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P
@@ -394,12 +396,13 @@ double performSimulation(const char *outputFolder, const char *problem, double R
         }
         else {
             // write visualization file for current iteration (only every dt_value step)
-            if (t >= currentOutputTime) {
+            if (t >= currentOutputTime && t > lastOutputTime) {
                 logEvent(PRODUCTION, t, "Writing visualization file n=%d, executionTime=%.3fs",
                          n,
                          getTimeSpentSeconds(interVisualizationExecTimeStart, getCurrentTimeMillis())
                 );
-                write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
+                write_vtkFile(outputFolder, problem, n, xlength, ylength, x_origin, y_origin, imax, jmax, dx, dy, U, V, P, T, Flags);
+                lastOutputTime = currentOutputTime;
                 currentOutputTime += dt_value;
                 // update output timestep iteration counter
                 n++;
@@ -416,13 +419,14 @@ double performSimulation(const char *outputFolder, const char *problem, double R
             t += dt;
         }
     }
+    precicec_finalize();
     
     // write visualisation file for the last iteration
     logEvent(PRODUCTION, t, "Writing visualization file n=%d, executionTime=%.3fs",
              n,
              getTimeSpentSeconds(interVisualizationExecTimeStart, getCurrentTimeMillis())
     );
-    write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
+    write_vtkFile(outputFolder, problem, n, xlength, ylength, x_origin, y_origin, imax, jmax, dx, dy, U, V, P, T, Flags);
 
     free(vertexIDs);
     free(temperatureCoupled);

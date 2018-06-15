@@ -35,13 +35,13 @@ void setLeftBoundaryValues(int imax, int jmax, double **U, double **V, double **
             ;
         }
         else {
-            if (Flag >> NSBIT & 1 || Flag >> CBIT & 1) {
+            if (Flag >> NOSLIP_BIT & 1 || Flag >> COUPLING_BIT & 1) {
                 U[0][j] = 0;
                 V[0][j] = -V[1][j];
-            } else if (Flag >> FSBIT & 1) {
+            } else if (Flag >> FREESLIP_BIT & 1) {
                 U[0][j] = 0;
                 V[0][j] = V[1][j];
-            } else if (Flag >> IFBIT & 1) {
+            } else if (Flag >> INFLOW_BIT & 1) {
                 U[0][j] = (boundaryInfo[LEFTBOUNDARY].valuesDirichletU)[0];
                 V[0][j] = 2 * (boundaryInfo[LEFTBOUNDARY].valuesDirichletV)[0] - V[1][j];
             } else {
@@ -50,7 +50,7 @@ void setLeftBoundaryValues(int imax, int jmax, double **U, double **V, double **
             }
             // Set temperature boundary values
             if(!isCoupling(Flag)){
-                if ((Flag >> TBIT&1) == DIRICHLET) {
+                if ((Flag >> TEMPERATUREBOUNDARYTYPE_BIT&1) == DIRICHLET) {
                     T[0][j] = 2 * (boundaryInfo[LEFTBOUNDARY].valuesDirichletT)[0] - T[1][j];
                 } else {
                     T[0][j] = T[1][j] + boundaryInfo[LEFTBOUNDARY].coeff;
@@ -69,13 +69,13 @@ void setRightBoundaryValues(int imax, int jmax, double **U, double **V, double *
         if (leftNeighbourIsObstacle) { ;
         }
         else {
-            if (Flag >> NSBIT & 1 || Flag >> CBIT & 1) {
+            if (Flag >> NOSLIP_BIT & 1 || Flag >> COUPLING_BIT & 1) {
                 U[imax][j] = 0;
                 V[imax + 1][j] = -V[imax][j];
-            } else if (Flag >> FSBIT & 1) {
+            } else if (Flag >> FREESLIP_BIT & 1) {
                 U[imax][j] = 0;
                 V[imax + 1][j] = V[imax][j];
-            } else if (Flag >> IFBIT & 1) {
+            } else if (Flag >> INFLOW_BIT & 1) {
                 U[imax][j] = (boundaryInfo[RIGHTBOUNDARY].valuesDirichletU)[0];
                 V[imax][j] = 2 * (boundaryInfo[RIGHTBOUNDARY].valuesDirichletV)[0] - V[imax][j];
             } else {
@@ -83,7 +83,7 @@ void setRightBoundaryValues(int imax, int jmax, double **U, double **V, double *
                 V[imax + 1][j] = V[imax][j];
             }
             if(!isCoupling(Flag)){
-                if ((Flag >> TBIT&1) ==  DIRICHLET) {
+                if ((Flag >> TEMPERATUREBOUNDARYTYPE_BIT&1) ==  DIRICHLET) {
                     T[imax + 1][j] = 2 * (boundaryInfo[RIGHTBOUNDARY].valuesDirichletT)[0] - T[imax][j];
                 } else {
                     T[imax + 1][j] = T[imax][j] + boundaryInfo[RIGHTBOUNDARY].coeff;
@@ -104,13 +104,13 @@ void setTopBoundaryValues(int imax, int jmax, double **U, double **V, double **T
         if (bottomNeighbourIsObstacle) { ;
         }
         else {
-            if (Flag >> NSBIT & 1 || Flag >> CBIT & 1) {
+            if (Flag >> NOSLIP_BIT & 1 || Flag >> COUPLING_BIT & 1) {
                 U[i][jmax+1] = -U[i][jmax];
                 V[i][jmax] = 0;
-            } else if (Flag >> FSBIT & 1) {
+            } else if (Flag >> FREESLIP_BIT & 1) {
                 U[i][jmax+1] = U[i][jmax];
                 V[i][jmax] = 0;
-            } else if (Flag >> IFBIT & 1) {
+            } else if (Flag >> INFLOW_BIT & 1) {
                 U[i][jmax+1] = 2 * (boundaryInfo[TOPBOUNDARY].valuesDirichletU)[0] - U[i][jmax];
                 V[i][jmax] = (boundaryInfo[TOPBOUNDARY].valuesDirichletV)[0] ;
             } else {
@@ -118,7 +118,7 @@ void setTopBoundaryValues(int imax, int jmax, double **U, double **V, double **T
                 V[i][jmax] = V[imax][jmax-1];
             }
             if(!isCoupling(Flag)){
-                if ((Flag >> TBIT&1) == DIRICHLET) {
+                if ((Flag >> TEMPERATUREBOUNDARYTYPE_BIT&1) == DIRICHLET) {
                     T[i][jmax+1] = 2 * (boundaryInfo[TOPBOUNDARY].valuesDirichletT)[0] - T[i][jmax];
                 } else {
                     T[i][jmax+1] = T[i][jmax] + boundaryInfo[TOPBOUNDARY].coeff;
@@ -139,13 +139,13 @@ void setBottomBoundaryValues(int imax, int jmax, double **U, double **V, double 
         if (topNeighbourIsObstacle) { ;
         }
         else {
-            if (Flag >> NSBIT & 1 || Flag >> CBIT & 1) {
+            if (Flag >> NOSLIP_BIT & 1 || Flag >> COUPLING_BIT & 1) {
                 U[i][0] = -U[i][1];
                 V[i][0] = 0;
-            } else if (Flag >> FSBIT & 1) {
+            } else if (Flag >> FREESLIP_BIT & 1) {
                 U[i][0] = U[i][1];
                 V[i][0] = 0;
-            } else if (Flag >> IFBIT & 1) {
+            } else if (Flag >> INFLOW_BIT & 1) {
                 U[i][0] = 2 * (boundaryInfo[BOTTOMBOUNDARY].valuesDirichletU)[0] - U[i][1];
                 V[i][0] = (boundaryInfo[BOTTOMBOUNDARY].valuesDirichletV)[0] ;
             } else {
@@ -153,7 +153,7 @@ void setBottomBoundaryValues(int imax, int jmax, double **U, double **V, double 
                 V[i][0] = V[i][1];
             }
             if(!isCoupling(Flag)){
-                if ((Flag >> TBIT &1) == DIRICHLET) {
+                if ((Flag >> TEMPERATUREBOUNDARYTYPE_BIT &1) == DIRICHLET) {
                     T[i][0] = 2 * (boundaryInfo[BOTTOMBOUNDARY].valuesDirichletT)[0] - T[i][1];
                 } else {
                     T[i][0] = T[i][0] + boundaryInfo[BOTTOMBOUNDARY].coeff;

@@ -24,13 +24,13 @@ jmax		34
 #--------------------------------------------
 
 problem     F2-heat-exchange
-geometry    NS/geometries/F2-heat-exchange_82x36.pgm
+geometry    geometries/F2-heat-exchange_82x36.pgm
 
 #--------------------------------------------
 #               PRECICE
 #--------------------------------------------
 
-precice_config		precice-config.xml
+precice_config		precice-configs/precice_config_exchange_explicit.xml
 participant_name	Fluid2
 mesh_name			F2-to-Solid-Mesh
 read_data_name		Heat-Flux
@@ -73,7 +73,7 @@ Re		100
 #               gravitation
 #--------------------------------------------
 GX		0
-GY		0
+GY		-9.81
 
 #--------------------------------------------
 #         initialization pressure
@@ -86,4 +86,10 @@ PI		0
 UI		-5
 VI		0
 
+#--------------------------------------------
+#       boundary description
+#--------------------------------------------
+
+right_boundary_T         		6
+right_boundary_dirichlet_U 		-5
 

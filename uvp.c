@@ -223,9 +223,18 @@ void calculate_rs(double dt, double dx, double dy, int imax, int jmax, double **
     {
         for (int j = 1; j < jmax + 1; j++)
         {
-            if (isFluid(Flags[i][j])) // TODO: double check if this restriction is correct
+            int cell = Flags[i][j];
+            if (isFluid(cell))
             {
-                RS[i][j] = ((F[i][j] - F[i - 1][j]) / dx + (G[i][j] - G[i][j - 1]) / dy) / dt;
+//                int isRightFluid = isNeighbourFluid(cell, RIGHT) || (i == imax);
+//                int isLeftFluid = isNeighbourFluid(cell, LEFT) || (i == 1);
+//                int isTopFluid = isNeighbourFluid(cell, TOP) || (j == jmax);
+//                int isBottomFluid = isNeighbourFluid(cell, BOT) || (j == 1);
+//                // Let's try to incorporate the same logic as in SOR
+//                RS[i][j] = ((isRightFluid*F[i][j] - isLeftFluid*F[i - 1][j]) / dx
+//                         + ( isTopFluid*G[i][j] - isBottomFluid*G[i][j - 1]) / dy) / dt;
+                RS[i][j] = ((F[i][j] - F[i - 1][j]) / dx
+                         + ( G[i][j] - G[i][j - 1]) / dy) / dt;
             }
         }
     }

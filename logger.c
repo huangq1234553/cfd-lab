@@ -91,7 +91,7 @@ void logEvent(DebugLevel eventDebugLevel, double t, char *fmt, ...)
     double timestamp = getTimeSpentSeconds(LOGGER_START_TIME, getCurrentTimeMillis());
     va_list args;
     va_start(args,fmt);
-    printf("[%06.3f] [%012.9f] %s: ", timestamp, t, DEBUG_STR[eventDebugLevel]);
+    printf("[%06.3f] [simTime=%012.9f] %s: ", timestamp, t, DEBUG_STR[eventDebugLevel]);
     vprintf(fmt, args);
     printf("\n");
     va_end(args);

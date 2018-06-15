@@ -357,12 +357,12 @@ void setGeometry(int imax, int jmax, int **Flag, RunningMode *runningMode, int *
             for (int j = 0; j <= jmax + 1; j++)
             {
                 Flag[i][j] = (1 << CENTER) * (pic[i][j] != FLUID_PIXEL)
-                             + (1 << NSBIT) * (pic[i][j] == NOSLIP_PIXEL)
-                             + (1 << FSBIT) * (pic[i][j] == FREESLIP_PIXEL)
-                             + (1 << OFBIT) * (pic[i][j] == OUTFLOW_PIXEL)
-                             + (1 << IFBIT) * (pic[i][j] == INFLOW_PIXEL)
-                             + (1 << CBIT) * (pic[i][j] == COUPLING_PIXEL)
-                             + (1 << TBIT) * (NEUMANN); // NEUMANN by default
+                             + (1 << NOSLIP_BIT) * (pic[i][j] == NOSLIP_PIXEL || pic[i][j] == COUPLING_PIXEL)
+                             + (1 << FREESLIP_BIT) * (pic[i][j] == FREESLIP_PIXEL)
+                             + (1 << OUTFLOW_BIT) * (pic[i][j] == OUTFLOW_PIXEL)
+                             + (1 << INFLOW_BIT) * (pic[i][j] == INFLOW_PIXEL)
+                             + (1 << COUPLING_BIT) * (pic[i][j] == COUPLING_PIXEL)
+                             + (1 << TEMPERATUREBOUNDARYTYPE_BIT) * (NEUMANN); // NEUMANN by default
             }
         }
     }
