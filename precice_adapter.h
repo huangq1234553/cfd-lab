@@ -22,6 +22,6 @@ int *precice_set_interface_vertices(int imax, int jmax, double dx, double dy, do
 void precice_write_temperature(int imax, int jmax, int num_coupling_cells, double *temperature, int *vertexIDs,
                                int temperatureID, double **TEMP, int **FLAG);
 
-void set_coupling_boundary(int imax, int jmax, double dx, double dy, double *heatflux, double **TEMP, int **FLAG);
+void set_coupling_boundary(int imax, int jmax, double dx, double dy, double dt, double *heatflux, double **TEMP, int **FLAG);
 
 #endif //MT_SOURCE_PRECICE_ADAPTER_H

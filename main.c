@@ -364,7 +364,7 @@ double performSimulation(const char *outputFolder, const char *problem, double R
     
         if (computeTemperatureSwitch)
         {
-            set_coupling_boundary(imax, jmax, dx, dy, heatfluxCoupled, T, Flags);
+            set_coupling_boundary(imax, jmax, dx, dy, dt, heatfluxCoupled, T, Flags);
             // calculate T using energy equation in 2D with boussinesq approximation
             calculate_T(Re, Pr, dt, dx, dy, alpha, imax, jmax, T, U, V, Flags);
         }

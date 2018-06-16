@@ -6,8 +6,8 @@
 
 void write_checkpoint(double t, double **U, double **V, double **T, double **U_cp, double **V_cp,
                       double **T_cp, int imax, int jmax){
-    for(int i=0; i < imax+1; i++){
-        for(int j=0; j < jmax+1; j++){
+    for(int i=0; i <= imax+1; i++){
+        for(int j=0; j <= jmax+1; j++){
             T_cp[i][j] = T[i][j];
             U_cp[i][j] = U[i][j];
             V_cp[i][j] = V[i][j];
@@ -19,8 +19,8 @@ void write_checkpoint(double t, double **U, double **V, double **T, double **U_c
 void restore_checkpoint(double t, double **U, double **V, double **T, double **U_cp,
                         double **V_cp,
                         double **T_cp, int imax, int jmax){
-    for(int i=0; i < imax+1; i++){
-        for(int j=0; j < jmax+1; j++){
+    for(int i=0; i <= imax+1; i++){
+        for(int j=0; j <= jmax+1; j++){
             T[i][j] = T_cp[i][j];
             U[i][j] = U_cp[i][j];
             V[i][j] = V_cp[i][j];
@@ -134,13 +134,14 @@ void precice_write_temperature(int imax, int jmax, int num_coupling_cells, doubl
 
 }
 
-void set_coupling_boundary(int imax, int jmax, double dx, double dy, double *heatflux, double **T, int **Flags){
+void set_coupling_boundary(int imax, int jmax, double dx, double dy, double dt, double *heatflux, double **T, int **Flags){
     int count = 0;
     // Iterate over left boundary
     for(int j = 1; j <= jmax; j++){
         if(isCoupling(Flags[0][j])){
 //            T[0][j] = T[1][j] + dx*dx*heatflux[count];
-            T[0][j] = T[1][j] + dx*heatflux[count];
+            T[0][j] = T[1][j] + dx*heatflux[count]/2;
+            // printf("%f ", T[0][j]);
             count += 1;
         }
     }
@@ -148,7 +149,7 @@ void set_coupling_boundary(int imax, int jmax, double dx, double dy, double *hea
     for(int j = 1; j <= jmax; j++){
         if(isCoupling(Flags[imax+1][j])){
 //            T[imax+1][j] = T[imax][j] + dx*dx*heatflux[count];
-            T[imax+1][j] = T[imax][j] + dx*heatflux[count];
+            T[imax+1][j] = T[imax][j] + dx*heatflux[count]/2;
             count += 1;
         }
     }
@@ -156,7 +157,7 @@ void set_coupling_boundary(int imax, int jmax, double dx, double dy, double *hea
     for(int i = 1; i <= imax; i++){
         if(isCoupling(Flags[i][jmax+1])){
 //            T[i][jmax+1] = T[i][jmax] + dy*dy*heatflux[count];
-            T[i][jmax+1] = T[i][jmax] + dy*heatflux[count];
+            T[i][jmax+1] = T[i][jmax] + dy*heatflux[count]/2;
             count += 1;
         }
     }
@@ -164,7 +165,7 @@ void set_coupling_boundary(int imax, int jmax, double dx, double dy, double *hea
     for(int i = 1; i <= imax; i++){
         if(isCoupling(Flags[i][0])){
 //            T[i][0] = T[i][1] + dy*dy*heatflux[count];
-            T[i][0] = T[i][1] + dy*heatflux[count];
+            T[i][0] = T[i][1] + dy*heatflux[count]/2;
             count += 1;
         }
     }
@@ -175,7 +176,7 @@ void set_coupling_boundary(int imax, int jmax, double dx, double dy, double *hea
                  T[i][j] = T[i][j+1] * isNeighbourFluid(Flags[i][j], TOP)
                              + T[i][j-1] * isNeighbourFluid(Flags[i][j], BOT)
 //                               + dy*dy*heatflux[count];
-                               + dy*heatflux[count];
+                               + dy*heatflux[count]/2;
                  count += 1;
              }
          }
