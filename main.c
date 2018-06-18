@@ -250,8 +250,10 @@ int main(int argc, char **argv)
     
     init_flag(problem, geometry, imax, jmax, Flags, &noFluidCells, &noCouplingCells, runningMode);
 
-    // init_special_flag(imax, jmax, Flags, LEFTBOUNDARY, TEMPERATUREBOUNDARYTYPE_BIT, DIRICHLET);
-    // init_special_flag(imax, jmax, Flags, RIGHTBOUNDARY, TEMPERATUREBOUNDARYTYPE_BIT, DIRICHLET);
+    if (*(boundaryInfo[LEFTBOUNDARY].valuesDirichletT) != 0.0)
+        init_special_flag(imax, jmax, Flags, LEFTBOUNDARY, TEMPERATUREBOUNDARYTYPE_BIT, DIRICHLET);
+    if (*(boundaryInfo[RIGHTBOUNDARY].valuesDirichletT) != 0.0)
+        init_special_flag(imax, jmax, Flags, RIGHTBOUNDARY, TEMPERATUREBOUNDARYTYPE_BIT, DIRICHLET);
 
     // for(int j=jmax+1; j >=0; j--){
     //     for(int i=0; i <=imax+1; i++){
@@ -368,6 +370,7 @@ double performSimulation(const char *outputFolder, const char *problem, double R
             // calculate T using energy equation in 2D with boussinesq approximation
             calculate_T(Re, Pr, dt, dx, dy, alpha, imax, jmax, T, U, V, Flags);
         }
+        boundaryval(imax, jmax, U, V, T, Flags, boundaryInfo);
         
         // momentum equations M1 and M2 - F and G are the terms arising from explicit Euler velocity update scheme
         calculate_fg(Re, GX, GY, alpha, beta, dt, dx, dy, imax, jmax, U, V, F, G, T, Flags);

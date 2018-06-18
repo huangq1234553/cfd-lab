@@ -32,18 +32,17 @@ all:  $(OBJ)
 clean:
 	rm $(OBJ)
 
-tests:
-	./sim Tests/EmptyCavity/EmptyCavity.dat --compact -q --notemp
-	./sim Tests/DrivenCavity/DrivenCavity.dat --compact -q --notemp
-	./sim Tests/FlowOverStep/FlowOverStep.dat --compact -q --notemp
-	./sim Tests/FluidTrap1/FluidTrap1.dat --compact -q
-	./sim Tests/FluidTrap2/FluidTrap2.dat --compact -q
-	./sim Tests/KarmanVortex/KarmanVortex.dat --compact -q --notemp
-	./sim Tests/NaturalConvection/NaturalConvection.dat --compact -q
-	./sim Tests/RayleighBernardConvection/RayleighBenardConvection1.dat --compact -q
+runsolidplate:
+	./sim Cases/heated_plate/heated-plate.dat -q -o Solid_plate/Out
 
-debugtest:
-	./sim DebugTest/precice_test_scenario.dat --debug
+runsolidconvection:
+	./sim Cases/natural_convection/convection.dat -q -o Solid_convection/Out
+
+runsolidexchangeF1:
+	./sim Cases/heat_exchange/F1-heat-exchange.dat -q -o Solid_exchange/OutF1
+
+runsolidexchangeF2:
+	./sim Cases/heat_exchange/F2-heat-exchange.dat -q -o Solid_exchange/OutF2
 
 helper.o            : helper.h logger.h
 init.o              : helper.h init.h boundary_configurator.h logger.h

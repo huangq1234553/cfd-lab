@@ -63,11 +63,13 @@ void sor(double omg, double dx, double dy, int imax, int jmax, double **P, doubl
 //        if (isInflow(Flags[i][0]))
 //            P[i][0] = -0.5*U[i][0]*U[i][0];
 //        else
-            P[i][0] = P[i][1] * !(isOutflow(Flags[i][0]));
+//        P[i][0] = P[i][1] * !(isOutflow(Flags[i][0]));
+        P[i][0] = P[i][1];
 //        if (isInflow(Flags[i][jmax+1]))
 //            P[i][jmax+1] = -0.5*U[jmax+1][0]*U[jmax+1][0];
 //        else
-            P[i][jmax + 1] = P[i][jmax] * !(isOutflow(Flags[i][jmax + 1]));
+//        P[i][jmax + 1] = P[i][jmax] * !(isOutflow(Flags[i][jmax + 1]));
+        P[i][jmax + 1] = P[i][jmax];
     }
     for (int j = 1; j <= jmax; j++)
     {
@@ -75,11 +77,13 @@ void sor(double omg, double dx, double dy, int imax, int jmax, double **P, doubl
 //        if (isInflow(Flags[0][j]))
 //            P[0][j] = -0.5*U[0][j]*U[0][j];
 //        else
-            P[0][j] = P[1][j] * !(isOutflow(Flags[0][j]));
+//        P[0][j] = P[1][j] * !(isOutflow(Flags[0][j]));
+        P[0][j] = P[1][j];
 //        if (isInflow(Flags[imax+1][j]))
 //            P[imax+1][j] = -0.5*U[imax+1][j]*U[imax+1][j];
 //        else
-            P[imax + 1][j] = P[imax][j] * !(isOutflow(Flags[imax + 1][j]));
+//        P[imax + 1][j] = P[imax][j] * !(isOutflow(Flags[imax + 1][j]));
+        P[imax + 1][j] = P[imax][j];
     }
     
     /* set boundary values on obstacle interface */
