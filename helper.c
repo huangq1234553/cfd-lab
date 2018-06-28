@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "helper.h"
 #include "logger.h"
+#include "boundary_configurator.h"
 
 
 
@@ -573,3 +574,101 @@ int **read_pgm(const char *filename) {
 
     return pic;
 }
+
+/* decodes Flag back into *.pgm format */
+void decode_flags(int imax, int jmax, int **Flag, int** pic)
+{
+    // always running in EXTENDED mode
+
+
+        // decode flags into gray colour map - go through the whole domain including boundaries, i.e. EXTENDED mode
+        for (int i = 0; i <= imax; i++)
+        {
+            for (int j = 0; j <= jmax; j++)
+            {
+                pic[i][j] = (((1 << CENTER) & Flag[i][j]) == 0) * FLUID_PIXEL // if the cell is fluid then set pic value to FLUID_PIXEL
+                            + (((1 << NSBIT) & Flag[i][j]) != 0) * NOSLIP_PIXEL // ...
+                            + (((1 << FSBIT) & Flag[i][j]) != 0) * FREESLIP_PIXEL // ...
+                            + (((1 << OFBIT) & Flag[i][j]) != 0) * OUTFLOW_PIXEL // ...
+                            + (((1 << IFBIT) & Flag[i][j]) != 0) * INFLOW_PIXEL // ...
+                            + (((1 << CBIT) & Flag[i][j]) != 0) * COUPLING_PIXEL; // if the cell is coupling then set pic value to COUPLING_PIXEXL
+            }
+        }
+}
+
+
+void write_pgm(int xsize, int ysize, int** pgm, const char* filename)
+{
+    // always running in EXTENDED mode
+
+        // pointer to the file
+        FILE *output = NULL;
+
+        //Create an empty file for output operations. If afile with the same name already exists, its contents are discarded and the file is treated as a new empty file.
+        if ((output = fopen(filename, "wb")) != 0)
+        {
+            logMsg(DEBUG, "write_pgm(): filename = %s created", filename); //debug
+            //printf("write_pgm(): filename = %s created\n", filename);
+        } else {
+            logMsg(PRODUCTION, "write_pgm(): unable to create filename = %s", filename);
+            //printf("write_pgm(): unable to create filename = %s\n", filename);
+        }
+
+        fprintf(output, "P2\n");
+        //printf("P2\n");
+
+        fprintf(output, "# 0 - no-slip\n");
+        //printf("# 0 - no-slip\n");
+
+        fprintf(output, "# 1 - free-slip\n");
+        //printf("# 1 - free-slip\n");
+
+        fprintf(output, "# 2 - outflow\n");
+        //printf("# 2 - outflow\n");
+
+        fprintf(output, "# 3 - inflow\n");
+        //printf("# 3 - inflow\n");
+
+        fprintf(output, "# 4 - coupling\n");
+        //printf("# 4 - coupling\n");
+
+        fprintf(output, "# 6 - fluid\n");
+        //printf("# 6 - fluid\n");
+
+        fprintf(output, "%d %d\n", ysize, xsize);
+        //printf("%d %d\n", xsize, ysize);
+
+        fprintf(output, "%d\n", FLUID_PIXEL);
+        //printf("%d\n", FLUID_PIXEL);
+
+        // create buffer - one row of *.pgm picture
+        char* buffer = (char*)malloc((ysize * 2 + 1) * sizeof(char));
+
+        for (int i = xsize - 1; i >= 0; i--)
+        {
+            int j = 0;
+
+            for(j = 0; j <= 2 * ysize - 1; j = j+2)
+            {
+                // fill in line buffer including spaces inbetween the numbers
+                buffer[j] = 48 + pgm[i][j/2];
+                buffer[j + 1] = ' ';
+            }
+
+            // add newline character
+            buffer[2*ysize - 1] = '\n';
+            // add end of string character
+            buffer[2*ysize] = '\0';
+
+            fprintf(output, "%s", buffer);
+            //printf("%s\n",buffer);
+        }
+
+        // on Windows sth strange here - infinite loop (?) how to correctly free the buffer (?)
+        free(buffer);
+        buffer = NULL;
+        fclose(output);
+        //printf("EOF");
+}
+
+

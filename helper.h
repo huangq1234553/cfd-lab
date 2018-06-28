@@ -45,7 +45,8 @@ int isCorner(int flag); // Current cell is a corner obstacle
 int skipU(int flag);    // Current cell is surrounded by obstacles to its Top-Right-Bottom
 int skipV(int flag);    // Current cell is surrounded by obstacles to its Left-Top-Right
 void geometryCheck(int** flag, int imax, int jmax);  //Checks if forbidden geometry is in pgm
-
+void decode_flags(int imax, int jmax, int **Flag, int** pic); // decode flags into pgm file gray scale
+void write_pgm(int xsize, int ysize, int** pgm, const char* filename); //write *.pgm file
 
 /**
  * Error handling:
