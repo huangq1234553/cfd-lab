@@ -49,7 +49,7 @@ double performSimulation(const char *outputFolder, const char *problem, double R
                          double alpha, double omg, double tau, int itermax, double eps, double dt_value, int n,
                          double res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
                          BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V, double **F,
-                         double **G, double **RS, double **P, double **T, bool computeTemperatureSwitch);
+                         double **G, double **RS, double **P, double **T, int **PGM, bool computeTemperatureSwitch);
 
 int main(int argc, char **argv)
 {
@@ -217,6 +217,7 @@ int main(int argc, char **argv)
     double **RS = matrix(0, imax + 1, 0, jmax + 1);
     double **P = matrix(0, imax + 1, 0, jmax + 1);
     double **T = matrix(0, imax + 1, 0, jmax + 1);
+    int **PGM = imatrix(0, imax + 1, 0, jmax + 1);
     
     // create flag array to determine boundary conditions
     if (runningMode == COMPACT)
@@ -250,10 +251,11 @@ int main(int argc, char **argv)
 //
     // simulation interval 0 to t_end
     long simulationStartTime = getCurrentTimeMillis();
-    mindt = performSimulation(outputFolder, problem, Re, GX, GY, t_end, xlength, ylength, dt, dx, dy, imax, jmax,
-                              alpha, omg, tau, itermax, eps, dt_value, n, res, t, it, mindt, noFluidCells, beta, Pr,
-                              boundaryInfo, dt_check,
-                              Flags, U, V, F, G, RS, P, T, computeTemperatureSwitch);
+    mindt = performSimulation(outputFolder, problem, Re, GX, GY, t_end, xlength, ylength, dt, dx, dy, imax, jmax, alpha,
+                              omg, tau, itermax, eps, dt_value, n, res, t, it, mindt, noFluidCells, beta, Pr,
+                              boundaryInfo, dt_check, Flags,
+                              U, V, F, G, RS, P, T, PGM, computeTemperatureSwitch);
+
     long simulationEndTime = getCurrentTimeMillis();
     // Check value of U[imax/2][7*jmax/8] (task6)
     logMsg(PRODUCTION, "Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
@@ -280,7 +282,7 @@ double performSimulation(const char *outputFolder, const char *problem, double R
                          double alpha, double omg, double tau, int itermax, double eps, double dt_value, int n,
                          double res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
                          BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V, double **F,
-                         double **G, double **RS, double **P, double **T, bool computeTemperatureSwitch)
+                         double **G, double **RS, double **P, double **T, int **PGM, bool computeTemperatureSwitch)
 {
     double currentOutputTime = 0; // For chosing when to output
     long interVisualizationExecTimeStart = getCurrentTimeMillis();
@@ -338,6 +340,7 @@ double performSimulation(const char *outputFolder, const char *problem, double R
                      getTimeSpentSeconds(interVisualizationExecTimeStart, getCurrentTimeMillis())
             );
             write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
+
             currentOutputTime += dt_value;
             // update output timestep iteration counter
             n++;
@@ -364,6 +367,15 @@ double performSimulation(const char *outputFolder, const char *problem, double R
              getTimeSpentSeconds(interVisualizationExecTimeStart, getCurrentTimeMillis())
     );
     write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
+
+    // saving the *.pgm
+    logEvent(PRODUCTION, t, "Writing PGM file n=%d, executionTime=%.3fs",
+             n,
+             getTimeSpentSeconds(interVisualizationExecTimeStart, getCurrentTimeMillis())
+    );
+    decode_flags(imax, jmax, Flags, PGM);
+    write_pgm(imax+2,jmax+2,PGM,outputFolder, problem, n);
+
     return mindt;
 }
 
