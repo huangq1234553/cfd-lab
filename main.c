@@ -255,7 +255,11 @@ int main(int argc, char **argv)
     
     init_flag(problem, geometry, imax, jmax, Flags, &noFluidCells, &noCouplingCells, runningMode);
 //    THROW_ERROR("Forcing exit for DEBUG");
-    
+
+
+
+
+
     // initialise velocities and pressure
     init_uvpt(UI, VI, PI, TI, imax, jmax, U, V, P, T, Flags);
 
@@ -273,8 +277,20 @@ int main(int argc, char **argv)
                                   noFluidCells, beta, Pr, boundaryInfo,
                                   dt_check, Flags, U, V, F, G, RS, P, T, PGM, computeTemperatureSwitch, 5);
 
+
+        /*for (int j = jmax + 1; j >= 0; j--)
+        {
+            for (int i = 0; i <= imax + 1; i++)
+            {
+                printf("%d ",isObstacle(Flags[i][j]));
+                if (i == imax + 1) printf("\n");
+            }
+        }*/
+
         //update PGM here - go through all the flags and decide what needs to be changed and what not
-        update_pgm(imax, jmax, &noFluidCells, PGM, Flags, P, U, V, 5);
+        update_pgm(imax, jmax, &noFluidCells, PGM, Flags, P, U, V, 0.05, PGM, outputFolderPGM, problem);
+        // fix forbidden geometry in case it exists
+        geometryFix(U, V, P, Flags, imax, jmax);
         // saving the *.pgm
         logEvent(PRODUCTION, t, "Writing PGM file k=%d, executionTime=%.3fs",
                  k,
@@ -283,16 +299,16 @@ int main(int argc, char **argv)
         decode_flags(imax, jmax, Flags, PGM);
         write_pgm(imax+2,jmax+2,PGM,outputFolderPGM, problem, k);
 
-        for (int j = jmax + 1; j >= 0; j--)
+        /*for (int j = jmax + 1; j >= 0; j--)
         {
             for (int i = 0; i <= imax + 1; i++)
             {
-                printf("%d ",Flags[i][j]);
+                printf("%d ",isObstacle(Flags[i][j]));
                 if (i == imax + 1) printf("\n");
             }
-        }
+        }*/
 
-        THROW_ERROR("Test 1 run");
+        //THROW_ERROR("Test 1 run");
 
     }
 

@@ -707,10 +707,14 @@ void flipToSolid(double **U, double **V, double** P, int  **Flag, int i, int j)
                  + (1 << RIGHT) * isObstacle(Flag[i + 1][j])
     + (1 << TBIT) * (NEUMANN); // NEUMANN by default
 
-    Flag[i+1][j] += (1 << LEFT);
-    Flag[i-1][j] += (1 << RIGHT);
-    Flag[i][j -1] += (1 << TOP);
-    Flag[i][j + 1] += (1 << BOT);
+
+
+    Flag[i+1][j] += (1 << LEFT)*isObstacle(Flag[i][j]);
+    Flag[i-1][j] += (1 << RIGHT)*isObstacle(Flag[i][j]);
+    Flag[i][j -1] += (1 << TOP)*isObstacle(Flag[i][j]);
+    Flag[i][j + 1] += (1 << BOT)*isObstacle(Flag[i][j]);
+
+     printf("i=%d,j=%d\n",i,j);
 
     U[i][j] = 0;
     V[i][j] = 0;
@@ -726,18 +730,22 @@ int checkVelocityMagnitude(double eps, double U, double V)
 
 }
 
-void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, double **Flag, double **P, double **U, double **V, double eps)
+void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, double **P, double **U, double **V,
+                double eps, int **PGM, const char *outputFolderPGM, const char *szProblem)
 {
     //int i = 1;
     //int j = 1;
     int isFlip = 0;
+    int counter = 1;
 
     for (int i = 1; i < imax + 1; i++)
     {
         for(int j = 1; j < jmax + 1; j++)
         {
             isFlip = 0;
-            if (isObstacle(Flag[i][j]))
+            int cell = Flag[i][j];
+            if (isObstacle(cell))
+                            //if ( ((1 << CENTER) & Flag[i][j]) != 0)
             {
                 //isFlip = checkVelocityMagnitude(eps,U[i][j],V[i][j]);
                 if (isFlip) {
@@ -746,7 +754,7 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, double **Flag,
                     (*noFluidCells)++;
                 }
             }
-            else
+            else if (isNeighbourObstacle(cell,RIGHT) || isNeighbourObstacle(cell,LEFT) || isNeighbourObstacle(cell,TOP) || isNeighbourObstacle(cell,BOT))
             {
                 isFlip = checkVelocityMagnitude(eps,U[i][j],V[i][j]);
                 if (isFlip)
@@ -756,6 +764,42 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, double **Flag,
                 }
             }
 
+            //decode_flags(imax, jmax, Flag, PGM);
+            //write_pgm(imax+2,jmax+2,PGM,outputFolderPGM, szProblem, counter);
+            counter++;
+
+        }
+    }
+
+}
+
+void geometryFix(double **U, double **V, double** P, int** Flag, int imax, int jmax)
+{
+
+    for (int i = 1; i < imax + 1; i++)
+    {
+        for (int j = 1; j < jmax + 1; j++) {
+            if (isObstacle(Flag[i][j])) {
+                if ((isFluid(Flag[i][j + 1]) && isFluid(Flag[i][j - 1]))) {
+                    double top = sqrt(pow(U[i][j + 1], 2) + pow(V[i][j + 1], 2));
+                    double bot = sqrt(pow(U[i][j - 1], 2) + pow(V[i][j - 1], 2));
+
+                    if (top > bot) {
+                        flipToSolid(U, V, P, Flag, i, j - 1);
+                    } else {
+                        flipToSolid(U, V, P, Flag, i, j + 1);
+                    }
+                }
+                if ((isFluid(Flag[i - 1][j]) && isFluid(Flag[i + 1][j]))) {
+                    double left = sqrt(pow(U[i - 1][j], 2) + pow(V[i - 1][j], 2));
+                    double right = sqrt(pow(U[i + 1][j], 2) + pow(V[i + 1][j], 2));
+                    if (right > left) {
+                        flipToSolid(U, V, P, Flag, i - 1, j);
+                    } else {
+                        flipToSolid(U, V, P, Flag, i + 1, j);
+                    }
+                }
+            }
         }
     }
 
