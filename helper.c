@@ -54,6 +54,11 @@ int isCoupling(int flag){
     return ((flag>>CBIT)&1);
 }
 
+// Returns 1 (True) if the cell is outflow
+int isOutflow(int flag){
+    return ((flag>>OFBIT)&1);
+}
+
 // Returns 1 (True) if the neighbouring cell in the indicated direction is an obstacle
 int isNeighbourObstacle(int flag, Direction direction){
     return (flag>>direction)&1;
@@ -480,8 +485,8 @@ int **imatrix( int nrl, int nrh, int ncl, int nch )
    int nrow = nrh - nrl + 1;	/* compute number of rows */
    int ncol = nch - ncl + 1;	/* compute number of columns */
    
-   int **pArray  = (int **) malloc((size_t)( nrow * sizeof( int* )) );
-   int  *pMatrix = (int *)  malloc((size_t)( nrow * ncol * sizeof( int )));
+   int **pArray  = (int **) calloc( (size_t) nrow, sizeof( int* ));
+   int  *pMatrix = (int *)  calloc( (size_t) nrow * ncol,  sizeof( int ));
 
 
    if( pArray  == 0)  THROW_ERROR("Storage cannot be allocated");
@@ -714,7 +719,7 @@ void flipToSolid(double **U, double **V, double** P, int  **Flag, int i, int j)
     Flag[i][j -1] += (1 << TOP)*isObstacle(Flag[i][j]);
     Flag[i][j + 1] += (1 << BOT)*isObstacle(Flag[i][j]);
 
-     printf("i=%d,j=%d\n",i,j);
+    logMsg(DEBUG,"Flipping to solid: i=%d,j=%d",i,j);
 
     U[i][j] = 0;
     V[i][j] = 0;
@@ -737,6 +742,9 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, do
     //int j = 1;
     int isFlip = 0;
     int counter = 1;
+    
+    // Now allocate aux matrix to keep trace of just flipped geometries, to prevent cascade flipping!
+    int **justFlipped = imatrix(0, imax + 1, 0, jmax + 1);
 
     for (int i = 1; i < imax + 1; i++)
     {
@@ -751,15 +759,21 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, do
                 if (isFlip) {
                     printf("inside flip solid\n");
                     flipToFluid(U,V, Flag, i, j);
+                    justFlipped[i][j] = 1;
                     (*noFluidCells)++;
                 }
             }
-            else if (isNeighbourObstacle(cell,RIGHT) || isNeighbourObstacle(cell,LEFT) || isNeighbourObstacle(cell,TOP) || isNeighbourObstacle(cell,BOT))
+            else if ( (isNeighbourObstacle(cell,RIGHT) && !justFlipped[i+1][j])
+                     || (isNeighbourObstacle(cell,LEFT) && !justFlipped[i-1][j])
+                     || (isNeighbourObstacle(cell,TOP) && !justFlipped[i][j+1])
+                     || (isNeighbourObstacle(cell,BOT) && !justFlipped[i][j-1])
+                    )
             {
                 isFlip = checkVelocityMagnitude(eps,U[i][j],V[i][j]);
                 if (isFlip)
                 {
                     flipToSolid(U,V, P, Flag, i, j);
+                    justFlipped[i][j] = 1;
                     (*noFluidCells)--;
                 }
             }
@@ -770,7 +784,7 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, do
 
         }
     }
-
+    free_imatrix(justFlipped, 0, imax + 1, 0, jmax + 1);
 }
 
 void geometryFix(double **U, double **V, double** P, int** Flag, int imax, int jmax)

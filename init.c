@@ -200,24 +200,28 @@ void read_boundary_parameters_extended_mode(const char *szFileName, BoundaryInfo
     // Now read boundary-related variables
     double left_boundary_dirichlet_U;
     double left_boundary_dirichlet_V;
+    double left_boundary_P;
     double left_boundary_T;
     double left_boundary_qN;
     double left_boundary_k;
 
     double right_boundary_dirichlet_U;
     double right_boundary_dirichlet_V;
+    double right_boundary_P;
     double right_boundary_T;
     double right_boundary_qN;
     double right_boundary_k;
 
     double top_boundary_dirichlet_U;
     double top_boundary_dirichlet_V;
+    double top_boundary_P;
     double top_boundary_T;
     double top_boundary_qN;
     double top_boundary_k;
 
     double bottom_boundary_dirichlet_U;
     double bottom_boundary_dirichlet_V;
+    double bottom_boundary_P;
     double bottom_boundary_T;
     double bottom_boundary_qN;
     double bottom_boundary_k;
@@ -245,6 +249,7 @@ void read_boundary_parameters_extended_mode(const char *szFileName, BoundaryInfo
     setDefaultStringIfRequired(bottom_boundary_temp_type, boundaryTempTypeDefault);*/
     READ_DOUBLE(szFileName, left_boundary_dirichlet_U, OPTIONAL);
     READ_DOUBLE(szFileName, left_boundary_dirichlet_V, OPTIONAL);
+    READ_DOUBLE(szFileName, left_boundary_P, OPTIONAL);
     READ_DOUBLE(szFileName, left_boundary_T, OPTIONAL);
     READ_DOUBLE(szFileName, left_boundary_qN, OPTIONAL);
     READ_DOUBLE(szFileName, left_boundary_k, OPTIONAL);
@@ -255,6 +260,7 @@ void read_boundary_parameters_extended_mode(const char *szFileName, BoundaryInfo
     
     READ_DOUBLE(szFileName, right_boundary_dirichlet_U, OPTIONAL);
     READ_DOUBLE(szFileName, right_boundary_dirichlet_V, OPTIONAL);
+    READ_DOUBLE(szFileName, right_boundary_P, OPTIONAL);
     READ_DOUBLE(szFileName, right_boundary_T, OPTIONAL);
     READ_DOUBLE(szFileName, right_boundary_qN, OPTIONAL);
     READ_DOUBLE(szFileName, right_boundary_k, OPTIONAL);
@@ -265,6 +271,7 @@ void read_boundary_parameters_extended_mode(const char *szFileName, BoundaryInfo
     
     READ_DOUBLE(szFileName, top_boundary_dirichlet_U, OPTIONAL);
     READ_DOUBLE(szFileName, top_boundary_dirichlet_V, OPTIONAL);
+    READ_DOUBLE(szFileName, top_boundary_P, OPTIONAL);
     READ_DOUBLE(szFileName, top_boundary_T, OPTIONAL);
     READ_DOUBLE(szFileName, top_boundary_qN, OPTIONAL);
     READ_DOUBLE(szFileName, top_boundary_k, OPTIONAL);
@@ -275,6 +282,7 @@ void read_boundary_parameters_extended_mode(const char *szFileName, BoundaryInfo
     
     READ_DOUBLE(szFileName, bottom_boundary_dirichlet_U, OPTIONAL);
     READ_DOUBLE(szFileName, bottom_boundary_dirichlet_V, OPTIONAL);
+    READ_DOUBLE(szFileName, bottom_boundary_P, OPTIONAL);
     READ_DOUBLE(szFileName, bottom_boundary_T, OPTIONAL);
     READ_DOUBLE(szFileName, bottom_boundary_qN, OPTIONAL);
     READ_DOUBLE(szFileName, bottom_boundary_k, OPTIONAL);
@@ -283,23 +291,30 @@ void read_boundary_parameters_extended_mode(const char *szFileName, BoundaryInfo
         bottom_boundary_k = 1;
     }
     
-    configureBoundary(boundaryInfo, LEFTBOUNDARY, left_boundary_dirichlet_U, left_boundary_dirichlet_V, left_boundary_T, left_boundary_qN, left_boundary_k, dx);
-    configureBoundary(boundaryInfo, RIGHTBOUNDARY, right_boundary_dirichlet_U, right_boundary_dirichlet_V, right_boundary_T, right_boundary_qN, right_boundary_k, dy);
-    configureBoundary(boundaryInfo, TOPBOUNDARY, top_boundary_dirichlet_U, top_boundary_dirichlet_V, top_boundary_T, top_boundary_qN, top_boundary_k, dx);
-    configureBoundary(boundaryInfo, BOTTOMBOUNDARY, bottom_boundary_dirichlet_U, bottom_boundary_dirichlet_V, bottom_boundary_T, bottom_boundary_qN, bottom_boundary_k, dy);
+    configureBoundary(boundaryInfo, LEFTBOUNDARY, left_boundary_dirichlet_U, left_boundary_dirichlet_V, left_boundary_P,
+                      left_boundary_T, left_boundary_qN, left_boundary_k, dx);
+    configureBoundary(boundaryInfo, RIGHTBOUNDARY, right_boundary_dirichlet_U, right_boundary_dirichlet_V, right_boundary_P,
+                      right_boundary_T, right_boundary_qN, right_boundary_k, dy);
+    configureBoundary(boundaryInfo, TOPBOUNDARY, top_boundary_dirichlet_U, top_boundary_dirichlet_V, top_boundary_P,
+                      top_boundary_T, top_boundary_qN, top_boundary_k, dx);
+    configureBoundary(boundaryInfo, BOTTOMBOUNDARY, bottom_boundary_dirichlet_U, bottom_boundary_dirichlet_V, bottom_boundary_P,
+                      bottom_boundary_T, bottom_boundary_qN, bottom_boundary_k, dy);
     
     // TODO: add support for more complex profiles and/or autogeneration of parabolic one. Do this into the new boundary_configurator.c file
     
 }
 
 void configureBoundary(BoundaryInfo *boundaryInfo, BoundarySide boundarySide, double dirichletU, double dirichletV,
-                       double temp, double qN, double k, double h){
+                       double pressure, double temp, double qN, double k, double h)
+{
     boundaryInfo[boundarySide].valuesDirichletU = calloc(1, sizeof(double));
     boundaryInfo[boundarySide].valuesDirichletV = calloc(1, sizeof(double));
+    boundaryInfo[boundarySide].valuesDirichletP = calloc(1, sizeof(double));
     boundaryInfo[boundarySide].valuesDirichletT = calloc(1, sizeof(double));
 
     *(boundaryInfo[boundarySide].valuesDirichletU) = dirichletU;
     *(boundaryInfo[boundarySide].valuesDirichletV) = dirichletV;
+    *(boundaryInfo[boundarySide].valuesDirichletP) = pressure;
     *(boundaryInfo[boundarySide].valuesDirichletT) = temp;
 
     boundaryInfo[boundarySide].coeff = h * qN / k;

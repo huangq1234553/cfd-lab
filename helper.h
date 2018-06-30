@@ -40,6 +40,7 @@ double fmax( double a, double b);
 int isObstacle(int flag);   // Current cell is an obstacle
 int isFluid(int flag);      // Current cell is fluid
 int isCoupling(int flag);      // Current cell is coupling
+int isOutflow(int flag);      // Current cell is outflow
 int isNeighbourObstacle(int flag, Direction direction); // Current cell's neighbor in the specified direction is obstacle
 int isNeighbourFluid(int flag, Direction direction);    // Current cell's neighbor in the specified direction is fluid
 int isCorner(int flag); // Current cell is a corner obstacle

@@ -35,6 +35,7 @@ typedef struct BoundaryInfo
 {
     double *valuesDirichletU;
     double *valuesDirichletV;
+    double *valuesDirichletP;
     double *valuesDirichletT;
     double coeff; // This is dx*qN/k or dy*qn/k depending on the boundary
 } BoundaryInfo;
@@ -67,5 +68,7 @@ void setBottomBoundaryValues(int imax, int jmax, double **U, double **V, double 
 void setEdgeBoundaryValues(int imax, int jmax, double **U, double **V, int **Flags, int i, int j);
 
 void setCenterBoundaryValues(int imax, int jmax, double **Q, int **Flags, int i, int j, bool isCoupled);
+
+void setPressureOuterBoundaryValues(int imax, int jmax, double **P, int **Flags, const BoundaryInfo *boundaryInfo);
 
 #endif

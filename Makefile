@@ -7,7 +7,7 @@ LIBS = \
 	-lm
 
 CC = gcc
-CFLAGS = -Wall -pedantic -Werror
+CFLAGS = -Wall -pedantic -Werror -Wno-unused-value
 .c.o:  ; $(CC) -c $(CFLAGS) $<
 
 OBJ = 	helper.o\
@@ -43,7 +43,7 @@ tests:
 	./sim Tests/RayleighBernardConvection/RayleighBenardConvection1.dat --compact -q
 
 debugtest:
-	./sim DebugTest/precice_test_scenario.dat --debug
+	./sim DebugTest/F1HeatExchangerPressureBoundaries/heat_exchanger_Pboundaries.dat --debug
 
 helper.o            : helper.h logger.h
 init.o              : helper.h init.h boundary_configurator.h logger.h

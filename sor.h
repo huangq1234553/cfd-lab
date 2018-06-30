@@ -10,8 +10,8 @@
  * 
  * An \omega = 1 GS - implementation is given within sor.c.
  */
-void sor(double omg, double dx, double dy, int imax, int jmax, double **P, double **RS, int **Flags, double *res,
-         int noFluidCells);
+void sor(double omg, double dx, double dy, int imax, int jmax, double **P, double **RS, int **Flags,
+         BoundaryInfo *boundaryInfo, double *res, int noFluidCells);
 
 
 #endif

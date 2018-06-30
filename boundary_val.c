@@ -260,12 +260,59 @@ void setCenterBoundaryValues(int imax, int jmax, double **Q, int **Flags, int i,
     }
 }
 
+void setPressureOuterBoundaryValues(int imax, int jmax, double **P, int **Flags, const BoundaryInfo *boundaryInfo)
+{
+    for (int i = 1; i <= imax; i++)
+    {
+        if (isOutflow(Flags[i][0]))
+        {
+            P[i][0] = (boundaryInfo[BOTTOMBOUNDARY].valuesDirichletP)[0];
+        }
+        else
+        {
+            P[i][0] = P[i][1];
+        }
+        
+        if (isOutflow(Flags[i][jmax+1]))
+        {
+            P[i][jmax+1] = (boundaryInfo[TOPBOUNDARY].valuesDirichletP)[0];
+        }
+        else
+        {
+            P[i][jmax+1] = P[i][jmax];
+        }
+    }
+    for (int j = 1; j <= jmax; j++)
+    {
+        if (isOutflow(Flags[0][j]))
+        {
+            double value = (boundaryInfo[LEFTBOUNDARY].valuesDirichletP)[0];
+            P[0][j] = value;
+        }
+        else
+        {
+            P[0][j] = P[1][j];
+        }
+        
+        if (isOutflow(Flags[imax+1][j]))
+        {
+            double value = (boundaryInfo[RIGHTBOUNDARY].valuesDirichletP)[0];
+            P[imax + 1][j] = value;
+        }
+        else
+        {
+            P[imax+1][j] = P[imax][j];
+        }
+    }
+}
+
 void freeAllBoundaryInfo(BoundaryInfo boundaryInfo[4])
 {
     for (int i=0; i<4; ++i)
     {
         free(boundaryInfo[i].valuesDirichletU);
         free(boundaryInfo[i].valuesDirichletV);
+        free(boundaryInfo[i].valuesDirichletP);
         free(boundaryInfo[i].valuesDirichletT);
     }
 }

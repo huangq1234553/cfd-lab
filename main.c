@@ -184,7 +184,7 @@ int main(int argc, char **argv)
     double omg;               /* relaxation factor */
     double tau;               /* safety factor for time step*/
     int itermax;              /* max. number of iterations  */
-    int itermaxPGM;           /* max. nunmber of iterations for PGM convergence */
+    int itermaxPGM=10;           /* max. nunmber of iterations for PGM convergence */
     double eps;               /* accuracy bound for pressure*/
     double dt_value;          /* time for output */
     int n = 0;                  /* timestep iteration counter */
@@ -288,7 +288,7 @@ int main(int argc, char **argv)
         }*/
 
         //update PGM here - go through all the flags and decide what needs to be changed and what not
-        update_pgm(imax, jmax, &noFluidCells, PGM, Flags, P, U, V, 0.05, PGM, outputFolderPGM, problem);
+        update_pgm(imax, jmax, &noFluidCells, PGM, Flags, P, U, V, 5e-8, PGM, outputFolderPGM, problem);
         // fix forbidden geometry in case it exists
         geometryFix(U, V, P, Flags, imax, jmax);
         // saving the *.pgm
@@ -345,6 +345,7 @@ double performSimulation(const char *outputFolder, const char *outputFolderPGM, 
     double currentOutputTime = 0; // For chosing when to output
     long interVisualizationExecTimeStart = getCurrentTimeMillis();
     it = itThreshold + 1;
+    setPressureOuterBoundaryValues(imax, jmax, P, Flags, boundaryInfo);
     while (it > itThreshold)
     {
         
@@ -385,7 +386,7 @@ double performSimulation(const char *outputFolder, const char *outputFolderPGM, 
         res = 1e9;
         while (it < itermax && res > eps)
         {
-            sor(omg, dx, dy, imax, jmax, P, RS, Flags, &res, noFluidCells);
+            sor(omg, dx, dy, imax, jmax, P, RS, Flags, boundaryInfo, &res, noFluidCells);
             it++;
         }
         // calculate velocities acc to explicit Euler velocity update scheme - depends on F, G and P

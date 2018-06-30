@@ -69,6 +69,7 @@ VI		    0
 #--------------------------------------------
 problem     testProblem
 geometry    F1-heat-exchange_82x60.pgm
+itermaxPGM	9
 
 #--------------------------------------------
 #       boundary description
@@ -79,10 +80,10 @@ geometry    F1-heat-exchange_82x60.pgm
 #--------------------------------------------
 #top_boundary_type       MOVINGWALL
 #top_boundary_U          -1
-#left_boundary_type      INFLOW
-#left_boundary_U         1
-#left_boundary_V         0
-#right_boundary_type     OUTFLOW
+left_boundary_type      INFLOW
+left_boundary_U         1
+left_boundary_V         0
+right_boundary_type     OUTFLOW
 #bottom_boundary_type    OUTFLOW
 #top_boundary_type       OUTFLOW
 
