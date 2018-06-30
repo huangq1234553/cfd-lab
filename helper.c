@@ -5,6 +5,7 @@
 #include "helper.h"
 #include "logger.h"
 #include "boundary_configurator.h"
+#include "boundary_val.h"
 
 
 
@@ -604,16 +605,6 @@ void write_pgm(int xsize, int ysize, int **pgm, const char *outputFolder, const 
     char szFileName[80];
     char szFileFullPath[512];
     FILE *fp = NULL;
-
-    // In case no outputFolder is passed, default to inputFolder/Out...
-            sprintf(outputFolder, "%s/PGM", outputFolder);
-        // ...and create it if not on filesystem
-        struct stat st = {0};
-        if (stat(outputFolder, &st) == -1)
-        {
-            mkdir(outputFolder, 0700);
-        }
-
     sprintf(szFileName, "%s.%i.pgm", szProblem, iterationNumber);
     sprintf(szFileFullPath, "%s/%s", outputFolder, szFileName);
     fp = fopen(szFileFullPath, "wb");
@@ -685,3 +676,87 @@ void write_pgm(int xsize, int ysize, int **pgm, const char *outputFolder, const 
 }
 
 
+void flipToFluid(double **U, double **V, int  **Flag, int i, int j)
+{
+    if (isObstacle(Flag[i][j])){ printf("eeeerrrrrooooorrr\n");}
+
+    Flag[i][j] = 0
+                  + (1 << TOP) * isObstacle(Flag[i][j + 1])
+                  + (1 << BOT) * isObstacle(Flag[i][j - 1])
+                  + (1 << LEFT) * isObstacle(Flag[i - 1][j])
+                  + (1 << RIGHT) * isObstacle(Flag[i + 1][j])
+                 + (1 << TBIT) * (NEUMANN); // NEUMANN by default
+
+    Flag[i+1][j] -= (1 << LEFT);
+    Flag[i-1][j] -= (1 << RIGHT);
+    Flag[i][j-1] -= (1 << TOP);
+    Flag[i][j+1] -= (1 << BOT);
+
+    U[i][j] = 0;
+    V[i][j] = 0;
+
+}
+
+void flipToSolid(double **U, double **V, double** P, int  **Flag, int i, int j)
+{
+    Flag[i][j] = (1 << CENTER)
+                 + (1 << NSBIT)
+                 + (1 << TOP) * isObstacle(Flag[i][j + 1])
+                 + (1 << BOT) * isObstacle(Flag[i][j - 1])
+                 + (1 << LEFT) * isObstacle(Flag[i - 1][j])
+                 + (1 << RIGHT) * isObstacle(Flag[i + 1][j])
+    + (1 << TBIT) * (NEUMANN); // NEUMANN by default
+
+    Flag[i+1][j] += (1 << LEFT);
+    Flag[i-1][j] += (1 << RIGHT);
+    Flag[i][j -1] += (1 << TOP);
+    Flag[i][j + 1] += (1 << BOT);
+
+    U[i][j] = 0;
+    V[i][j] = 0;
+    P[i][j] = 0;
+}
+
+int checkVelocityMagnitude(double eps, double U, double V)
+{
+    if(sqrt( pow(U,2) + pow(V,2) ) < eps)
+        return 1;
+    else
+        return 0;
+
+}
+
+void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, double **Flag, double **P, double **U, double **V, double eps)
+{
+    //int i = 1;
+    //int j = 1;
+    int isFlip = 0;
+
+    for (int i = 1; i < imax + 1; i++)
+    {
+        for(int j = 1; j < jmax + 1; j++)
+        {
+            isFlip = 0;
+            if (isObstacle(Flag[i][j]))
+            {
+                //isFlip = checkVelocityMagnitude(eps,U[i][j],V[i][j]);
+                if (isFlip) {
+                    printf("inside flip solid\n");
+                    flipToFluid(U,V, Flag, i, j);
+                    (*noFluidCells)++;
+                }
+            }
+            else
+            {
+                isFlip = checkVelocityMagnitude(eps,U[i][j],V[i][j]);
+                if (isFlip)
+                {
+                    flipToSolid(U,V, P, Flag, i, j);
+                    (*noFluidCells)--;
+                }
+            }
+
+        }
+    }
+
+}

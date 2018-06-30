@@ -44,12 +44,13 @@
  * - calculate_uv() Calculate the velocity at the next time step.
  */
 
-double performSimulation(const char *outputFolder, const char *problem, double Re, double GX, double GY, double t_end,
-                         double xlength, double ylength, double dt, double dx, double dy, int imax, int jmax,
-                         double alpha, double omg, double tau, int itermax, double eps, double dt_value, int n,
-                         double res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
+double performSimulation(const char *outputFolder, const char *outputFolderPGM, const char *problem, double Re, double GX,
+                         double GY, double t_end, double xlength, double ylength, double dt, double dx, double dy, int imax,
+                         int jmax, double alpha, double omg, double tau, int itermax, double eps, double dt_value, int n,
+                         int k, double res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
                          BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V, double **F,
-                         double **G, double **RS, double **P, double **T, int **PGM, bool computeTemperatureSwitch);
+                         double **G, double **RS, double **P, double **T, int **PGM, bool computeTemperatureSwitch,
+                         int itThreshold);
 
 int main(int argc, char **argv)
 {
@@ -62,6 +63,7 @@ int main(int argc, char **argv)
     char computeTemperatureSwitch = 1;
     char inputFolder[512] = "";
     char outputFolder[512] = ""; // Please don't use superlong paths here, 512 should be more than enough :P
+    char outputFolderPGM[512] = "";
 //    strcpy(outputFolder, "./"); // Default is CWD
     
     //
@@ -145,6 +147,17 @@ int main(int argc, char **argv)
             mkdir(outputFolder, 0700);
         }
     }
+
+    //always create a subfolder for PGMs outputFolder/PGM
+    if (strlen(outputFolderPGM) == 0) {
+        sprintf(outputFolderPGM, "%s/PGM", outputFolder);
+        // ...and create it if not on filesystem
+        struct stat st = {0};
+        if (stat(outputFolderPGM, &st) == -1) {
+            mkdir(outputFolderPGM, 0700);
+        }
+    }
+
     //
     // END command line flags management
     //
@@ -171,9 +184,11 @@ int main(int argc, char **argv)
     double omg;               /* relaxation factor */
     double tau;               /* safety factor for time step*/
     int itermax;              /* max. number of iterations  */
+    int itermaxPGM;           /* max. nunmber of iterations for PGM convergence */
     double eps;               /* accuracy bound for pressure*/
     double dt_value;          /* time for output */
     int n = 0;                  /* timestep iteration counter */
+    int k = 1;                     /* PGM iteration counter */
     double res = 10;          /* residual */
     double t = 0;              /* initial time */
     int it = 0;                      /* sor iteration counter */
@@ -191,12 +206,12 @@ int main(int argc, char **argv)
             read_data_name[128], write_data_name[128];
     
     BoundaryInfo boundaryInfo[4];
-    
+
     read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax, &jmax,
                     &alpha, &omg,
-                    &tau, &itermax, &eps, &dt_value, problem, geometry, boundaryInfo, &beta, &TI, &T_h, &T_c, &Pr,
-                    &x_origin, &y_origin,
-                    precice_config, participant_name, mesh_name, read_data_name, write_data_name);
+                    &tau, &itermax, &itermaxPGM, &eps, &dt_value, problem, geometry, boundaryInfo, &beta, &TI, &T_h, &T_c, &Pr,
+                    &x_origin, &y_origin, precice_config, participant_name,
+                    mesh_name, read_data_name, write_data_name);
     
     // In case geometry was given as a filename only, prepend it with inputFolder path, just in case it is not CWD.
     if (strstr(geometry, "/") == NULL)
@@ -250,13 +265,39 @@ int main(int argc, char **argv)
 //    n++;
 //
     // simulation interval 0 to t_end
-    long simulationStartTime = getCurrentTimeMillis();
-    mindt = performSimulation(outputFolder, problem, Re, GX, GY, t_end, xlength, ylength, dt, dx, dy, imax, jmax, alpha,
-                              omg, tau, itermax, eps, dt_value, n, res, t, it, mindt, noFluidCells, beta, Pr,
-                              boundaryInfo, dt_check, Flags,
-                              U, V, F, G, RS, P, T, PGM, computeTemperatureSwitch);
+        long simulationStartTime = getCurrentTimeMillis();
 
-    long simulationEndTime = getCurrentTimeMillis();
+    for (k; k < itermaxPGM; k++) {
+        mindt = performSimulation(outputFolder, outputFolderPGM, problem, Re, GX, GY, t_end, xlength, ylength, dt, dx,
+                                  dy, imax, jmax, alpha, omg, tau, itermax, eps, dt_value, n, k, res, t, it, mindt,
+                                  noFluidCells, beta, Pr, boundaryInfo,
+                                  dt_check, Flags, U, V, F, G, RS, P, T, PGM, computeTemperatureSwitch, 5);
+
+        //update PGM here - go through all the flags and decide what needs to be changed and what not
+        update_pgm(imax, jmax, &noFluidCells, PGM, Flags, P, U, V, 5);
+        // saving the *.pgm
+        logEvent(PRODUCTION, t, "Writing PGM file k=%d, executionTime=%.3fs",
+                 k,
+                 getTimeSpentSeconds(getCurrentTimeMillis(), getCurrentTimeMillis())
+        );
+        decode_flags(imax, jmax, Flags, PGM);
+        write_pgm(imax+2,jmax+2,PGM,outputFolderPGM, problem, k);
+
+        for (int j = jmax + 1; j >= 0; j--)
+        {
+            for (int i = 0; i <= imax + 1; i++)
+            {
+                printf("%d ",Flags[i][j]);
+                if (i == imax + 1) printf("\n");
+            }
+        }
+
+        THROW_ERROR("Test 1 run");
+
+    }
+
+        long simulationEndTime = getCurrentTimeMillis();
+
     // Check value of U[imax/2][7*jmax/8] (task6)
     logMsg(PRODUCTION, "Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
     logMsg(PRODUCTION, "Min dt value used: %16e", mindt);
@@ -277,16 +318,18 @@ int main(int argc, char **argv)
     return 0;
 }
 
-double performSimulation(const char *outputFolder, const char *problem, double Re, double GX, double GY, double t_end,
-                         double xlength, double ylength, double dt, double dx, double dy, int imax, int jmax,
-                         double alpha, double omg, double tau, int itermax, double eps, double dt_value, int n,
-                         double res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
+double performSimulation(const char *outputFolder, const char *outputFolderPGM, const char *problem, double Re, double GX,
+                         double GY, double t_end, double xlength, double ylength, double dt, double dx, double dy, int imax,
+                         int jmax, double alpha, double omg, double tau, int itermax, double eps, double dt_value, int n,
+                         int k, double res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
                          BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V, double **F,
-                         double **G, double **RS, double **P, double **T, int **PGM, bool computeTemperatureSwitch)
+                         double **G, double **RS, double **P, double **T, int **PGM, bool computeTemperatureSwitch,
+                         int itThreshold)
 {
     double currentOutputTime = 0; // For chosing when to output
     long interVisualizationExecTimeStart = getCurrentTimeMillis();
-    while (t < t_end)
+    it = itThreshold + 1;
+    while (it > itThreshold)
     {
         
         // adaptive stepsize control based on stability conditions ensures stability of the method!
@@ -335,11 +378,11 @@ double performSimulation(const char *outputFolder, const char *problem, double R
         // write visualization file for current iteration (only every dt_value step)
         if (t >= currentOutputTime)
         {
-            logEvent(PRODUCTION, t, "Writing visualization file n=%d, executionTime=%.3fs",
-                     n,
+            logEvent(PRODUCTION, t, "Writing visualization file k=%d, n=%d, executionTime=%.3fs",
+                     k, n,
                      getTimeSpentSeconds(interVisualizationExecTimeStart, getCurrentTimeMillis())
             );
-            write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
+            write_vtkFile(outputFolder, problem, n, k, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
 
             currentOutputTime += dt_value;
             // update output timestep iteration counter
@@ -362,19 +405,19 @@ double performSimulation(const char *outputFolder, const char *problem, double R
     }
     
     // write visualisation file for the last iteration
-    logEvent(PRODUCTION, t, "Writing visualization file n=%d, executionTime=%.3fs",
-             n,
+    logEvent(PRODUCTION, t, "Writing visualization file k=%d, n=%d, executionTime=%.3fs",
+             k, n,
              getTimeSpentSeconds(interVisualizationExecTimeStart, getCurrentTimeMillis())
     );
-    write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
+    write_vtkFile(outputFolder, problem, n, k, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
 
-    // saving the *.pgm
-    logEvent(PRODUCTION, t, "Writing PGM file n=%d, executionTime=%.3fs",
-             n,
+    /*// saving the *.pgm
+    logEvent(PRODUCTION, t, "Writing PGM file k=%d, n=%d, executionTime=%.3fs",
+             k, n,
              getTimeSpentSeconds(interVisualizationExecTimeStart, getCurrentTimeMillis())
     );
     decode_flags(imax, jmax, Flags, PGM);
-    write_pgm(imax+2,jmax+2,PGM,outputFolder, problem, n);
+    write_pgm(imax+2,jmax+2,PGM,outputFolderPGM, problem, k);*/
 
     return mindt;
 }

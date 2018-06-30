@@ -5,8 +5,8 @@
 
 
 void
-write_vtkFile(const char *outputFolder, const char *szProblem, int timeStepNumber, double xlength, double ylength,
-              int imax, int jmax, double dx, double dy, double **U, double **V, double **P, double **T,
+write_vtkFile(const char *outputFolder, const char *szProblem, int timeStepNumber, int PGMIterNumber, double xlength,
+              double ylength, int imax, int jmax, double dx, double dy, double **U, double **V, double **P, double **T,
               int **Flags)
 {
     
@@ -14,7 +14,7 @@ write_vtkFile(const char *outputFolder, const char *szProblem, int timeStepNumbe
     char szFileName[80];
     char szFileFullPath[512];
     FILE *fp = NULL;
-    sprintf(szFileName, "%s.%i.vtk", szProblem, timeStepNumber);
+    sprintf(szFileName, "%s.%i.%i.vtk", szProblem, PGMIterNumber,timeStepNumber);
     sprintf(szFileFullPath, "%s/%s", outputFolder, szFileName);
     fp = fopen(szFileFullPath, "w");
     if (fp == NULL)
