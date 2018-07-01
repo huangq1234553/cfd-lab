@@ -63,8 +63,8 @@ VI		    0
 #       problem description
 #       and path to geometry file
 #--------------------------------------------
-problem     FlowOverStep
-geometry    FlowOverStep.pgm
+problem     SimpleChannel
+geometry    SimpleChannel.pgm
 itermaxPGM  200
 
 #--------------------------------------------

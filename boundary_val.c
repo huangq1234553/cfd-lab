@@ -142,15 +142,15 @@ void setBottomBoundaryValues(int imax, int jmax, double **U, double **V, double 
                 U[i][0] = U[i][1];
                 V[i][0] = 0;
             } else if (Flag >> IFBIT & 1) {
-                U[i][0] = 2 * (boundaryInfo[TOPBOUNDARY].valuesDirichletU)[0] - U[i][1];
-                V[i][0] = (boundaryInfo[TOPBOUNDARY].valuesDirichletV)[0] ;
+                U[i][0] = 2 * (boundaryInfo[BOTTOMBOUNDARY].valuesDirichletU)[0] - U[i][1];
+                V[i][0] = (boundaryInfo[BOTTOMBOUNDARY].valuesDirichletV)[0] ;
             } else {
                 U[i][0] = U[i][1];
                 V[i][0] = V[i][1];
             }
 
             if (Flag >> TBIT & 1) {
-                T[i][0] = 2 * (boundaryInfo[TOPBOUNDARY].valuesDirichletT)[0] - T[i][1];
+                T[i][0] = 2 * (boundaryInfo[BOTTOMBOUNDARY].valuesDirichletT)[0] - T[i][1];
             } else {
                 T[i][0] = T[i][0] + boundaryInfo[BOTTOMBOUNDARY].coeff;
             }

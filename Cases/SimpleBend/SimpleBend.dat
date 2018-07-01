@@ -2,19 +2,19 @@
 #            size of the domain             
 #--------------------------------------------
 xlength		10
-ylength		2
+ylength		10
 
 #--------------------------------------------
 #            number of cells
 #--------------------------------------------
-imax		100
-jmax		20
+imax		60
+jmax		60
 
 #--------------------------------------------
 #               time steps
 #--------------------------------------------
 dt		0.05
-t_end		500.0
+t_end		50.0
 tau	 	0.5
 
 #--------------------------------------------
@@ -25,7 +25,7 @@ dt_value    	10
 #--------------------------------------------
 #               pressure
 #--------------------------------------------
-itermax		500
+itermax		1000
 eps		0.001
 omg		1.7
 alpha		0.9
@@ -63,8 +63,8 @@ VI		    0
 #       problem description
 #       and path to geometry file
 #--------------------------------------------
-problem     FlowOverStep
-geometry    FlowOverStep.pgm
+problem     SimpleBend
+geometry    SimpleBend.pgm
 itermaxPGM  200
 
 #--------------------------------------------
@@ -75,7 +75,7 @@ itermaxPGM  200
 #       Default value is 0
 #--------------------------------------------
 #left_boundary_type      INFLOW
-left_boundary_dirichlet_U        1
+bottom_boundary_dirichlet_V        10
 right_boundary_dirichlet_V         0
 #right_boundary_type     OUTFLOW
 

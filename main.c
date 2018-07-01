@@ -184,7 +184,7 @@ int main(int argc, char **argv)
     double omg;               /* relaxation factor */
     double tau;               /* safety factor for time step*/
     int itermax;              /* max. number of iterations  */
-    int itermaxPGM=10;           /* max. nunmber of iterations for PGM convergence */
+    int itermaxPGM=50;           /* max. nunmber of iterations for PGM convergence */
     double eps;               /* accuracy bound for pressure*/
     double dt_value;          /* time for output */
     int n = 0;                  /* timestep iteration counter */
@@ -277,18 +277,8 @@ int main(int argc, char **argv)
                                   noFluidCells, beta, Pr, boundaryInfo,
                                   dt_check, Flags, U, V, F, G, RS, P, T, PGM, computeTemperatureSwitch, 5);
 
-
-        /*for (int j = jmax + 1; j >= 0; j--)
-        {
-            for (int i = 0; i <= imax + 1; i++)
-            {
-                printf("%d ",isObstacle(Flags[i][j]));
-                if (i == imax + 1) printf("\n");
-            }
-        }*/
-
         //update PGM here - go through all the flags and decide what needs to be changed and what not
-        update_pgm(imax, jmax, &noFluidCells, PGM, Flags, P, U, V, 5e-8, PGM, outputFolderPGM, problem);
+        update_pgm(imax, jmax, &noFluidCells, PGM, Flags, P, U, V, 0.05, PGM, outputFolderPGM, problem);
         // fix forbidden geometry in case it exists
         geometryFix(U, V, P, Flags, imax, jmax);
         // saving the *.pgm
@@ -346,7 +336,7 @@ double performSimulation(const char *outputFolder, const char *outputFolderPGM, 
     long interVisualizationExecTimeStart = getCurrentTimeMillis();
     it = itThreshold + 1;
     setPressureOuterBoundaryValues(imax, jmax, P, Flags, boundaryInfo);
-    while (it > itThreshold)
+    while (it > itThreshold || t > t_end)
     {
         
         // adaptive stepsize control based on stability conditions ensures stability of the method!

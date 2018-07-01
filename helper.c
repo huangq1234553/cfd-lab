@@ -741,7 +741,7 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, do
     //int i = 1;
     //int j = 1;
     int isFlip = 0;
-    int counter = 1;
+    int cell;
     
     // Now allocate aux matrix to keep trace of just flipped geometries, to prevent cascade flipping!
     int **justFlipped = imatrix(0, imax + 1, 0, jmax + 1);
@@ -751,11 +751,10 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, do
         for(int j = 1; j < jmax + 1; j++)
         {
             isFlip = 0;
-            int cell = Flag[i][j];
+            cell = Flag[i][j];
             if (isObstacle(cell))
-                            //if ( ((1 << CENTER) & Flag[i][j]) != 0)
             {
-                //isFlip = checkVelocityMagnitude(eps,U[i][j],V[i][j]);
+                // isFlip = checkVelocityMagnitude(eps,U[i][j],V[i][j]);
                 if (isFlip) {
                     printf("inside flip solid\n");
                     flipToFluid(U,V, Flag, i, j);
@@ -777,10 +776,6 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, do
                     (*noFluidCells)--;
                 }
             }
-
-            //decode_flags(imax, jmax, Flag, PGM);
-            //write_pgm(imax+2,jmax+2,PGM,outputFolderPGM, szProblem, counter);
-            counter++;
 
         }
     }
