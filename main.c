@@ -200,6 +200,11 @@ int main(int argc, char **argv)
     double T_h;                  /* hot surface boundary condition */
     double T_c;                  /* cold surface boundary condition */
     double Pr;                  /* Prandtl number */
+    double outflow = 0;
+    double outflowMax = 0;
+    double percent = 0.6;
+    double minVelocity = 0.05;
+    int maxK = 0;
     // Params for preCICE coupling
     double x_origin = 0.0, y_origin = 0.0;
     char precice_config[512], participant_name[128], mesh_name[128],
@@ -210,7 +215,7 @@ int main(int argc, char **argv)
     read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax, &jmax,
                     &alpha, &omg,
                     &tau, &itermax, &itermaxPGM, &eps, &dt_value, problem, geometry, boundaryInfo, &beta, &TI, &T_h, &T_c, &Pr,
-                    &x_origin, &y_origin, precice_config, participant_name,
+                    &x_origin, &y_origin, &minVelocity, &percent, precice_config, participant_name,
                     mesh_name, read_data_name, write_data_name);
     
     // In case geometry was given as a filename only, prepend it with inputFolder path, just in case it is not CWD.
@@ -278,13 +283,26 @@ int main(int argc, char **argv)
                                   dt_check, Flags, U, V, F, G, RS, P, T, PGM, computeTemperatureSwitch, 5);
 
         //update PGM here - go through all the flags and decide what needs to be changed and what not
-        update_pgm(imax, jmax, &noFluidCells, PGM, Flags, P, U, V, 0.05, PGM, outputFolderPGM, problem);
+        percent = 0.6;
+        minVelocity = 0.05;
+        update_pgm(imax, jmax, &noFluidCells, PGM, Flags, P, U, V, minVelocity, percent, PGM, outputFolderPGM, problem);
         // fix forbidden geometry in case it exists
         geometryFix(U, V, P, Flags, imax, jmax);
         // saving the *.pgm
-        logEvent(PRODUCTION, t, "Writing PGM file k=%d, executionTime=%.3fs",
+        
+        outputCalculation(U, V, Flags, imax, jmax, &outflow);
+
+        if(outflow > outflowMax){
+            outflowMax = outflow;
+            maxK = k;
+        }
+
+        logEvent(PRODUCTION, t, "Writing PGM file k=%d, executionTime=%.3fs, outflowValue=%.3f, maxOutflow=%.3f at iteration %d",
                  k,
-                 getTimeSpentSeconds(getCurrentTimeMillis(), getCurrentTimeMillis())
+                 getTimeSpentSeconds(simulationStartTime, getCurrentTimeMillis()),
+                 outflow,
+                 outflowMax,
+                 maxK
         );
         decode_flags(imax, jmax, Flags, PGM);
         write_pgm(imax+2,jmax+2,PGM,outputFolderPGM, problem, k);
@@ -336,7 +354,7 @@ double performSimulation(const char *outputFolder, const char *outputFolderPGM, 
     long interVisualizationExecTimeStart = getCurrentTimeMillis();
     it = itThreshold + 1;
     setPressureOuterBoundaryValues(imax, jmax, P, Flags, boundaryInfo);
-    while (it > itThreshold || t > t_end)
+    while (it > itThreshold && t < t_end)
     {
         
         // adaptive stepsize control based on stability conditions ensures stability of the method!

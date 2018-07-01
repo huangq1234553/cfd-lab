@@ -75,7 +75,9 @@ itermaxPGM  200
 #       Default value is 0
 #--------------------------------------------
 #left_boundary_type      INFLOW
-bottom_boundary_dirichlet_V        10
-right_boundary_dirichlet_V         0
+bottom_boundary_dirichlet_V        2
+#right_boundary_dirichlet_V         0
 #right_boundary_type     OUTFLOW
+#bottom_boundary_P	50
+#right_boundary_P 	0
 

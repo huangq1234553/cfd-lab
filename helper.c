@@ -683,7 +683,6 @@ void write_pgm(int xsize, int ysize, int **pgm, const char *outputFolder, const 
 
 void flipToFluid(double **U, double **V, int  **Flag, int i, int j)
 {
-    if (isObstacle(Flag[i][j])){ printf("eeeerrrrrooooorrr\n");}
 
     Flag[i][j] = 0
                   + (1 << TOP) * isObstacle(Flag[i][j + 1])
@@ -705,7 +704,7 @@ void flipToFluid(double **U, double **V, int  **Flag, int i, int j)
 void flipToSolid(double **U, double **V, double** P, int  **Flag, int i, int j)
 {
     Flag[i][j] = (1 << CENTER)
-                 + (1 << NSBIT)
+                 + (1 << FSBIT)
                  + (1 << TOP) * isObstacle(Flag[i][j + 1])
                  + (1 << BOT) * isObstacle(Flag[i][j - 1])
                  + (1 << LEFT) * isObstacle(Flag[i - 1][j])
@@ -735,8 +734,20 @@ int checkVelocityMagnitude(double eps, double U, double V)
 
 }
 
+int checkPressure(double percent, double ** P, int Flag, int i, int j)
+{
+	double yaxis = isNeighbourFluid(Flag, TOP)*P[i][j+1] + isNeighbourFluid(Flag, BOT)*P[i][j-1];
+	double xaxis = isNeighbourFluid(Flag, RIGHT)*P[i+1][j] + isNeighbourFluid(Flag, LEFT)*P[i-1][j];
+
+	if(  fabs( (yaxis - xaxis)/fmax(xaxis, yaxis) ) > percent ){
+		return 1;
+	}
+
+	return 0;
+}
+
 void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, double **P, double **U, double **V,
-                double eps, int **PGM, const char *outputFolderPGM, const char *szProblem)
+                double eps, double percent, int **PGM, const char *outputFolderPGM, const char *szProblem)
 {
     //int i = 1;
     //int j = 1;
@@ -755,8 +766,10 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, do
             if (isObstacle(cell))
             {
                 // isFlip = checkVelocityMagnitude(eps,U[i][j],V[i][j]);
+                if(isCorner(cell)){
+                	isFlip = checkPressure(percent, P, cell, i , j);
+                }
                 if (isFlip) {
-                    printf("inside flip solid\n");
                     flipToFluid(U,V, Flag, i, j);
                     justFlipped[i][j] = 1;
                     (*noFluidCells)++;
@@ -812,4 +825,33 @@ void geometryFix(double **U, double **V, double** P, int** Flag, int imax, int j
         }
     }
 
+}
+
+void outputCalculation(double **U, double **V, int **Flags, int imax, int jmax, double *outflow){
+
+	(*outflow) = 0;
+	for (int i = 1; i <= imax; i++)
+    {
+        if (isOutflow(Flags[i][0]))
+        {
+            (*outflow) += sqrt( pow(U[i][0] , 2 ) + pow(V[i][0] , 2) );
+        }
+        
+        if (isOutflow(Flags[i][jmax+1]))
+        {
+        	(*outflow) += sqrt( pow(U[i][jmax+1] , 2 ) + pow(V[i][jmax+1] , 2) );
+        }
+    }
+    for (int j = 1; j <= jmax; j++)
+    {
+        if (isOutflow(Flags[0][j]))
+        {	
+        	(*outflow) += sqrt( pow(U[0][j] , 2 ) + pow(V[0][j] , 2) );
+        }
+        
+        if (isOutflow(Flags[imax+1][j]))
+        {
+        	(*outflow) += sqrt( pow(U[imax+1][j] , 2 ) + pow(V[imax+1][j] , 2) );
+        }
+    }
 }

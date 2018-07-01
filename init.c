@@ -15,7 +15,7 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
                     double *t_end, double *xlength, double *ylength, double *dt, double *dx, double *dy, int *imax,
                     int *jmax, double *alpha, double *omg, double *tau, int *itermax, int *itermaxPGM, double *eps,
                     double *dt_value, char *problem, char *geometry, BoundaryInfo boundaryInfo[4], double *beta,
-                    double *TI, double *T_h, double *T_c, double *Pr, double *x_origin, double *y_origin,
+                    double *TI, double *T_h, double *T_c, double *Pr, double *x_origin, double *y_origin, double *minVelocity, double *percent,
                     char *precice_config, char *participant_name, char *mesh_name, char *read_data_name,
                     char *write_data_name)    /* path/filename to geometry file */
 {
@@ -60,6 +60,9 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
     { // Pr cannot be 0, setting a sane default
         *Pr = 1.0;
     }
+
+    READ_DOUBLE(szFileName, *TI, OPTIONAL);
+    READ_DOUBLE(szFileName, *TI, OPTIONAL);
     
     READ_STRING(szFileName, problem, REQUIRED);
     READ_STRING(szFileName, geometry, REQUIRED);
@@ -72,6 +75,9 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
     Optional PRECICE_VARS_REQUIREMENT = OPTIONAL; // TODO: this should be controlled by a cmdline flag or a config param
     READ_DOUBLE(szFileName, *x_origin, PRECICE_VARS_REQUIREMENT);
     READ_DOUBLE(szFileName, *y_origin, PRECICE_VARS_REQUIREMENT);
+
+        READ_DOUBLE(szFileName, *minVelocity, OPTIONAL);
+    READ_DOUBLE(szFileName, *percent, OPTIONAL);
     
     READ_STRING(szFileName, precice_config, PRECICE_VARS_REQUIREMENT);
     READ_STRING(szFileName, participant_name, PRECICE_VARS_REQUIREMENT);
