@@ -66,6 +66,8 @@ VI		    0
 problem     ShiftedFlowOverStep
 geometry    ShiftedFlowOverStep.pgm
 itermaxPGM  200
+percent		0.8
+minVelocity	0.05
 
 #--------------------------------------------
 #       boundary description

@@ -968,8 +968,8 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, do
         }
 }*/
 
-int expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double **V, double **P, int **Flag,
-                      signed int **Vortex, int **PGM, const char *outputFolderPGM, const char *szProblem)
+void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double **V, double **P, int **Flag,
+                       signed int **Vortex, int **PGM, const char *outputFolderPGM, const char *szProblem)
 {
     //Every point in the plane is checked in the same way as the initial algorithm isVortexSeed
     //Except when a Vortex is encountered, i.e. vavlue 0, then the furthermost interpolation point in this direction is taken

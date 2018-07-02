@@ -66,6 +66,8 @@ VI		    0
 problem     FlowOverStep
 geometry    FlowOverStep.pgm
 itermaxPGM  200
+percent		0.8
+minVelocity	0.05
 
 #--------------------------------------------
 #       boundary description
@@ -75,9 +77,9 @@ itermaxPGM  200
 #       Default value is 0
 #--------------------------------------------
 #left_boundary_type      INFLOW
-#left_boundary_dirichlet_U        1
+left_boundary_dirichlet_U        1
 #right_boundary_dirichlet_V         0
 #right_boundary_type     OUTFLOW
 
-left_boundary_P				10
-right_boundary_P 			0
+#left_boundary_P				10
+#right_boundary_P 			0

@@ -284,8 +284,8 @@ int main(int argc, char **argv)
                                   dt_check, Flags, U, V, F, G, RS, P, T, PGM, computeTemperatureSwitch, 5);
 
         //update PGM here - go through all the flags and decide what needs to be changed and what not
-        percent = 0.6;
-        minVelocity = 0.05;
+//        percent = 0.8;
+//        minVelocity = 0.05;
         update_pgm(imax, jmax, &noFluidCells, PGM, Flags, P, U, V, minVelocity, percent, PGM, outputFolderPGM, problem);
         //expandVortexSeeds(imax, jmax, &noFluidCells, U, V, P, Flags, Vortex, PGM, outputFolderPGM,problem);
         //fix forbidden geometry in case it exists

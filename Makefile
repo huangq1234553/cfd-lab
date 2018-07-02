@@ -7,7 +7,8 @@ LIBS = \
 	-lm
 
 CC = gcc
-CFLAGS = -Wall -pedantic -Werror -Wno-unused-value
+CFLAGS = -Wall -pedantic -Werror -Wno-unused-value -Wno-unused-variable
+
 .c.o:  ; $(CC) -c $(CFLAGS) $<
 
 OBJ = 	helper.o\
