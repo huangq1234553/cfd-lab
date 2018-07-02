@@ -725,6 +725,71 @@ void flipToSolid(double **U, double **V, double** P, int  **Flag, int i, int j)
     P[i][j] = 0;
 }
 
+/*void flipToSolidVortex(double **U, double **V, double **P, int **Flag, int i, int j)
+{
+    Flag[i][j] = (1 << CENTER)
+                 + (1 << FSBIT)
+                 + (1 << TOP)
+                 + (1 << BOT) * isObstacle(Flag[i][j - 1])
+                 + (1 << LEFT) * isObstacle(Flag[i - 1][j])
+                 + (1 << RIGHT)
+                 + (1 << TBIT) * (NEUMANN); // NEUMANN by default
+
+
+    Flag[i+1][j] = (1 << CENTER)
+                + (1 << FSBIT)
+                + (1 << TOP)
+                + (1 << BOT) * isObstacle(Flag[i + 1][j - 1])
+                + (1 << LEFT)
+                + (1 << RIGHT) * isObstacle(Flag[i + 2][j])
+                + (1 << TBIT) * (NEUMANN); // NEUMANN by default
+
+    Flag[i][j + 1] = (1 << CENTER)
+                   + (1 << FSBIT)
+                   + (1 << TOP) * isObstacle(Flag[i][j + 2])
+                   + (1 << BOT)
+                   + (1 << LEFT) * isObstacle(Flag[i - 1][j + 1])
+                   + (1 << RIGHT)
+                   + (1 << TBIT) * (NEUMANN); // NEUMANN by default
+
+    Flag[i + 1][j + 1] = (1 << CENTER)
+                     + (1 << FSBIT)
+                     + (1 << TOP) * isObstacle(Flag[i +1][j + 2])
+                     + (1 << BOT)
+                     + (1 << LEFT)
+                     + (1 << RIGHT) * isObstacle(Flag[i + 2][j + 1])
+                     + (1 << TBIT) * (NEUMANN); // NEUMANN by default
+
+
+    // plus update the surroundings of the whole big cell
+    Flag[i-1][j] += (1 << RIGHT)*isObstacle(Flag[i][j]);
+    Flag[i-1][j + 1] += (1 << RIGHT)*isObstacle(Flag[i][j + 1]);
+    Flag[i][j -1] += (1 << TOP)*isObstacle(Flag[i][j]);
+    Flag[i][j + 2] += (1 << BOT)*isObstacle(Flag[i][j + 1]);
+    Flag[i+1][j - 1] += (1 << TOP)*isObstacle(Flag[i +1][j]);
+    Flag[i+1][j + 2] += (1 << BOT)*isObstacle(Flag[i + 1][j +1]);
+    Flag[i + 2][j] += (1 << LEFT)*isObstacle(Flag[i +1][j]);
+    Flag[i + 2][j + 1] += (1 << LEFT)*isObstacle(Flag[i+1][j+1]);
+
+    logMsg(DEBUG,"Flipping to solid: i=%d,j=%d",i,j);
+    logMsg(DEBUG,"Flipping to solid: i=%d,j=%d",i+1,j);
+    logMsg(DEBUG,"Flipping to solid: i=%d,j=%d",i,j+1);
+    logMsg(DEBUG,"Flipping to solid: i=%d,j=%d",i+1,j+1);
+
+    U[i][j] = 0;
+    V[i][j] = 0;
+    P[i][j] = 0;
+    U[i+1][j] = 0;
+    V[i+1][j] = 0;
+    P[i+1][j] = 0;
+    U[i][j+1] = 0;
+    V[i][j+1] = 0;
+    P[i][j+1] = 0;
+    U[i+1][j+1] = 0;
+    V[i+1][j+1] = 0;
+    P[i+1][j+1] = 0;
+}*/
+
 int checkVelocityMagnitude(double eps, double U, double V)
 {
     if(sqrt( pow(U,2) + pow(V,2) ) < eps)
@@ -794,6 +859,264 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, do
     }
     free_imatrix(justFlipped, 0, imax + 1, 0, jmax + 1);
 }
+
+/*void findVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double **V, double ** P, int **Flag, signed int **Vortex)
+{
+    int cell = 0;
+    signed int isFlip = 0;
+    // Now allocate aux matrix to keep trace of just flipped geometries, to prevent cascade flipping!
+    int **justFlipped = imatrix(0, imax + 1, 0, jmax + 1);
+
+    // avoid fluid cells immediately neighbouring with boundary on the right and top
+            // due to a "stencil" for vortex seed
+    for (int i = 1; i < imax; i++)
+    {
+        for (int j = 1; j < jmax; j++)
+        {
+            cell = Flag[i][j];
+
+            if ((isNeighbourObstacle(cell,RIGHT) && !justFlipped[i+1][j])
+                || (isNeighbourObstacle(cell,TOP) && !justFlipped[i][j+1])
+                    || (isObstacle(cell) && !justFlipped[i][j]))
+            {
+                printf("Cell i=%d, j=%d ignored\n", i, j);
+                // ignore obstacle cells
+                // and fluid cells immediately neighbouring with obstacles on the right and top
+                // due to a "stencil" for vortex seed
+            }
+            else
+            {
+                printf("Cell i=%d, j=%d checked\n", i, j);
+                // otherwise check if cell qualifies as a vortex seed and determine direction of swirl
+                // for future reference in growVortex() - TODO: growth of vorticies!!!
+                isFlip = isVortexSeed(Vortex, U, V, i, j);
+                if (isFlip != 0)
+                {
+                    // if it has beed identified as a seed then immediately update flags
+                    // always flip all four "neighbouring" cells - no need for geometry fix here
+                    // we are guaranteed here that neighbours on the right and top are fluid cells! so all safe
+                    //flipToSolidVortex(U, V, P, Flag, i, j);
+                    flipToSolid(U, V, P, Flag, i, j);
+                    //justFlipped[i][j] = 1;
+                    //justFlipped[i+1][j] = 1;
+                    //justFlipped[i][j+1] = 1;
+                    //justFlipped[i+1][j+1] = 1;
+                    //(*noFluidCells) = (*noFluidCells)-4;
+                    (*noFluidCells)--;
+
+                }
+
+            }
+        }
+    }
+
+    free_imatrix(justFlipped, 0, imax + 1, 0, jmax + 1);
+}*/
+
+/*signed int isVortexSeed(signed int **Vortex, double **U, double **V, int i, int j)
+{
+        // interpolate left point
+        double u_left = (U[i - 1][j] + U[i - 1][j + 1]) * 0.5;
+        double v_left = (V[i - 1][j] + V[i][j]) * 0.5;
+
+        // interpolate top point
+        double u_top = (U[i][j + 1] + U[i][j + 2]) * 0.5;
+        double v_top = (V[i][j + 1] + V[i + 1][j + 1]) * 0.5;
+
+        // interpolate right point
+        double u_right = (U[i + 1][j] + U[i + 1][j + 1]) * 0.5;
+        double v_right = (V[i + 1][j] + V[i + 2][j]) * 0.5;
+
+        // interpolate bottom point
+        double u_bottom = (U[i][j - 1] + U[i][j]) * 0.5;
+        double v_bottom = (V[i][j - 1] + V[i + 1][j - 1]) * 0.5;
+
+        // calculate signum values
+        int sgn_u_left = 0;
+        int sgn_u_right = 0;
+        int sgn_v_top = 0;
+        int sgn_v_bottom = 0;
+        if (u_left > 0) sgn_u_left = 1;
+        else if (u_left < 0) sgn_u_left = -1;
+        if (u_right > 0) sgn_u_right = 1;
+        else if (u_right < 0) sgn_u_right = -1;
+        if (v_top > 0) sgn_v_top = 1;
+        else if (v_top < 0) sgn_v_top = -1;
+        if (v_bottom > 0) sgn_v_bottom = 1;
+        else if (v_bottom < 0) sgn_v_bottom = -1;
+
+
+        // check if it qualifies as a vortex seed
+        if ((sgn_u_left + sgn_u_right + sgn_v_bottom + sgn_v_top == 0) && (sgn_u_left + sgn_v_top != 0))
+        {
+            // determine in which direction it swirls
+            if (sgn_u_left == 1)
+            {
+                Vortex[i][j] == -1; // right swirl
+                return 1;
+            }
+            else
+            {
+                Vortex[i][j] == 1; // left swirl
+                return 1;
+            }
+        }
+
+        else {
+            Vortex[i][j] == 0; // no rotation
+            return 0;
+        }
+}*/
+
+int expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double **V, double **P, int **Flag,
+                      signed int **Vortex, int **PGM, const char *outputFolderPGM, const char *szProblem)
+{
+    //Every point in the plane is checked in the same way as the initial algorithm isVortexSeed
+    //Except when a Vortex is encountered, i.e. vavlue 0, then the furthermost interpolation point in this direction is taken
+
+    int left_shift;
+    int right_shift;
+    int top_shift;
+    int bottom_shift;
+    int noFluidCellsOld = 1;
+    int noFluidCellsNew = 0;
+    int **justFlipped = imatrix(0, imax + 1, 0, jmax + 1);
+    int counter = 0;
+
+    //iterate until it "converges"
+    while (noFluidCellsNew != noFluidCellsOld)
+        //or iterate prescribed number of times
+    //for(int k = 1; k < 50;k++)
+    {
+        counter++;
+        noFluidCellsOld = (*noFluidCells);
+
+        for (int i = 1; i < imax; i++) {
+            for (int j = 1; j < jmax; j++) {
+
+                left_shift = 1;
+                right_shift = 1;
+                top_shift = 1;
+                bottom_shift = 1;
+                int cell = Flag[i][j];
+
+                if ((isNeighbourObstacle(cell, RIGHT) && !justFlipped[i + 1][j])
+                    || (isNeighbourObstacle(cell, TOP) && !justFlipped[i][j + 1])
+                    || (isObstacle(cell) && !justFlipped[i][j]))
+                {
+                    printf("Cell i=%d, j=%d ignored\n", i, j);
+                    // ignore obstacle cells
+                    // and fluid cells immediately neighbouring with obstacles on the right and top
+                    // due to a "stencil" for vortex seed
+                } else {
+                    if (Vortex[i][j] == 0) {
+                            printf("Cell i=%d, j=%d checked\n", i, j);
+                            //find rightmost seed
+                            while ((Vortex[i + right_shift][j] != 0) && (isObstacle(Flag[i+right_shift][j]))&& (!justFlipped[i+right_shift][j])) {
+                                right_shift++;
+                            }
+                            right_shift--;
+                            //if(right_shift != 0) THROW_ERROR("RS != 0");
+                        // interpolate right point
+                        printf("\t\tRIGHT SHIFT i=%d, j=%d r=%d checked\n", i, j, right_shift);
+                        double u_right = (U[(i + right_shift) + 1][j] + U[(i + right_shift) + 1][j + 1]) * 0.5;
+                        double v_right = (V[(i + right_shift) + 1][j] + V[(i + right_shift) + 2][j]) * 0.5;
+                        printf("\t\t\t\tinterpolated i=%d, j=%d r=%d checked\n", i, j, right_shift);
+
+                        //find leftmost seed
+                        while ((Vortex[i - left_shift][j] != 0) && (isObstacle(Flag[i-left_shift][j])) && (!justFlipped[i-left_shift][j])) {
+                            left_shift++;
+                        }
+                        left_shift--;
+                        //if(left_shift != 0) THROW_ERROR("LS != 0");
+                        // interpolate left point
+                        printf("\t\tLEFT SHIFT i=%d, j=%d l=%d checked\n", i, j, left_shift);
+                        double u_left = (U[(i - left_shift) - 1][j] + U[(i - left_shift) - 1][j + 1]) * 0.5;
+                        double v_left = (V[(i - left_shift) - 1][j] + V[(i - left_shift)][j]) * 0.5;
+                        printf("\t\t\t\tinterpolated i=%d, j=%d l=%d checked\n", i, j, left_shift);
+
+                        //find topmost seed
+                        while ((Vortex[i + top_shift][j] != 0) && (isObstacle(Flag[i][j+top_shift]))&& (!justFlipped[i][j+top_shift])) {
+                            top_shift++;
+                        }
+                        top_shift--;
+                        //if(top_shift != 0) THROW_ERROR("TS != 0");
+                        // interpolate top point
+                        printf("\t\tTOP SHIFT i=%d, j=%d t=%d checked\n", i, j, top_shift);
+                        double u_top = (U[i][(j + top_shift) + 1] + U[i][(j + top_shift) + 2]) * 0.5;
+                        double v_top = (V[i][(j + top_shift) + 1] + V[i + 1][(j + top_shift) + 1]) * 0.5;
+                        printf("\t\t\t\tinterpolated i=%d, j=%d t=%d checked\n", i, j, top_shift);
+
+                        //find bottommost seed
+                        while ((Vortex[i - bottom_shift][j] != 0)&& (isObstacle(Flag[i][j-bottom_shift]))&& (!justFlipped[i][j-bottom_shift])) {
+                            bottom_shift++;
+                        }
+                        bottom_shift--;
+                        //if(bottom_shift != 0) THROW_ERROR("BS != 0");
+                        // interpolate bottom point
+                        printf("\t\tBOTTOM SHIFT i=%d, j=%d b=%d checked\n", i, j, bottom_shift);
+                        double u_bottom = (U[i][(j - bottom_shift) - 1] + U[i][(j - bottom_shift)]) * 0.5;
+                        double v_bottom = (V[i][(j - bottom_shift) - 1] + V[i + 1][(j - bottom_shift) - 1]) * 0.5;
+                        printf("\t\t\t\tinterpolated i=%d, j=%d b=%d checked\n", i, j, bottom_shift);
+
+                        // calculate signum values
+                        int sgn_u_left = 0;
+                        int sgn_u_right = 0;
+                        int sgn_v_top = 0;
+                        int sgn_v_bottom = 0;
+                        if (u_left > 0) sgn_u_left = 1;
+                        else if (u_left < 0) sgn_u_left = -1;
+                        if (u_right > 0) sgn_u_right = 1;
+                        else if (u_right < 0) sgn_u_right = -1;
+                        if (v_top > 0) sgn_v_top = 1;
+                        else if (v_top < 0) sgn_v_top = -1;
+                        if (v_bottom > 0) sgn_v_bottom = 1;
+                        else if (v_bottom < 0) sgn_v_bottom = -1;
+
+                        // check if it qualifies as a vortex seed
+                        if ((sgn_u_left + sgn_u_right + sgn_v_bottom + sgn_v_top == 0) &&
+                            (sgn_u_left + sgn_v_top != 0)) {
+                            // determine in which direction it swirls
+                            if (sgn_u_left == 1) {
+                                Vortex[i][j] = -1; // right swirl
+                                flipToSolid(U, V, P, Flag, i, j);
+                                justFlipped[i][j] = 1;
+                                (*noFluidCells)--;
+                            } else {
+                                Vortex[i][j] = 1; // left swirl
+                                flipToSolid(U, V, P, Flag, i, j);
+                                justFlipped[i][j] = 1;
+                                (*noFluidCells)--;
+                            }
+                        } else {
+                            Vortex[i][j] = 0; // no rotation
+                        }
+
+                    }
+                }
+            }
+        }
+
+        noFluidCellsNew = (*noFluidCells);
+
+        // erase justFlipped to allow for "convergence"
+        for (int j = 0; j <= jmax; j++)
+        {
+            for (int i = 0; i <= imax + 1; i++)
+            {
+                justFlipped[i][j]=0;
+            }
+        }
+
+        //decode_flags(imax, jmax, Flag, PGM);
+        //write_pgm(imax+2,jmax+2,PGM,outputFolderPGM, szProblem, counter);
+
+    }
+
+    free_imatrix(justFlipped, 0, imax + 1, 0, jmax + 1);
+}
+
+
 
 void geometryFix(double **U, double **V, double** P, int** Flag, int imax, int jmax)
 {

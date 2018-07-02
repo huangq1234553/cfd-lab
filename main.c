@@ -230,6 +230,7 @@ int main(int argc, char **argv)
     double dt_check = fmin(dt, dt_value);
     
     int **Flags = imatrix(0, imax + 1, 0, jmax + 1);
+    signed int **Vortex = imatrix(0, imax + 1, 0, jmax + 1);
     double **U = matrix(0, imax + 1, 0, jmax + 1);
     double **V = matrix(0, imax + 1, 0, jmax + 1);
     double **F = matrix(0, imax + 1, 0, jmax + 1);
@@ -286,7 +287,8 @@ int main(int argc, char **argv)
         percent = 0.6;
         minVelocity = 0.05;
         update_pgm(imax, jmax, &noFluidCells, PGM, Flags, P, U, V, minVelocity, percent, PGM, outputFolderPGM, problem);
-        // fix forbidden geometry in case it exists
+        //expandVortexSeeds(imax, jmax, &noFluidCells, U, V, P, Flags, Vortex, PGM, outputFolderPGM,problem);
+        //fix forbidden geometry in case it exists
         geometryFix(U, V, P, Flags, imax, jmax);
         // saving the *.pgm
         
@@ -328,6 +330,7 @@ int main(int argc, char **argv)
     logMsg(PRODUCTION, "Total time spent in simulation: %.3f s", getTimeSpentSeconds(simulationStartTime, simulationEndTime));
     
     free_imatrix(Flags, 0, imax + 1, 0, jmax + 1);
+    free_imatrix(Vortex, 0, imax + 1, 0, jmax + 1);
     free_matrix(U, 0, imax + 1, 0, jmax + 1);
     free_matrix(V, 0, imax + 1, 0, jmax + 1);
     free_matrix(F, 0, imax + 1, 0, jmax + 1);
