@@ -40,10 +40,12 @@ void setLeftBoundaryValues(int imax, int jmax, double **U, double **V, double **
                 V[0][j] = -V[1][j];
             } else if (Flag >> FSBIT & 1) {
                 U[0][j] = 0;
-                V[0][j] = V[1][j];
+                V[0][j] = V[1][j]*0.6;
             } else if (Flag >> IFBIT & 1) {
                 U[0][j] = (boundaryInfo[LEFTBOUNDARY].valuesDirichletU)[0];
                 V[0][j] = 2 * (boundaryInfo[LEFTBOUNDARY].valuesDirichletV)[0] - V[1][j];
+            } else if(isFluid(Flag)){
+            	;
             } else {
                 U[0][j] = U[1][j];
                 V[0][j] = V[1][j];
@@ -72,10 +74,12 @@ void setRightBoundaryValues(int imax, int jmax, double **U, double **V, double *
                 V[imax + 1][j] = -V[imax][j];
             } else if (Flag >> FSBIT & 1) {
                 U[imax][j] = 0;
-                V[imax + 1][j] = V[imax][j];
+                V[imax + 1][j] = V[imax][j]*0.6;
             } else if (Flag >> IFBIT & 1) {
                 U[imax][j] = (boundaryInfo[RIGHTBOUNDARY].valuesDirichletU)[0];
                 V[imax][j] = 2 * (boundaryInfo[RIGHTBOUNDARY].valuesDirichletV)[0] - V[imax][j];
+            } else if(isFluid(Flag)){
+            	;
             } else {
                 U[imax][j] = U[imax - 1][j];
                 V[imax + 1][j] = V[imax][j];
@@ -105,11 +109,13 @@ void setTopBoundaryValues(int imax, int jmax, double **U, double **V, double **T
                 U[i][jmax+1] = -U[i][jmax];
                 V[i][jmax] = 0;
             } else if (Flag >> FSBIT & 1) {
-                U[i][jmax+1] = U[i][jmax];
+                U[i][jmax+1] = U[i][jmax]*0.6;
                 V[i][jmax] = 0;
             } else if (Flag >> IFBIT & 1) {
                 U[i][jmax+1] = 2 * (boundaryInfo[TOPBOUNDARY].valuesDirichletU)[0] - U[i][jmax];
                 V[i][jmax] = (boundaryInfo[TOPBOUNDARY].valuesDirichletV)[0] ;
+            } else if(isFluid(Flag)){
+            	;
             } else {
                 U[i][jmax+1] = U[i][jmax];
                 V[i][jmax] = V[imax][jmax-1];
@@ -139,11 +145,13 @@ void setBottomBoundaryValues(int imax, int jmax, double **U, double **V, double 
                 U[i][0] = -U[i][1];
                 V[i][0] = 0;
             } else if (Flag >> FSBIT & 1) {
-                U[i][0] = U[i][1];
+                U[i][0] = U[i][1]*0.6;
                 V[i][0] = 0;
             } else if (Flag >> IFBIT & 1) {
                 U[i][0] = 2 * (boundaryInfo[BOTTOMBOUNDARY].valuesDirichletU)[0] - U[i][1];
                 V[i][0] = (boundaryInfo[BOTTOMBOUNDARY].valuesDirichletV)[0] ;
+            } else if(isFluid(Flag)){
+            	;
             } else {
                 U[i][0] = U[i][1];
                 V[i][0] = V[i][1];
@@ -264,7 +272,7 @@ void setPressureOuterBoundaryValues(int imax, int jmax, double **P, int **Flags,
 {
     for (int i = 1; i <= imax; i++)
     {
-        if (isOutflow(Flags[i][0]))
+        if (isOutflow(Flags[i][0]) || isFluid(Flags[i][0]))
         {
             P[i][0] = (boundaryInfo[BOTTOMBOUNDARY].valuesDirichletP)[0];
         }
@@ -273,7 +281,7 @@ void setPressureOuterBoundaryValues(int imax, int jmax, double **P, int **Flags,
             P[i][0] = P[i][1];
         }
         
-        if (isOutflow(Flags[i][jmax+1]))
+        if (isOutflow(Flags[i][jmax+1]) || isFluid(Flags[i][jmax+1]))
         {
             P[i][jmax+1] = (boundaryInfo[TOPBOUNDARY].valuesDirichletP)[0];
         }
@@ -284,7 +292,7 @@ void setPressureOuterBoundaryValues(int imax, int jmax, double **P, int **Flags,
     }
     for (int j = 1; j <= jmax; j++)
     {
-        if (isOutflow(Flags[0][j]))
+        if (isOutflow(Flags[0][j]) || isFluid(Flags[0][j]))
         {
             double value = (boundaryInfo[LEFTBOUNDARY].valuesDirichletP)[0];
             P[0][j] = value;
@@ -294,7 +302,7 @@ void setPressureOuterBoundaryValues(int imax, int jmax, double **P, int **Flags,
             P[0][j] = P[1][j];
         }
         
-        if (isOutflow(Flags[imax+1][j]))
+        if (isOutflow(Flags[imax+1][j]) || isFluid(Flags[imax+1][j]))
         {
             double value = (boundaryInfo[RIGHTBOUNDARY].valuesDirichletP)[0];
             P[imax + 1][j] = value;
