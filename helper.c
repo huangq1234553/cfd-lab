@@ -59,6 +59,17 @@ int isOutflow(int flag){
     return ((flag>>OFBIT)&1);
 }
 
+// Returns 1 (True) if the cell is inflow
+int isInflow(int flag){
+    return ((flag>>IFBIT)&1);
+}
+
+// Returns 1 (True) if cell cannot be switched between solid & fluid
+int isGeometryConstant(int flag)
+{
+    return ((flag>>GEOMETRYMASKBIT)&1);
+}
+
 // Returns 1 (True) if the neighbouring cell in the indicated direction is an obstacle
 int isNeighbourObstacle(int flag, Direction direction){
     return (flag>>direction)&1;
@@ -67,6 +78,31 @@ int isNeighbourObstacle(int flag, Direction direction){
 // Returns 1 (True) if the neighbouring cell in the indicated direction is fluid
 int isNeighbourFluid(int flag, Direction direction){
     return !((flag>>direction)&1);
+}
+
+// Current cell's neighbor in the specified direction can be flipped to solid
+int doesNeighbourAllowFlipToSolid(int **Flags, int i, int j, Direction direction)
+{
+    int cell = Flags[i][j];
+    int neighbour = 0;
+    switch (direction)
+    {
+        case LEFT:
+            neighbour = Flags[i-1][j];
+            break;
+        case RIGHT:
+            neighbour = Flags[i+1][j];
+            break;
+        case TOP:
+            neighbour = Flags[i][j+1];
+            break;
+        case BOT:
+            neighbour = Flags[i][j-1];
+            break;
+        default:
+            neighbour = cell;
+    }
+    return isNeighbourObstacle(cell, direction) && !isOutflow(neighbour) && !isInflow(neighbour);
 }
 
 // Returns 1 (True) if the cell is present at a corner (bordering only 2 fluid cells)
@@ -695,7 +731,9 @@ void flipToFluid(double **U, double **V, int  **Flag, int i, int j)
     Flag[i-1][j] -= (1 << RIGHT);
     Flag[i][j-1] -= (1 << TOP);
     Flag[i][j+1] -= (1 << BOT);
-
+    
+    logMsg(DEBUG,"Flipping to fluid: i=%d,j=%d",i,j);
+    
     U[i][j] = 0;
     V[i][j] = 0;
 
@@ -719,10 +757,12 @@ void flipToSolid(double **U, double **V, double** P, int  **Flag, int i, int j)
     Flag[i][j + 1] += (1 << BOT)*isObstacle(Flag[i][j]);
 
     logMsg(DEBUG,"Flipping to solid: i=%d,j=%d",i,j);
-
+    
     U[i][j] = 0;
+    U[i-1][j] = 0;
     V[i][j] = 0;
-    P[i][j] = 0;
+    V[i][j-1] = 0;
+//    P[i][j] = 0;
 }
 
 /*void flipToSolidVortex(double **U, double **V, double **P, int **Flag, int i, int j)
@@ -826,13 +866,18 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, do
     {
         for(int j = 1; j < jmax + 1; j++)
         {
-            isFlip = 0;
             cell = Flag[i][j];
+            if (isGeometryConstant(cell)) // If current cell cannot be changed, skip to next one
+            {
+                continue;
+            }
+            isFlip = 0;
             if (isObstacle(cell))
             {
                 // isFlip = checkVelocityMagnitude(eps,U[i][j],V[i][j]);
                 if(isCorner(cell)){
                 	isFlip = checkPressure(percent, P, cell, i , j);
+//                    isFlip += !checkVelocityMagnitude(1.1*eps,U[i][j],V[i][j]); // EXPERIMENTAL!
                 }
                 if (isFlip) {
                     flipToFluid(U,V, Flag, i, j);
@@ -840,10 +885,10 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, do
                     (*noFluidCells)++;
                 }
             }
-            else if ( (isNeighbourObstacle(cell,RIGHT) && !justFlipped[i+1][j])
-                     || (isNeighbourObstacle(cell,LEFT) && !justFlipped[i-1][j])
-                     || (isNeighbourObstacle(cell,TOP) && !justFlipped[i][j+1])
-                     || (isNeighbourObstacle(cell,BOT) && !justFlipped[i][j-1])
+            else if ( (doesNeighbourAllowFlipToSolid(Flag,i,j,RIGHT) && !justFlipped[i+1][j])
+                     || (doesNeighbourAllowFlipToSolid(Flag,i,j,LEFT) && !justFlipped[i-1][j])
+                     || (doesNeighbourAllowFlipToSolid(Flag,i,j,TOP) && !justFlipped[i][j+1])
+                     || (doesNeighbourAllowFlipToSolid(Flag,i,j,BOT) && !justFlipped[i][j-1])
                     )
             {
                 isFlip = checkVelocityMagnitude(eps,U[i][j],V[i][j]);

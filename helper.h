@@ -27,7 +27,7 @@
  */
 //typedef enum Direction {CENTER=1, TOP=16, BOT=8, LEFT=4, RIGHT=2} Direction;
 typedef enum Direction {CENTER=0, TOP=4, BOT=3, LEFT=2, RIGHT=1} Direction;
-typedef enum BoundaryTypeBit {NSBIT=5, FSBIT=6, OFBIT=7, IFBIT=8, CBIT=9, TBIT=10} BoundaryTypeBit;
+typedef enum FlagTypeBit {NSBIT=5, FSBIT=6, OFBIT=7, IFBIT=8, CBIT=9, TBIT=10, GEOMETRYMASKBIT=11} FlagTypeBit;
 typedef enum Optional {REQUIRED, OPTIONAL} Optional;
 extern clock_t last_timer_reset;   
 
@@ -41,8 +41,11 @@ int isObstacle(int flag);   // Current cell is an obstacle
 int isFluid(int flag);      // Current cell is fluid
 int isCoupling(int flag);      // Current cell is coupling
 int isOutflow(int flag);      // Current cell is outflow
+int isInflow(int flag);      // Current cell is inflow
+int isGeometryConstant(int flag);      // Current cell does not allow to be switched from fluid to solid or viceversa
 int isNeighbourObstacle(int flag, Direction direction); // Current cell's neighbor in the specified direction is obstacle
 int isNeighbourFluid(int flag, Direction direction);    // Current cell's neighbor in the specified direction is fluid
+int doesNeighbourAllowFlipToSolid(int **Flags, int i, int j, Direction direction); // Current cell's neighbor in the specified direction can be flipped to solid
 int isCorner(int flag); // Current cell is a corner obstacle
 int skipU(int flag);    // Current cell is surrounded by obstacles to its Top-Right-Bottom
 int skipV(int flag);    // Current cell is surrounded by obstacles to its Left-Top-Right

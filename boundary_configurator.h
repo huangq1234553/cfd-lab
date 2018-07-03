@@ -15,6 +15,12 @@ typedef enum GeometryPixelValue
     FLUID_PIXEL = 6,
 } GeometryPixelValue;
 
+typedef enum GeometryMaskValue
+{
+    FREE_MASK = 0,
+    CONST_MASK = 1
+} GeometryMaskValue;
+
 void mapVelocityPixelValueToBoundaryTypeStr(GeometryPixelValue pixel, char* boundaryTypeStr);
 
 //void getVelocityBoundaryTypesFromExtendedGeometryFile(int** geometry, int imax, int jmax,

@@ -14,6 +14,7 @@
 
 USAGE="Usage:\n\t./create-geometry.sh FILE [width height]"
 CONVERT_FLAGS="-posterize 2 -depth 1 -compress none -negate"
+#CONVERT_FLAGS="-posterize 2 -depth 1 -compress none"
 
 if [[ ! $1 ]]; then
     echo "ERROR: You need to pass a jpg file as argument!"

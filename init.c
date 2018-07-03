@@ -3,9 +3,15 @@
 #include "logger.h"
 #include "boundary_configurator.h"
 
+
+char isStringDefault(char* string)
+{
+    return (strcmp(string, NULLSTRING) == 0);
+}
+
 void setDefaultStringIfRequired(char *variable, const char *defaultValue)
 {
-    if (strcmp(variable, "NULLSTRING") == 0)
+    if (strcmp(variable, NULLSTRING) == 0)
     {
         strcpy(variable, defaultValue);
     }
@@ -13,9 +19,10 @@ void setDefaultStringIfRequired(char *variable, const char *defaultValue)
 
 int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, double *PI, double *GX, double *GY,
                     double *t_end, double *xlength, double *ylength, double *dt, double *dx, double *dy, int *imax,
-                    int *jmax, double *alpha, double *omg, double *tau, int *itermax, int *itermaxPGM, double *eps,
-                    double *dt_value, char *problem, char *geometry, BoundaryInfo boundaryInfo[4], double *beta,
-                    double *TI, double *T_h, double *T_c, double *Pr, double *x_origin, double *y_origin, double *minVelocity, double *percent,
+                    int *jmax, double *alpha, double *omg, double *tau, int *itermax, int *itermaxPGM,
+                    int *sorIterationsThreshold, double *eps, double *dt_value, char *problem, char *geometry,
+                    char *geometryMask, BoundaryInfo boundaryInfo[4], double *beta, double *TI, double *T_h,
+                    double *T_c, double *Pr, double *x_origin, double *y_origin, double *minVelocity, double *percent,
                     char *precice_config, char *participant_name, char *mesh_name, char *read_data_name,
                     char *write_data_name)    /* path/filename to geometry file */
 {
@@ -66,7 +73,13 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
     
     READ_STRING(szFileName, problem, REQUIRED);
     READ_STRING(szFileName, geometry, REQUIRED);
+    READ_STRING(szFileName, geometryMask, OPTIONAL);
     READ_INT   (szFileName, *itermaxPGM, REQUIRED);
+    READ_INT   (szFileName, *sorIterationsThreshold, OPTIONAL);
+    if (*sorIterationsThreshold == 0.0)
+    {
+        *sorIterationsThreshold = 10;
+    }
     
     *dx = *xlength / (double) (*imax);
     *dy = *ylength / (double) (*jmax);
@@ -348,28 +361,28 @@ void init_uvpt(double UI, double VI, double PI, double TI, int imax, int jmax, d
     }
 }
 
-void setGeometry(int imax, int jmax, int **Flag, RunningMode *runningMode, int **pic)
+void setGeometry(int imax, int jmax, int **Flags, RunningMode *runningMode, int **pic, int **mask)
 {// Set the outer boundaries
     for (int i = 0; i < imax + 1; ++i)
     {
         // Outer boundary
-        Flag[i][0] = 1;
-        Flag[i][jmax + 1] = 1;
+        Flags[i][0] = 1;
+        Flags[i][jmax + 1] = 1;
     }
     for (int j = 0; j < jmax + 1; ++j)
     {
         // Outer boundary
-        Flag[0][j] = 1;
-        Flag[imax + 1][j] = 1;
+        Flags[0][j] = 1;
+        Flags[imax + 1][j] = 1;
     }
     // Set the inner domain geometry
-    if ((*runningMode) == COMPACT)
+    if ((*runningMode) == COMPACT) //TODO: clean this as there is no compact mode anymore
     {
         for (int i = 1; i < imax + 1; i++)
         {
             for (int j = 1; j < jmax + 1; j++)
             {
-                Flag[i][j] = pic[i - 1][j - 1];
+                Flags[i][j] = pic[i - 1][j - 1];
             }
         }
     }
@@ -379,13 +392,18 @@ void setGeometry(int imax, int jmax, int **Flag, RunningMode *runningMode, int *
         {
             for (int j = 0; j <= jmax + 1; j++)
             {
-                Flag[i][j] = (1 << CENTER) * (pic[i][j] != FLUID_PIXEL)
+                Flags[i][j] = (1 << CENTER) * (pic[i][j] != FLUID_PIXEL)
                              + (1 << NSBIT) * (pic[i][j] == NOSLIP_PIXEL)
                              + (1 << FSBIT) * (pic[i][j] == FREESLIP_PIXEL)
                              + (1 << OFBIT) * (pic[i][j] == OUTFLOW_PIXEL)
                              + (1 << IFBIT) * (pic[i][j] == INFLOW_PIXEL)
                              + (1 << CBIT) * (pic[i][j] == COUPLING_PIXEL)
                              + (1 << TBIT) * (NEUMANN); // NEUMANN by default
+                // Now set if this geometry cell has to be const or can be changed (1=const, 0=changeable), if relevant
+                if (mask != NULL)
+                {
+                    Flags[i][j] += (1 << GEOMETRYMASKBIT) * (mask[i][j] != FREE_MASK);
+                }
             }
         }
     }
@@ -440,14 +458,19 @@ void setFlagsOnDomain(int imax, int jmax, int **Flag, int *fluidCellsCounter, in
     }
 }
 
-void init_flag(char *problem, char *geometry, int imax, int jmax, int **Flag, int *fluidCellsCounter,
+void init_flag(char *problem, char *geometry, char *mask, int imax, int jmax, int **Flag, int *fluidCellsCounter,
                int *couplingCellsCounter, RunningMode runningMode)
 {
     int **pic = NULL;
+    int **msk = NULL; // This reads a pgm containing a 1-0 mask of geometry cells that cannot be changed
     
-    pic = read_pgm(
-            geometry); // NOTE: when running in compact mode this is covering just the inner part of the image, so it is imax*jmax //TODO remove compact mode
-    setGeometry(imax, jmax, Flag, &runningMode, pic);
+    pic = read_pgm(geometry);
+    if (!isStringDefault(mask))
+    {
+        msk = read_pgm(mask);
+    }
+    
+    setGeometry(imax, jmax, Flag, &runningMode, pic, msk);
     
     //
     setFlagsOnBoundary(imax, jmax, Flag, couplingCellsCounter);

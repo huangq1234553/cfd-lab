@@ -5,6 +5,10 @@
 
 typedef enum RunningMode { COMPACT=0, EXTENDED=1 } RunningMode;
 
+static char *const NULLSTRING = "NULLSTRING";
+
+char isStringDefault(char* string);
+
 /**
  * This operation initializes all the local variables reading a configuration
  * file. For every variable a macro like READ_INT() is called passing it the
@@ -46,9 +50,10 @@ typedef enum RunningMode { COMPACT=0, EXTENDED=1 } RunningMode;
  */
 int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, double *PI, double *GX, double *GY,
                     double *t_end, double *xlength, double *ylength, double *dt, double *dx, double *dy, int *imax,
-                    int *jmax, double *alpha, double *omg, double *tau, int *itermax, int *itermaxPGM, double *eps,
-                    double *dt_value, char *problem, char *geometry, BoundaryInfo boundaryInfo[4], double *beta,
-                    double *TI, double *T_h, double *T_c, double *Pr, double *x_origin, double *y_origin, double *minVelocity, double *percent,
+                    int *jmax, double *alpha, double *omg, double *tau, int *itermax, int *itermaxPGM,
+                    int *sorIterationsThreshold, double *eps, double *dt_value, char *problem, char *geometry,
+                    char *geometryMask, BoundaryInfo boundaryInfo[4], double *beta, double *TI, double *T_h,
+                    double *T_c, double *Pr, double *x_origin, double *y_origin, double *minVelocity, double *percent,
                     char *precice_config, char *participant_name, char *mesh_name, char *read_data_name,
                     char *write_data_name);
 
@@ -67,9 +72,8 @@ void configureBoundary(BoundaryInfo *boundaryInfo, BoundarySide boundarySide, do
 void init_uvpt(double UI, double VI, double PI, double TI, int imax, int jmax, double **U, double **V, double **P,
                double **T, int **Flags);
 
-void init_flag(char *problem, char *geometry, int imax, int jmax, int **Flag, int *fluidCellsCounter,
+void init_flag(char *problem, char *geometry, char *mask, int imax, int jmax, int **Flag, int *fluidCellsCounter,
                int *couplingCellsCounter, RunningMode runningMode);
-
 
 
 #endif
