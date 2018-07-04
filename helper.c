@@ -836,7 +836,6 @@ int checkVelocityMagnitude(double eps, double U, double V)
         return 1;
     else
         return 0;
-
 }
 
 int checkPressure(double percent, double ** P, int Flag, int i, int j)
@@ -874,7 +873,6 @@ int checkVelocity(int isFlip, double percent, double ** U, double **V, int Flag,
 		if(fabs((yaxis_velocity - xaxis_velocity)/fmin(yaxis_velocity, xaxis_velocity)) > 0.8){
 			return 1;
 		}
-		
 	}
 
 	return 0;
@@ -1253,7 +1251,7 @@ void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double
 
 
 
-void geometryFix(double **U, double **V, double** P, int** Flag, int imax, int jmax)
+void geometryFix(double **U, double **V, double **P, int **Flag, int imax, int jmax, int *noFluidCells)
 {
 
     for (int i = 1; i < imax + 1; i++)
@@ -1269,6 +1267,7 @@ void geometryFix(double **U, double **V, double** P, int** Flag, int imax, int j
                     } else {
                         flipToSolid(U, V, P, Flag, i, j + 1);
                     }
+                    --(*noFluidCells);
                 }
                 if ((isFluid(Flag[i - 1][j]) && isFluid(Flag[i + 1][j]))) {
                     double left = sqrt(pow(U[i - 1][j], 2) + pow(V[i - 1][j], 2));
@@ -1278,6 +1277,7 @@ void geometryFix(double **U, double **V, double** P, int** Flag, int imax, int j
                     } else {
                         flipToSolid(U, V, P, Flag, i + 1, j);
                     }
+                    --(*noFluidCells);
                 }
             }
         }

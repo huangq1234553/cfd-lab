@@ -62,7 +62,7 @@ void flipToSolid(double **U, double **V, double** P, int  **Flag, int i, int j);
 int checkVelocity(int isFlip, double percent, double ** U, double **V, int Flag, int i, int j, double maxU, double maxV);
 int checkVelocityMagnitude(double eps, double U, double V);
 int checkPressure(double percent, double ** P, int Flag, int i, int j);
-void geometryFix(double **U, double **V, double** P, int** Flag, int imax, int jmax);
+void geometryFix(double **U, double **V, double **P, int **Flag, int imax, int jmax, int *noFluidCells);
 
 void outputCalculation(double **U, double **V, int **Flags, int imax, int jmax, double *outflow);
 

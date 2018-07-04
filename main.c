@@ -304,7 +304,7 @@ int main(int argc, char **argv)
         update_pgm(imax, jmax, &noFluidCells, PGM, Flags, P, U, V, minVelocity, percent, PGM, outputFolderPGM, problem, maxU, maxV, k);
         //expandVortexSeeds(imax, jmax, &noFluidCells, U, V, P, Flags, Vortex, PGM, outputFolderPGM,problem);
         //fix forbidden geometry in case it exists
-        geometryFix(U, V, P, Flags, imax, jmax);
+        geometryFix(U, V, P, Flags, imax, jmax, &noFluidCells);
         // saving the *.pgm
         
         outputCalculation(U, V, Flags, imax, jmax, &outflow);
@@ -436,12 +436,12 @@ double performSimulation(const char *outputFolder, const char *outputFolderPGM, 
         if (it == itermax)
         {
             logEvent(WARNING, t, "Max number of iterations reached on SOR. Probably it did not converge!");
-            logEvent(WARNING, t, "dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res);
+            logEvent(WARNING, t, "dt=%f, numSorIterations=%d, sorResidual=%f, noFluidCells=%d", dt, it, res, noFluidCells);
             
         }
         else
         {
-            logEvent(INFO, t, "dt=%f, numSorIterations=%d, sorResidual=%f", dt, it, res);
+            logEvent(INFO, t, "dt=%f, numSorIterations=%d, sorResidual=%f, noFluidCells=%d", dt, it, res, noFluidCells);
         }
         // advance in time
         t += dt;
