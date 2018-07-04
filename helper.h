@@ -55,11 +55,11 @@ void decode_flags(int imax, int jmax, int **Flag, int** pic); // decode flags in
 void write_pgm(int xsize, int ysize, int **pgm, const char *outputFolder, const char *szProblem, int iterationNumber); //write *.pgm file
 
 void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, double **P, double **U, double **V,
-                double eps, double percent, int **PGM, const char *outputFolder, const char *szProblem);
+                double eps, double percent, int **PGM, const char *outputFolder, const char *szProblem, double maxU, double maxV);
 
 void flipToFluid(double **U, double **V, int  **Flags, int i, int j);
 void flipToSolid(double **U, double **V, double** P, int  **Flag, int i, int j);
-
+int checkVelocity(int isFlip, double percent, double ** U, double **V, int Flag, int i, int j, double maxU, double maxV);
 int checkVelocityMagnitude(double eps, double U, double V);
 int checkPressure(double percent, double ** P, int Flag, int i, int j);
 void geometryFix(double **U, double **V, double** P, int** Flag, int imax, int jmax);

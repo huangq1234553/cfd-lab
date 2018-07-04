@@ -50,7 +50,7 @@ double performSimulation(const char *outputFolder, const char *outputFolderPGM, 
                          int k, double res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
                          BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V, double **F,
                          double **G, double **RS, double **P, double **T, int **PGM, bool computeTemperatureSwitch,
-                         int itThreshold);
+                         int itThreshold, double *maxU, double *maxV);
 
 int main(int argc, char **argv)
 {
@@ -205,6 +205,7 @@ int main(int argc, char **argv)
     double outflowMax = 0;
     double percent = 0.6;
     double minVelocity = 0.05;
+    
     int maxK = 0;
     int sorIterationsAcceptanceThreshold;
     // Params for preCICE coupling
@@ -280,6 +281,7 @@ int main(int argc, char **argv)
 
     // initialise velocities and pressure
     init_uvpt(UI, VI, PI, TI, imax, jmax, U, V, P, T, Flags);
+    double maxU, maxV;
 
 //    // Debug
 //    logEvent(PRODUCTION, t, "Writing visualization file n=%d", n);
@@ -294,12 +296,12 @@ int main(int argc, char **argv)
                                   dy, imax, jmax, alpha, omg, tau, itermax, eps, dt_value, n, k, res, t, it, mindt,
                                   noFluidCells, beta, Pr, boundaryInfo,
                                   dt_check, Flags, U, V, F, G, RS, P, T, PGM, computeTemperatureSwitch,
-                                  sorIterationsAcceptanceThreshold);
+                                  sorIterationsAcceptanceThreshold, &maxU, &maxV);
 
         //update PGM here - go through all the flags and decide what needs to be changed and what not
 //        percent = 0.8;
 //        minVelocity = 0.05;
-        update_pgm(imax, jmax, &noFluidCells, PGM, Flags, P, U, V, minVelocity, percent, PGM, outputFolderPGM, problem);
+        update_pgm(imax, jmax, &noFluidCells, PGM, Flags, P, U, V, minVelocity, percent, PGM, outputFolderPGM, problem, maxU, maxV);
         //expandVortexSeeds(imax, jmax, &noFluidCells, U, V, P, Flags, Vortex, PGM, outputFolderPGM,problem);
         //fix forbidden geometry in case it exists
         geometryFix(U, V, P, Flags, imax, jmax);
@@ -364,7 +366,7 @@ double performSimulation(const char *outputFolder, const char *outputFolderPGM, 
                          int k, double res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
                          BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V, double **F,
                          double **G, double **RS, double **P, double **T, int **PGM, bool computeTemperatureSwitch,
-                         int itThreshold)
+                         int itThreshold, double *maxU, double *maxV)
 {
     double currentOutputTime = 0; // For chosing when to output
     long interVisualizationExecTimeStart = getCurrentTimeMillis();
@@ -378,7 +380,7 @@ double performSimulation(const char *outputFolder, const char *outputFolderPGM, 
         // NOTE: if tau<0, stepsize is not adaptively computed!
         if (tau > 0)
         {
-            calculate_dt(Re, Pr, tau, &dt, dx, dy, imax, jmax, U, V);
+            calculate_dt(Re, Pr, tau, &dt, dx, dy, imax, jmax, U, V, maxU, maxV);
             dt = fmin(dt, dt_check); // test, to avoid a dt bigger than visualization interval
             // Used to check the minimum time-step for convergence
             if (dt < mindt)

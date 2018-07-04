@@ -250,7 +250,9 @@ void calculate_dt(
         int imax,
         int jmax,
         double **U,
-        double **V
+        double **V,
+        double *maxU,
+        double *maxV
 )
 {
     double u_max = 0, v_max = 0;
@@ -268,6 +270,9 @@ void calculate_dt(
             }
         }
     }
+
+    (*maxU) = u_max;
+    (*maxV) = v_max;
     
     double stabilityConditions = fmin((Re / 2 / (1 / pow(dx, 2) + 1 / pow(dy, 2))),
                                       (Re * Pr / 2 / (1 / pow(dx, 2) + 1 / pow(dy, 2))));

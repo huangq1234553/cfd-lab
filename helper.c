@@ -742,7 +742,7 @@ void flipToFluid(double **U, double **V, int  **Flag, int i, int j)
 void flipToSolid(double **U, double **V, double** P, int  **Flag, int i, int j)
 {
     Flag[i][j] = (1 << CENTER)
-                 + (1 << FSBIT)
+                 + (1 << NSBIT)
                  + (1 << TOP) * isObstacle(Flag[i][j + 1])
                  + (1 << BOT) * isObstacle(Flag[i][j - 1])
                  + (1 << LEFT) * isObstacle(Flag[i - 1][j])
@@ -851,8 +851,42 @@ int checkPressure(double percent, double ** P, int Flag, int i, int j)
 	return 0;
 }
 
+int checkVelocity(int isFlip, double percent, double ** U, double **V, int Flag, int i, int j, double maxU, double maxV)
+{
+	if(isFlip){
+		return 1;
+	}
+	double max_velocity = sqrt(pow( maxU,2 ) + pow( maxV,2) );
+	double left_velocity = sqrt(pow(U[i-1][j],2) + pow(V[i-1][j],2)) * isNeighbourFluid(Flag, LEFT);
+	double right_velocity = sqrt(pow(U[i+1][j],2) + pow(V[i+1][j],2)) * isNeighbourFluid(Flag, RIGHT);
+	double top_velocity = sqrt(pow(U[i][j+1],2) + pow(V[i][j+1],2)) * isNeighbourFluid(Flag, TOP);
+	double bottom_velocity = sqrt(pow(U[i][j-1],2) + pow(V[i][j-1],2)) * isNeighbourFluid(Flag, BOT);
+	double velocity = left_velocity + right_velocity + top_velocity + bottom_velocity;
+	if(velocity > (max_velocity * 0.0))
+	{
+		return 1;
+	}
+	else if(isCorner(Flag))
+	{
+		double yaxis_velocity = top_velocity + bottom_velocity;
+		double xaxis_velocity = left_velocity + right_velocity;
+
+		if(fabs((yaxis_velocity - xaxis_velocity)/fmin(yaxis_velocity, xaxis_velocity)) > 0.8){
+			return 1;
+		}
+		
+	}
+
+	return 0;
+
+		
+}
+
+
+
+
 void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, double **P, double **U, double **V,
-                double eps, double percent, int **PGM, const char *outputFolderPGM, const char *szProblem)
+                double eps, double percent, int **PGM, const char *outputFolderPGM, const char *szProblem, double maxU, double maxV)
 {
     //int i = 1;
     //int j = 1;
@@ -862,7 +896,7 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, do
     // Now allocate aux matrix to keep trace of just flipped geometries, to prevent cascade flipping!
     int **justFlipped = imatrix(0, imax + 1, 0, jmax + 1);
 
-    for (int i = 1; i < imax + 1; i++)
+    for (int i = imax; i > 0; i--)
     {
         for(int j = 1; j < jmax + 1; j++)
         {
@@ -877,6 +911,7 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, do
                 // isFlip = checkVelocityMagnitude(eps,U[i][j],V[i][j]);
                 if(isCorner(cell)){
                 	isFlip = checkPressure(percent, P, cell, i , j);
+                	isFlip = checkVelocity(isFlip, percent, U, V, cell, i , j, maxU, maxV);
 //                    isFlip += !checkVelocityMagnitude(1.1*eps,U[i][j],V[i][j]); // EXPERIMENTAL!
                 }
                 if (isFlip) {
