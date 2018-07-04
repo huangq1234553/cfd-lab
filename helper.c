@@ -896,8 +896,8 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, do
     icounter = k&1;
     jcounter = (k>>1)&1;
     
-    istart = imax * icounter;
-    jstart = jmax * jcounter;
+    istart = (imax-1) * icounter + 1;
+    jstart = (jmax-1) * jcounter + 1;
 
     ibound = (imax + 1) * !icounter;
     jbound = (jmax + 1) * !jcounter;
@@ -905,9 +905,9 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, do
     iflip = pow(-1, icounter);
     jflip = pow(-1, jcounter);
 
-    // printf("The counter = %d, jstart=%d, jend=%d, iter=%d for k = %d\n", jcounter, jstart, jbound, jflip, k);
-    // printf("The counter = %d, istart=%d, iend=%d, iter=%d for k = %d\n", icounter, istart, ibound, iflip, k);
-
+  
+    printf("The counter = %d, istart=%d, iend=%d, iter=%d for k = %d\n", icounter, istart, ibound, iflip, k);
+    printf("The counter = %d, jstart=%d, jend=%d, iter=%d for k = %d\n", jcounter, jstart, jbound, jflip, k);
     
     // Now allocate aux matrix to keep trace of just flipped geometries, to prevent cascade flipping!
     int **justFlipped = imatrix(0, imax + 1, 0, jmax + 1);
