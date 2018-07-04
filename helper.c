@@ -927,7 +927,7 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, do
                 // isFlip = checkVelocityMagnitude(eps,U[i][j],V[i][j]);
                 if(isCorner(cell)){
                 	isFlip = checkPressure(percent, P, cell, i , j);
-                	isFlip = checkVelocity(isFlip, percent, U, V, cell, i , j, maxU, maxV);
+                	// isFlip = checkVelocity(isFlip, percent, U, V, cell, i , j, maxU, maxV);
 //                    isFlip += !checkVelocityMagnitude(1.1*eps,U[i][j],V[i][j]); // EXPERIMENTAL!
                 }
                 if (isFlip) {
@@ -1259,25 +1259,32 @@ void geometryFix(double **U, double **V, double **P, int **Flag, int imax, int j
         for (int j = 1; j < jmax + 1; j++) {
             if (isObstacle(Flag[i][j])) {
                 if ((isFluid(Flag[i][j + 1]) && isFluid(Flag[i][j - 1]))) {
-                    double top = sqrt(pow(U[i][j + 1], 2) + pow(V[i][j + 1], 2));
-                    double bot = sqrt(pow(U[i][j - 1], 2) + pow(V[i][j - 1], 2));
+                    // double top = sqrt(pow(U[i][j + 1], 2) + pow(V[i][j + 1], 2));
+                    // double bot = sqrt(pow(U[i][j - 1], 2) + pow(V[i][j - 1], 2));
 
-                    if (top > bot) {
-                        flipToSolid(U, V, P, Flag, i, j - 1);
-                    } else {
-                        flipToSolid(U, V, P, Flag, i, j + 1);
-                    }
-                    --(*noFluidCells);
+                    // if (top > bot) {
+                    //     flipToSolid(U, V, P, Flag, i, j - 1);
+                    // } else {
+                    //     flipToSolid(U, V, P, Flag, i, j + 1);
+                    // }
+                    // --(*noFluidCells);
+                  flipToFluid(U, V, Flag, i, j);
+                  ++(*noFluidCells);
                 }
                 if ((isFluid(Flag[i - 1][j]) && isFluid(Flag[i + 1][j]))) {
-                    double left = sqrt(pow(U[i - 1][j], 2) + pow(V[i - 1][j], 2));
-                    double right = sqrt(pow(U[i + 1][j], 2) + pow(V[i + 1][j], 2));
-                    if (right > left) {
-                        flipToSolid(U, V, P, Flag, i - 1, j);
-                    } else {
-                        flipToSolid(U, V, P, Flag, i + 1, j);
-                    }
-                    --(*noFluidCells);
+                    // double left = sqrt(pow(U[i - 1][j], 2) + pow(V[i - 1][j], 2));
+                    // double right = sqrt(pow(U[i + 1][j], 2) + pow(V[i + 1][j], 2));
+                    // if (right > left) {
+                    //     flipToSolid(U, V, P, Flag, i - 1, j);
+                    // } else {
+                    //     flipToSolid(U, V, P, Flag, i + 1, j);
+                    // }
+                    // --(*noFluidCells);
+                  if(isObstacle(Flag[i][j])){
+                    flipToFluid(U, V, Flag, i, j);
+                    ++(*noFluidCells);  
+                  }
+                  
                 }
             }
         }
