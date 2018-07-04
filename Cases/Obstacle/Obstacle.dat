@@ -68,7 +68,7 @@ geometry    Obstacle.pgm
 geometryMask    ObstacleMask.pgm
 itermaxPGM  200
 sorIterationsThreshold	5
-percent		0.5
+percent		0.3
 minVelocity	0.05
 
 #--------------------------------------------

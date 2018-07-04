@@ -696,7 +696,9 @@ void write_pgm(int xsize, int ysize, int **pgm, const char *outputFolder, const 
             for(i = 0; i <= 2*xsize-1; i = i+2)
             {
                 // fill in line buffer including spaces inbetween the numbers
-                buffer[i] = 48 + pgm[i/2][j];
+                int value = pgm[i / 2][j];
+                int character = 48 + value;
+                buffer[i] = character;
                 buffer[i + 1] = ' ';
             }
 
@@ -725,7 +727,7 @@ void flipToFluid(double **U, double **V, int  **Flag, int i, int j)
                   + (1 << BOT) * isObstacle(Flag[i][j - 1])
                   + (1 << LEFT) * isObstacle(Flag[i - 1][j])
                   + (1 << RIGHT) * isObstacle(Flag[i + 1][j])
-                 + (1 << TBIT) * (NEUMANN); // NEUMANN by default
+                  + (1 << TBIT) * (NEUMANN); // NEUMANN by default
 
     Flag[i+1][j] -= (1 << LEFT);
     Flag[i-1][j] -= (1 << RIGHT);
@@ -753,8 +755,8 @@ void flipToSolid(double **U, double **V, double** P, int  **Flag, int i, int j)
 
     Flag[i+1][j] += (1 << LEFT)*isObstacle(Flag[i][j]);
     Flag[i-1][j] += (1 << RIGHT)*isObstacle(Flag[i][j]);
-    Flag[i][j -1] += (1 << TOP)*isObstacle(Flag[i][j]);
-    Flag[i][j + 1] += (1 << BOT)*isObstacle(Flag[i][j]);
+    Flag[i][j-1] += (1 << TOP)*isObstacle(Flag[i][j]);
+    Flag[i][j+1] += (1 << BOT)*isObstacle(Flag[i][j]);
 
     logMsg(DEBUG,"Flipping to solid: i=%d,j=%d",i,j);
     
@@ -861,7 +863,7 @@ int checkVelocity(int isFlip, double percent, double ** U, double **V, int Flag,
 	double top_velocity = sqrt(pow(U[i][j+1],2) + pow(V[i][j+1],2)) * isNeighbourFluid(Flag, TOP);
 	double bottom_velocity = sqrt(pow(U[i][j-1],2) + pow(V[i][j-1],2)) * isNeighbourFluid(Flag, BOT);
 	double velocity = left_velocity + right_velocity + top_velocity + bottom_velocity;
-	if(velocity > (max_velocity * 0.7))
+	if(velocity > (max_velocity * 0.9))
 	{
 		return 1;
 	}
@@ -870,7 +872,7 @@ int checkVelocity(int isFlip, double percent, double ** U, double **V, int Flag,
 		double yaxis_velocity = top_velocity + bottom_velocity;
 		double xaxis_velocity = left_velocity + right_velocity;
 
-		if(fabs((yaxis_velocity - xaxis_velocity)/fmin(yaxis_velocity, xaxis_velocity)) > 0.8){
+		if(fabs((yaxis_velocity - xaxis_velocity)/fmin(yaxis_velocity, xaxis_velocity)) > 0.9){
 			return 1;
 		}
 	}
@@ -1257,7 +1259,9 @@ void geometryFix(double **U, double **V, double **P, int **Flag, int imax, int j
     for (int i = 1; i < imax + 1; i++)
     {
         for (int j = 1; j < jmax + 1; j++) {
-            if (isObstacle(Flag[i][j])) {
+            int cell = Flag[i][j];
+            if (isObstacle(cell)) {
+                // Check that not both top and bottom are fluid
                 if ((isFluid(Flag[i][j + 1]) && isFluid(Flag[i][j - 1]))) {
                     // double top = sqrt(pow(U[i][j + 1], 2) + pow(V[i][j + 1], 2));
                     // double bot = sqrt(pow(U[i][j - 1], 2) + pow(V[i][j - 1], 2));
@@ -1271,6 +1275,7 @@ void geometryFix(double **U, double **V, double **P, int **Flag, int imax, int j
                   flipToFluid(U, V, Flag, i, j);
                   ++(*noFluidCells);
                 }
+                // Check that not both left and right are fluid
                 if ((isFluid(Flag[i - 1][j]) && isFluid(Flag[i + 1][j]))) {
                     // double left = sqrt(pow(U[i - 1][j], 2) + pow(V[i - 1][j], 2));
                     // double right = sqrt(pow(U[i + 1][j], 2) + pow(V[i + 1][j], 2));
@@ -1287,6 +1292,24 @@ void geometryFix(double **U, double **V, double **P, int **Flag, int imax, int j
                   
                 }
             }
+        }
+    }
+    //
+    for (int i = 1; i < imax + 1; i++)
+    {
+        for (int j = 1; j < jmax + 1; j++) {
+            int cell = Flag[i][j];
+            // This is to avoid 1-cell holes
+            if (isFluid(cell)
+                && isNeighbourObstacle(cell, LEFT)
+                && isNeighbourObstacle(cell, RIGHT)
+                && isNeighbourObstacle(cell, TOP)
+                && isNeighbourObstacle(cell, BOT)
+                )
+                {
+                    flipToSolid(U, V, P, Flag, i, j);
+                    --(*noFluidCells);
+                }
         }
     }
 
