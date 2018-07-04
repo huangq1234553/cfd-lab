@@ -968,11 +968,11 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, do
         }
 }*/
 
-void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double **V, double **P, int **Flag,
-                       signed int **Vortex, int **PGM, const char *outputFolderPGM, const char *szProblem)
+void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double **V, double **P, int **Flag, int **PGM,
+                       const char *outputFolderPGM, const char *szProblem)
 {
     //Every point in the plane is checked in the same way as the initial algorithm isVortexSeed
-    //Except when a Vortex is encountered, i.e. vavlue 0, then the furthermost interpolation point in this direction is taken
+    //Except when a Vortex is encountered, i.e. Vortex != 0, then the furthermost interpolation point in this direction is taken
 
     int left_shift;
     int right_shift;
@@ -980,16 +980,23 @@ void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double
     int bottom_shift;
     int noFluidCellsOld = 1;
     int noFluidCellsNew = 0;
-    int **justFlipped = imatrix(0, imax + 1, 0, jmax + 1);
+    //int **justFlipped = imatrix(0, imax + 1, 0, jmax + 1);
+    int **Vortex = imatrix(0, imax + 1, 0, jmax + 1);
     int counter = 0;
+    int noVortex = 0;
+    int noVortexNew = 1;
+    int noVortexOld = 0;
 
     //iterate until it "converges"
-    while (noFluidCellsNew != noFluidCellsOld)
+    //while (noFluidCellsNew != noFluidCellsOld)
+            while(noVortexNew != noVortexOld)
         //or iterate prescribed number of times
     //for(int k = 1; k < 50;k++)
     {
         counter++;
-        noFluidCellsOld = (*noFluidCells);
+        noVortex = 0;
+        //noFluidCellsOld = (*noFluidCells);
+        noVortexOld = noVortexNew;
 
         for (int i = 1; i < imax; i++) {
             for (int j = 1; j < jmax; j++) {
@@ -998,11 +1005,15 @@ void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double
                 right_shift = 1;
                 top_shift = 1;
                 bottom_shift = 1;
+
                 int cell = Flag[i][j];
 
-                if ((isNeighbourObstacle(cell, RIGHT) && !justFlipped[i + 1][j])
-                    || (isNeighbourObstacle(cell, TOP) && !justFlipped[i][j + 1])
-                    || (isObstacle(cell) && !justFlipped[i][j]))
+                if (   (isNeighbourObstacle(cell, RIGHT) )
+                        //&& ( Vortex[i + 1][j] != 1 || Vortex[i + 1][j] != -1) )
+                    || (isNeighbourObstacle(cell, TOP) )
+                        //&& ( Vortex[i + 1][j] != 1 || Vortex[i + 1][j] != -1) )
+                    || ( isObstacle(cell) ) )
+                         //&& ( Vortex[i + 1][j] != 1 || Vortex[i + 1][j] != -1)) )
                 {
                     printf("Cell i=%d, j=%d ignored\n", i, j);
                     // ignore obstacle cells
@@ -1012,7 +1023,8 @@ void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double
                     if (Vortex[i][j] == 0) {
                             printf("Cell i=%d, j=%d checked\n", i, j);
                             //find rightmost seed
-                            while ((Vortex[i + right_shift][j] != 0) && (isObstacle(Flag[i+right_shift][j]))&& (!justFlipped[i+right_shift][j])) {
+                            while ((Vortex[i + right_shift][j] != 0)){
+                                   // && ( Vortex[i+right_shift][j] != 1 || Vortex[i+right_shift][j] != -1 ) ) {
                                 right_shift++;
                             }
                             right_shift--;
@@ -1024,7 +1036,8 @@ void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double
                         printf("\t\t\t\tinterpolated i=%d, j=%d r=%d checked\n", i, j, right_shift);
 
                         //find leftmost seed
-                        while ((Vortex[i - left_shift][j] != 0) && (isObstacle(Flag[i-left_shift][j])) && (!justFlipped[i-left_shift][j])) {
+                        while ( (Vortex[i - left_shift][j] != 0) ){
+                                //&& ( Vortex[i-left_shift][j] != 1 || Vortex[i-left_shift][j] != -1 ) ) {
                             left_shift++;
                         }
                         left_shift--;
@@ -1036,7 +1049,8 @@ void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double
                         printf("\t\t\t\tinterpolated i=%d, j=%d l=%d checked\n", i, j, left_shift);
 
                         //find topmost seed
-                        while ((Vortex[i + top_shift][j] != 0) && (isObstacle(Flag[i][j+top_shift]))&& (!justFlipped[i][j+top_shift])) {
+                        while ((Vortex[i + top_shift][j] != 0) ){
+                               //&& ( Vortex[i+top_shift][j] != 1 || Vortex[i+top_shift][j] != -1 )) {
                             top_shift++;
                         }
                         top_shift--;
@@ -1048,7 +1062,8 @@ void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double
                         printf("\t\t\t\tinterpolated i=%d, j=%d t=%d checked\n", i, j, top_shift);
 
                         //find bottommost seed
-                        while ((Vortex[i - bottom_shift][j] != 0)&& (isObstacle(Flag[i][j-bottom_shift]))&& (!justFlipped[i][j-bottom_shift])) {
+                        while ((Vortex[i - bottom_shift][j] != 0) ){
+                               //&& (Vortex[i-bottom_shift][j] != 1 || Vortex[i-bottom_shift][j] != -1)) {
                             bottom_shift++;
                         }
                         bottom_shift--;
@@ -1060,6 +1075,7 @@ void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double
                         printf("\t\t\t\tinterpolated i=%d, j=%d b=%d checked\n", i, j, bottom_shift);
 
                         // calculate signum values
+                        printf("sgn");
                         int sgn_u_left = 0;
                         int sgn_u_right = 0;
                         int sgn_v_top = 0;
@@ -1078,15 +1094,19 @@ void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double
                             (sgn_u_left + sgn_v_top != 0)) {
                             // determine in which direction it swirls
                             if (sgn_u_left == 1) {
+                                printf("vortex -1");
                                 Vortex[i][j] = -1; // right swirl
-                                flipToSolid(U, V, P, Flag, i, j);
-                                justFlipped[i][j] = 1;
-                                (*noFluidCells)--;
+                                //flipToSolid(U, V, P, Flag, i, j);
+                                //justFlipped[i][j] = 1;
+                                //(*noFluidCells)--;
+                                noVortex++;
                             } else {
+                                printf("vortex -1");
                                 Vortex[i][j] = 1; // left swirl
-                                flipToSolid(U, V, P, Flag, i, j);
-                                justFlipped[i][j] = 1;
-                                (*noFluidCells)--;
+                                //flipToSolid(U, V, P, Flag, i, j);
+                                //justFlipped[i][j] = 1;
+                                //(*noFluidCells)--;
+                                noVortex++;
                             }
                         } else {
                             Vortex[i][j] = 0; // no rotation
@@ -1097,23 +1117,40 @@ void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double
             }
         }
 
-        noFluidCellsNew = (*noFluidCells);
-
-        // erase justFlipped to allow for "convergence"
-        for (int j = 0; j <= jmax; j++)
-        {
-            for (int i = 0; i <= imax + 1; i++)
-            {
-                justFlipped[i][j]=0;
-            }
-        }
-
-        //decode_flags(imax, jmax, Flag, PGM);
-        //write_pgm(imax+2,jmax+2,PGM,outputFolderPGM, szProblem, counter);
+        noVortexNew = noVortexOld + noVortex;
+        //noFluidCellsNew = (*noFluidCells);
 
     }
 
-    free_imatrix(justFlipped, 0, imax + 1, 0, jmax + 1);
+    // now fill in the geometries
+    for(int i = 1; i < imax; i++){
+        for(int j = 1; j < jmax; i++){
+            if(Vortex[i][j] != 0){
+                printf("in fill in geometry");
+                flipToSolid(U, V, P, Flag, i, j);
+                flipToSolid(U, V, P, Flag, i+1, j);
+                flipToSolid(U, V, P, Flag, i, j+1);
+                flipToSolid(U, V, P, Flag, i+1, j+1);
+                (*noFluidCells)= (*noFluidCells)-4;
+            }
+        }
+    }
+
+    decode_flags(imax, jmax, Flag, PGM);
+    write_pgm(imax+2,jmax+2,PGM,outputFolderPGM, szProblem, counter);
+    /*// erase justFlipped to allow for "convergence"
+    for (int j = 0; j <= jmax; j++)
+    {
+        for (int i = 0; i <= imax + 1; i++)
+        {
+            justFlipped[i][j]=0;
+        }
+    }*/
+
+    //free_imatrix(justFlipped, 0, imax + 1, 0, jmax + 1);
+    free_imatrix(Vortex, 0, imax + 1, 0, jmax + 1);
+
+
 }
 
 
