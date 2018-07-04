@@ -4,15 +4,30 @@
 #include "boundary_val.h"
 #include "logger.h"
 
+static short k = 2;
+
 void sor(double omg, double dx, double dy, int imax, int jmax, double **P, double **RS, int **Flags,
          BoundaryInfo *boundaryInfo, double *res, int noFluidCells)
 {
     double rloc;
     
     /* SOR iteration */
-    for (int i = 1; i <= imax; i++)
+    int istart, jstart, ibound, jbound, iflip, jflip, icounter, jcounter;
+    
+    icounter = k&1;
+    jcounter = (k>>1)&1;
+    
+    istart = (imax-1) * icounter + 1;
+    jstart = (jmax-1) * jcounter + 1;
+    
+    ibound = (imax + 1) * !icounter;
+    jbound = (jmax + 1) * !jcounter;
+    
+    iflip = pow(-1, icounter);
+    jflip = pow(-1, jcounter);
+    for (int i = istart; i*iflip < ibound; i += iflip)
     {
-        for (int j = 1; j <= jmax; j++)
+        for(int j = jstart; j*jflip < jbound; j += jflip)
         {
             int cell = Flags[i][j];
             // proceed if fluid
@@ -35,7 +50,8 @@ void sor(double omg, double dx, double dy, int imax, int jmax, double **P, doubl
             }
         }
     }
-    
+    ++k;
+    k %= 4;
     
     /* compute the residual */
     rloc = 0;

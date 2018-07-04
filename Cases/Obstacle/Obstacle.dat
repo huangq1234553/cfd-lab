@@ -68,7 +68,7 @@ geometry    Obstacle.pgm
 geometryMask    ObstacleMask.pgm
 itermaxPGM  200
 sorIterationsThreshold	5
-percent		0.3
+percent		0.5
 minVelocity	0.05
 
 #--------------------------------------------
@@ -83,5 +83,5 @@ minVelocity	0.05
 #right_boundary_dirichlet_V         0
 #right_boundary_type     OUTFLOW
 
-left_boundary_P				10
+left_boundary_P				2
 right_boundary_P 			0

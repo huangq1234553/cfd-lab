@@ -60,7 +60,8 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, do
 void flipToFluid(double **U, double **V, int  **Flags, int i, int j);
 void flipToSolid(double **U, double **V, double** P, int  **Flag, int i, int j);
 int checkVelocity(int isFlip, double percent, double ** U, double **V, int Flag, int i, int j, double maxU, double maxV);
-int checkVelocityMagnitude(double eps, double U, double V);
+int checkVelocityMagnitude(double eps, double leftVelocity, double rightVelocity, double bottomVelocity,
+                           double topVelocity);
 int checkPressure(double percent, double ** P, int Flag, int i, int j);
 void geometryFix(double **U, double **V, double **P, int **Flag, int imax, int jmax, int *noFluidCells);
 
