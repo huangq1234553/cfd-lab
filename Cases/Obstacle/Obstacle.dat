@@ -2,27 +2,25 @@
 #            size of the domain             
 #--------------------------------------------
 xlength		10
-ylength		2
+ylength		5
 
 #--------------------------------------------
 #            number of cells
 #--------------------------------------------
-#imax		100
-#jmax		20
-imax		800
-jmax		160
+imax		100
+jmax		50
 
 #--------------------------------------------
 #               time steps
 #--------------------------------------------
 dt		0.05
-t_end		50.0
+t_end		10.0
 tau	 	0.5
 
 #--------------------------------------------
 #               output
 #--------------------------------------------
-dt_value    	0.5
+dt_value    	0.1
 
 #--------------------------------------------
 #               pressure
@@ -58,19 +56,18 @@ PI		    0
 #--------------------------------------------
 #       initialization velocity
 #--------------------------------------------
-UI		    3
+UI		    0
 VI		    0
 
 #--------------------------------------------
 #       problem description
 #       and path to geometry file
 #--------------------------------------------
-problem     ShiftedFlowOverStep
-#geometry    ShiftedFlowOverStep.pgm
-geometry    ShiftedFlowOverStep_x8.pgm
-geometryMask    ShiftedFlowOverStep_x8_mask.pgm
+problem     Obstacle
+geometry    Obstacle.pgm
+geometryMask    ObstacleMask.pgm
 itermaxPGM  200
-sorIterationsThreshold	100
+sorIterationsThreshold	5
 percent		0.8
 minVelocity	0.05
 

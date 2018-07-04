@@ -40,7 +40,7 @@ void setLeftBoundaryValues(int imax, int jmax, double **U, double **V, double **
                 V[0][j] = -V[1][j];
             } else if (Flag >> FSBIT & 1) {
                 U[0][j] = 0;
-                V[0][j] = V[1][j] * 0.6;
+                V[0][j] = V[1][j] * 0.6; // Artificial "drag"
             } else if (Flag >> IFBIT & 1) {
                 U[0][j] = (boundaryInfo[LEFTBOUNDARY].valuesDirichletU)[0];
                 V[0][j] = 2 * (boundaryInfo[LEFTBOUNDARY].valuesDirichletV)[0] - V[1][j];
@@ -74,7 +74,7 @@ void setRightBoundaryValues(int imax, int jmax, double **U, double **V, double *
                 V[imax + 1][j] = -V[imax][j];
             } else if (Flag >> FSBIT & 1) {
                 U[imax][j] = 0;
-                V[imax + 1][j] = V[imax][j] * 0.6;
+                V[imax + 1][j] = V[imax][j] * 0.6;  // Artificial "drag"
             } else if (Flag >> IFBIT & 1) {
                 U[imax][j] = (boundaryInfo[RIGHTBOUNDARY].valuesDirichletU)[0];
                 V[imax][j] = 2 * (boundaryInfo[RIGHTBOUNDARY].valuesDirichletV)[0] - V[imax][j];
@@ -109,7 +109,7 @@ void setTopBoundaryValues(int imax, int jmax, double **U, double **V, double **T
                 U[i][jmax+1] = -U[i][jmax];
                 V[i][jmax] = 0;
             } else if (Flag >> FSBIT & 1) {
-                U[i][jmax+1] = U[i][jmax] * 0.6;
+                U[i][jmax+1] = U[i][jmax] * 0.6;  // Artificial "drag"
                 V[i][jmax] = 0;
             } else if (Flag >> IFBIT & 1) {
                 U[i][jmax+1] = 2 * (boundaryInfo[TOPBOUNDARY].valuesDirichletU)[0] - U[i][jmax];
@@ -145,7 +145,7 @@ void setBottomBoundaryValues(int imax, int jmax, double **U, double **V, double 
                 U[i][0] = -U[i][1];
                 V[i][0] = 0;
             } else if (Flag >> FSBIT & 1) {
-                U[i][0] = U[i][1] * 0.6;
+                U[i][0] = U[i][1] * 0.6;  // Artificial "drag"
                 V[i][0] = 0;
             } else if (Flag >> IFBIT & 1) {
                 U[i][0] = 2 * (boundaryInfo[BOTTOMBOUNDARY].valuesDirichletU)[0] - U[i][1];

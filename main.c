@@ -50,7 +50,7 @@ double performSimulation(const char *outputFolder, const char *outputFolderPGM, 
                          int k, double res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
                          BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V, double **F,
                          double **G, double **RS, double **P, double **T, int **PGM, bool computeTemperatureSwitch,
-                         int itThreshold);
+                         int itThreshold, double *maxU, double *maxV);
 
 int main(int argc, char **argv)
 {
@@ -166,6 +166,7 @@ int main(int argc, char **argv)
     //
     char problem[256];
     char geometry[512]; // bigger since this can be a full path
+    char geometryMaskFile[512]; // bigger since this can be a full path
     double Re;                /* reynolds number   */
     double UI;                /* velocity x-direction */
     double VI;                /* velocity y-direction */
@@ -204,19 +205,22 @@ int main(int argc, char **argv)
     double outflowMax = 0;
     double percent = 0.6;
     double minVelocity = 0.05;
+    
     int maxK = 0;
+    int sorIterationsAcceptanceThreshold;
     // Params for preCICE coupling
     double x_origin = 0.0, y_origin = 0.0;
     char precice_config[512], participant_name[128], mesh_name[128],
             read_data_name[128], write_data_name[128];
     
     BoundaryInfo boundaryInfo[4];
-
+    
     read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax, &jmax,
                     &alpha, &omg,
-                    &tau, &itermax, &itermaxPGM, &eps, &dt_value, problem, geometry, boundaryInfo, &beta, &TI, &T_h, &T_c, &Pr,
-                    &x_origin, &y_origin, &minVelocity, &percent, precice_config, participant_name,
-                    mesh_name, read_data_name, write_data_name);
+                    &tau, &itermax, &itermaxPGM, &sorIterationsAcceptanceThreshold, &eps, &dt_value, problem, geometry, geometryMaskFile,
+                    boundaryInfo, &beta, &TI, &T_h, &T_c, &Pr, &x_origin, &y_origin,
+                    &minVelocity, &percent, precice_config, participant_name, mesh_name, read_data_name,
+                    write_data_name);
     
     // In case geometry was given as a filename only, prepend it with inputFolder path, just in case it is not CWD.
     if (strstr(geometry, "/") == NULL)
@@ -225,6 +229,15 @@ int main(int argc, char **argv)
         sprintf((char *) buf, "%s/%s", inputFolder, geometry);
         strcpy(geometry, buf);
         logMsg(PRODUCTION, "Using geometry file: %s", geometry);
+    }
+    // In case geometryMaskFile was given as a filename only, prepend it with inputFolder path, just in case it is not CWD.
+    logMsg(DEBUG, "Raw GeometryMask filename: \"%s\"", geometryMaskFile);
+    if (strstr(geometryMaskFile, "/") == NULL && !isStringDefault(geometryMaskFile))
+    {
+        char buf[512];
+        sprintf((char *) buf, "%s/%s", inputFolder, geometryMaskFile);
+        strcpy(geometryMaskFile, buf);
+        logMsg(PRODUCTION, "Using geometryMask file: %s", geometryMaskFile);
     }
     
     double dt_check = fmin(dt, dt_value);
@@ -259,7 +272,7 @@ int main(int argc, char **argv)
         logMsg(PRODUCTION, "NoTemp mode: Temperature is not computed");
     }
     
-    init_flag(problem, geometry, imax, jmax, Flags, &noFluidCells, &noCouplingCells, runningMode);
+    init_flag(problem, geometry, geometryMaskFile, imax, jmax, Flags, &noFluidCells, &noCouplingCells, runningMode);
 //    THROW_ERROR("Forcing exit for DEBUG");
 
 
@@ -268,6 +281,7 @@ int main(int argc, char **argv)
 
     // initialise velocities and pressure
     init_uvpt(UI, VI, PI, TI, imax, jmax, U, V, P, T, Flags);
+    double maxU, maxV;
 
 //    // Debug
 //    logEvent(PRODUCTION, t, "Writing visualization file n=%d", n);
@@ -281,12 +295,13 @@ int main(int argc, char **argv)
         mindt = performSimulation(outputFolder, outputFolderPGM, problem, Re, GX, GY, t_end, xlength, ylength, dt, dx,
                                   dy, imax, jmax, alpha, omg, tau, itermax, eps, dt_value, n, k, res, t, it, mindt,
                                   noFluidCells, beta, Pr, boundaryInfo,
-                                  dt_check, Flags, U, V, F, G, RS, P, T, PGM, computeTemperatureSwitch, 5);
+                                  dt_check, Flags, U, V, F, G, RS, P, T, PGM, computeTemperatureSwitch,
+                                  sorIterationsAcceptanceThreshold, &maxU, &maxV);
 
         //update PGM here - go through all the flags and decide what needs to be changed and what not
 //        percent = 0.8;
 //        minVelocity = 0.05;
-        update_pgm(imax, jmax, &noFluidCells, PGM, Flags, P, U, V, minVelocity, percent, PGM, outputFolderPGM, problem);
+        update_pgm(imax, jmax, &noFluidCells, PGM, Flags, P, U, V, minVelocity, percent, PGM, outputFolderPGM, problem, maxU, maxV, k);
         //expandVortexSeeds(imax, jmax, &noFluidCells, U, V, P, Flags, Vortex, PGM, outputFolderPGM,problem);
         //fix forbidden geometry in case it exists
         geometryFix(U, V, P, Flags, imax, jmax);
@@ -351,7 +366,7 @@ double performSimulation(const char *outputFolder, const char *outputFolderPGM, 
                          int k, double res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
                          BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V, double **F,
                          double **G, double **RS, double **P, double **T, int **PGM, bool computeTemperatureSwitch,
-                         int itThreshold)
+                         int itThreshold, double *maxU, double *maxV)
 {
     double currentOutputTime = 0; // For chosing when to output
     long interVisualizationExecTimeStart = getCurrentTimeMillis();
@@ -365,7 +380,7 @@ double performSimulation(const char *outputFolder, const char *outputFolderPGM, 
         // NOTE: if tau<0, stepsize is not adaptively computed!
         if (tau > 0)
         {
-            calculate_dt(Re, Pr, tau, &dt, dx, dy, imax, jmax, U, V);
+            calculate_dt(Re, Pr, tau, &dt, dx, dy, imax, jmax, U, V, maxU, maxV);
             dt = fmin(dt, dt_check); // test, to avoid a dt bigger than visualization interval
             // Used to check the minimum time-step for convergence
             if (dt < mindt)
@@ -438,6 +453,8 @@ double performSimulation(const char *outputFolder, const char *outputFolderPGM, 
              getTimeSpentSeconds(interVisualizationExecTimeStart, getCurrentTimeMillis())
     );
     write_vtkFile(outputFolder, problem, n, k, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
+    // Now also add a vtk to a series of "asymptotic" streams (PGM id = 0)
+    write_vtkFile(outputFolder, problem, k, 0, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
 
     /*// saving the *.pgm
     logEvent(PRODUCTION, t, "Writing PGM file k=%d, n=%d, executionTime=%.3fs",

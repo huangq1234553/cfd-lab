@@ -59,6 +59,17 @@ int isOutflow(int flag){
     return ((flag>>OFBIT)&1);
 }
 
+// Returns 1 (True) if the cell is inflow
+int isInflow(int flag){
+    return ((flag>>IFBIT)&1);
+}
+
+// Returns 1 (True) if cell cannot be switched between solid & fluid
+int isGeometryConstant(int flag)
+{
+    return ((flag>>GEOMETRYMASKBIT)&1);
+}
+
 // Returns 1 (True) if the neighbouring cell in the indicated direction is an obstacle
 int isNeighbourObstacle(int flag, Direction direction){
     return (flag>>direction)&1;
@@ -67,6 +78,31 @@ int isNeighbourObstacle(int flag, Direction direction){
 // Returns 1 (True) if the neighbouring cell in the indicated direction is fluid
 int isNeighbourFluid(int flag, Direction direction){
     return !((flag>>direction)&1);
+}
+
+// Current cell's neighbor in the specified direction can be flipped to solid
+int doesNeighbourAllowFlipToSolid(int **Flags, int i, int j, Direction direction)
+{
+    int cell = Flags[i][j];
+    int neighbour = 0;
+    switch (direction)
+    {
+        case LEFT:
+            neighbour = Flags[i-1][j];
+            break;
+        case RIGHT:
+            neighbour = Flags[i+1][j];
+            break;
+        case TOP:
+            neighbour = Flags[i][j+1];
+            break;
+        case BOT:
+            neighbour = Flags[i][j-1];
+            break;
+        default:
+            neighbour = cell;
+    }
+    return isNeighbourObstacle(cell, direction) && !isOutflow(neighbour) && !isInflow(neighbour);
 }
 
 // Returns 1 (True) if the cell is present at a corner (bordering only 2 fluid cells)
@@ -695,7 +731,9 @@ void flipToFluid(double **U, double **V, int  **Flag, int i, int j)
     Flag[i-1][j] -= (1 << RIGHT);
     Flag[i][j-1] -= (1 << TOP);
     Flag[i][j+1] -= (1 << BOT);
-
+    
+    logMsg(DEBUG,"Flipping to fluid: i=%d,j=%d",i,j);
+    
     U[i][j] = 0;
     V[i][j] = 0;
 
@@ -704,7 +742,7 @@ void flipToFluid(double **U, double **V, int  **Flag, int i, int j)
 void flipToSolid(double **U, double **V, double** P, int  **Flag, int i, int j)
 {
     Flag[i][j] = (1 << CENTER)
-                 + (1 << FSBIT)
+                 + (1 << NSBIT)
                  + (1 << TOP) * isObstacle(Flag[i][j + 1])
                  + (1 << BOT) * isObstacle(Flag[i][j - 1])
                  + (1 << LEFT) * isObstacle(Flag[i - 1][j])
@@ -719,10 +757,12 @@ void flipToSolid(double **U, double **V, double** P, int  **Flag, int i, int j)
     Flag[i][j + 1] += (1 << BOT)*isObstacle(Flag[i][j]);
 
     logMsg(DEBUG,"Flipping to solid: i=%d,j=%d",i,j);
-
+    
     U[i][j] = 0;
+    U[i-1][j] = 0;
     V[i][j] = 0;
-    P[i][j] = 0;
+    V[i][j-1] = 0;
+//    P[i][j] = 0;
 }
 
 /*void flipToSolidVortex(double **U, double **V, double **P, int **Flag, int i, int j)
@@ -811,28 +851,86 @@ int checkPressure(double percent, double ** P, int Flag, int i, int j)
 	return 0;
 }
 
+int checkVelocity(int isFlip, double percent, double ** U, double **V, int Flag, int i, int j, double maxU, double maxV)
+{
+	if(isFlip){
+		return 1;
+	}
+	double max_velocity = sqrt(pow( maxU,2 ) + pow( maxV,2) );
+	double left_velocity = sqrt(pow(U[i-1][j],2) + pow(V[i-1][j],2)) * isNeighbourFluid(Flag, LEFT);
+	double right_velocity = sqrt(pow(U[i+1][j],2) + pow(V[i+1][j],2)) * isNeighbourFluid(Flag, RIGHT);
+	double top_velocity = sqrt(pow(U[i][j+1],2) + pow(V[i][j+1],2)) * isNeighbourFluid(Flag, TOP);
+	double bottom_velocity = sqrt(pow(U[i][j-1],2) + pow(V[i][j-1],2)) * isNeighbourFluid(Flag, BOT);
+	double velocity = left_velocity + right_velocity + top_velocity + bottom_velocity;
+	if(velocity > (max_velocity * 0.7))
+	{
+		return 1;
+	}
+	else if(isCorner(Flag))
+	{
+		double yaxis_velocity = top_velocity + bottom_velocity;
+		double xaxis_velocity = left_velocity + right_velocity;
+
+		if(fabs((yaxis_velocity - xaxis_velocity)/fmin(yaxis_velocity, xaxis_velocity)) > 0.8){
+			return 1;
+		}
+		
+	}
+
+	return 0;
+
+		
+}
+
+
+
+
 void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, double **P, double **U, double **V,
-                double eps, double percent, int **PGM, const char *outputFolderPGM, const char *szProblem)
+                double eps, double percent, int **PGM, const char *outputFolderPGM, const char *szProblem, double maxU, double maxV, int k)
 {
     //int i = 1;
     //int j = 1;
     int isFlip = 0;
     int cell;
+
+    int istart, jstart, ibound, jbound, iflip, jflip, icounter, jcounter;
+
+    icounter = k&1;
+    jcounter = (k>>1)&1;
+    
+    istart = imax * icounter;
+    jstart = jmax * jcounter;
+
+    ibound = (imax + 1) * !icounter;
+    jbound = (jmax + 1) * !jcounter;
+    
+    iflip = pow(-1, icounter);
+    jflip = pow(-1, jcounter);
+
+    // printf("The counter = %d, jstart=%d, jend=%d, iter=%d for k = %d\n", jcounter, jstart, jbound, jflip, k);
+    // printf("The counter = %d, istart=%d, iend=%d, iter=%d for k = %d\n", icounter, istart, ibound, iflip, k);
+
     
     // Now allocate aux matrix to keep trace of just flipped geometries, to prevent cascade flipping!
     int **justFlipped = imatrix(0, imax + 1, 0, jmax + 1);
 
-    for (int i = 1; i < imax + 1; i++)
+    for (int i = istart; i*iflip < ibound; i += iflip)
     {
-        for(int j = 1; j < jmax + 1; j++)
+        for(int j = jstart; j*jflip < jbound; j += jflip)
         {
-            isFlip = 0;
             cell = Flag[i][j];
+            if (isGeometryConstant(cell)) // If current cell cannot be changed, skip to next one
+            {
+                continue;
+            }
+            isFlip = 0;
             if (isObstacle(cell))
             {
                 // isFlip = checkVelocityMagnitude(eps,U[i][j],V[i][j]);
                 if(isCorner(cell)){
                 	isFlip = checkPressure(percent, P, cell, i , j);
+                	isFlip = checkVelocity(isFlip, percent, U, V, cell, i , j, maxU, maxV);
+//                    isFlip += !checkVelocityMagnitude(1.1*eps,U[i][j],V[i][j]); // EXPERIMENTAL!
                 }
                 if (isFlip) {
                     flipToFluid(U,V, Flag, i, j);
@@ -840,10 +938,10 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, do
                     (*noFluidCells)++;
                 }
             }
-            else if ( (isNeighbourObstacle(cell,RIGHT) && !justFlipped[i+1][j])
-                     || (isNeighbourObstacle(cell,LEFT) && !justFlipped[i-1][j])
-                     || (isNeighbourObstacle(cell,TOP) && !justFlipped[i][j+1])
-                     || (isNeighbourObstacle(cell,BOT) && !justFlipped[i][j-1])
+            else if ( (doesNeighbourAllowFlipToSolid(Flag,i,j,RIGHT) && !justFlipped[i+1][j])
+                     || (doesNeighbourAllowFlipToSolid(Flag,i,j,LEFT) && !justFlipped[i-1][j])
+                     || (doesNeighbourAllowFlipToSolid(Flag,i,j,TOP) && !justFlipped[i][j+1])
+                     || (doesNeighbourAllowFlipToSolid(Flag,i,j,BOT) && !justFlipped[i][j-1])
                     )
             {
                 isFlip = checkVelocityMagnitude(eps,U[i][j],V[i][j]);

@@ -66,6 +66,9 @@ VI		    0
 problem     SimpleBend
 geometry    SimpleBend.pgm
 itermaxPGM  200
+sorIterationsThreshold	100
+percent		0.8
+minVelocity	0.5
 
 #--------------------------------------------
 #       boundary description

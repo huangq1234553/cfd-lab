@@ -66,7 +66,9 @@ void calculate_dt(
   int imax,
   int jmax,
   double **U,
-  double **V
+  double **V,
+  double *maxU,
+  double *maxV
 );
 
 
