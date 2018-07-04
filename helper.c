@@ -862,7 +862,7 @@ int checkVelocity(int isFlip, double percent, double ** U, double **V, int Flag,
 	double top_velocity = sqrt(pow(U[i][j+1],2) + pow(V[i][j+1],2)) * isNeighbourFluid(Flag, TOP);
 	double bottom_velocity = sqrt(pow(U[i][j-1],2) + pow(V[i][j-1],2)) * isNeighbourFluid(Flag, BOT);
 	double velocity = left_velocity + right_velocity + top_velocity + bottom_velocity;
-	if(velocity > (max_velocity * 0.0))
+	if(velocity > (max_velocity * 0.7))
 	{
 		return 1;
 	}
@@ -886,19 +886,37 @@ int checkVelocity(int isFlip, double percent, double ** U, double **V, int Flag,
 
 
 void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, double **P, double **U, double **V,
-                double eps, double percent, int **PGM, const char *outputFolderPGM, const char *szProblem, double maxU, double maxV)
+                double eps, double percent, int **PGM, const char *outputFolderPGM, const char *szProblem, double maxU, double maxV, int k)
 {
     //int i = 1;
     //int j = 1;
     int isFlip = 0;
     int cell;
+
+    int istart, jstart, ibound, jbound, iflip, jflip, icounter, jcounter;
+
+    icounter = k&1;
+    jcounter = (k>>1)&1;
+    
+    istart = imax * icounter;
+    jstart = jmax * jcounter;
+
+    ibound = (imax + 1) * !icounter;
+    jbound = (jmax + 1) * !jcounter;
+    
+    iflip = pow(-1, icounter);
+    jflip = pow(-1, jcounter);
+
+    // printf("The counter = %d, jstart=%d, jend=%d, iter=%d for k = %d\n", jcounter, jstart, jbound, jflip, k);
+    // printf("The counter = %d, istart=%d, iend=%d, iter=%d for k = %d\n", icounter, istart, ibound, iflip, k);
+
     
     // Now allocate aux matrix to keep trace of just flipped geometries, to prevent cascade flipping!
     int **justFlipped = imatrix(0, imax + 1, 0, jmax + 1);
 
-    for (int i = imax; i > 0; i--)
+    for (int i = istart; i*iflip < ibound; i += iflip)
     {
-        for(int j = 1; j < jmax + 1; j++)
+        for(int j = jstart; j*jflip < jbound; j += jflip)
         {
             cell = Flag[i][j];
             if (isGeometryConstant(cell)) // If current cell cannot be changed, skip to next one

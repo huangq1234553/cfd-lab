@@ -301,7 +301,7 @@ int main(int argc, char **argv)
         //update PGM here - go through all the flags and decide what needs to be changed and what not
 //        percent = 0.8;
 //        minVelocity = 0.05;
-        update_pgm(imax, jmax, &noFluidCells, PGM, Flags, P, U, V, minVelocity, percent, PGM, outputFolderPGM, problem, maxU, maxV);
+        update_pgm(imax, jmax, &noFluidCells, PGM, Flags, P, U, V, minVelocity, percent, PGM, outputFolderPGM, problem, maxU, maxV, k);
         //expandVortexSeeds(imax, jmax, &noFluidCells, U, V, P, Flags, Vortex, PGM, outputFolderPGM,problem);
         //fix forbidden geometry in case it exists
         geometryFix(U, V, P, Flags, imax, jmax);
