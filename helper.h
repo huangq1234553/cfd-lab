@@ -67,12 +67,8 @@ void geometryFix(double **U, double **V, double **P, int **Flag, int imax, int j
 
 void outputCalculation(double **U, double **V, int **Flags, int imax, int jmax, double *outflow);
 
-//void findVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double **V, double **P, int **Flag, signed int **Vortex);
-//signed int isVortexSeed(signed int **Vortex, double **U, double **V, int i, int j); // returns -1 if right swirl, 1 if left swirl and 0 if no rotation
-//void flipToSolidVortex(double **U, double **V, double **P, int **Flag, int i, int j);
-
 void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double **V, double **P, int **Flag, int **PGM,
-                       const char *outputFolderPGM, const char *szProblem); //returns # of cells added to Vortex
+                       const char *outputFolderPGM, const char *szProblem);
 
 /**
  * Error handling:
