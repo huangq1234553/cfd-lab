@@ -9,13 +9,16 @@ ylength		2
 #--------------------------------------------
 #imax		100
 #jmax		20
-imax		800
-jmax		160
+imax		400
+jmax		80
+#imax		800
+#jmax		160
 
 #--------------------------------------------
 #               time steps
 #--------------------------------------------
 dt		0.05
+#dt		0.0001
 t_end		50.0
 tau	 	0.5
 
@@ -86,5 +89,5 @@ minVelocity	0.05
 #right_boundary_dirichlet_V         0
 #right_boundary_type     OUTFLOW
 
-left_boundary_P				10
+left_boundary_P				1
 right_boundary_P 			0
