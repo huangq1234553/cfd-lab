@@ -33,7 +33,7 @@ alpha		0.5
 #--------------------------------------------
 #               reynoldsnumber
 #--------------------------------------------
-Re		    100
+Re		    50
 
 #--------------------------------------------
 #               temperature
@@ -71,17 +71,19 @@ itermaxPGM  200
 sorIterationsThreshold	5
 checkPressure		1
 checkVelocity		1
+checkUpstream		1
 checkVortex			1
 # With percentages, the bigger they are the harder is to remove stuff
 percentPressure		0.1
-percentVelocity		0.3
-# Min velocity below which geometry starts appearing
-minVelocity	0.05
+percentVelocity		0.5
+# Min velocity below which geometry starts appearing (in upstream cells)
+minVelocity	0.4
+downstreamVelocityFactor	30
 # Max velocity abve which geometry starts disappearing
-maxVelocity	0.3
+maxVelocity	1
 # Fractional of the entire domain area which can be occupied by obstacles (setting=x --> area allowed=domain_size/x)
-obstacleBudgetFraction	5
-vortexSizeThreshold	36
+obstacleBudgetFraction	8
+vortexSizeThreshold	20
 vortexStrengthThreshold	0.1
 
 

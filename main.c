@@ -50,7 +50,7 @@ double performSimulation(const char *outputFolder, const char *outputFolderPGM, 
                          int k, double res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
                          BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V, double **F,
                          double **G, double **RS, double **P, double **T, int **PGM, bool computeTemperatureSwitch,
-                         int itThreshold, double *maxU, double *maxV);
+                         int itThreshold, double *maxU, double *maxV, int t_threshold);
 
 int main(int argc, char **argv)
 {
@@ -220,6 +220,8 @@ int main(int argc, char **argv)
     int isGeometryAdaptivityEnabled;
     int vortexAreaThreshold;
     double vortexStrengthThreshold;
+    int isUpstreamCheckEnabled = 0;
+    double downstreamVelocityFactor = 0;
     
     int maxK = 0;
     int sorIterationsAcceptanceThreshold;
@@ -234,9 +236,9 @@ int main(int argc, char **argv)
                     &alpha, &omg,
                     &tau, &itermax, &itermaxPGM, &sorIterationsAcceptanceThreshold, &eps, &dt_value, problem, geometry,
                     geometryMaskFile, boundaryInfo, &beta, &TI, &T_h, &T_c, &Pr, &x_origin, &y_origin,
-                    &minVelocity, &maxVelocity, &percentPressure, &percentVelocity, &isPressure, &isVelocity, &isVortex,
-                    &vortexAreaThreshold, &vortexStrengthThreshold, &obstacleBudgetFraction, precice_config, participant_name, mesh_name, read_data_name,
-                    write_data_name, &isGeometryAdaptivityEnabled);
+                    &minVelocity, &downstreamVelocityFactor, &maxVelocity, &percentPressure, &percentVelocity, &isPressure, &isVelocity,
+                    &isUpstreamCheckEnabled, &isVortex, &vortexAreaThreshold, &vortexStrengthThreshold, &obstacleBudgetFraction,
+                    precice_config, participant_name, mesh_name, read_data_name, write_data_name, &isGeometryAdaptivityEnabled);
     
     // In case geometry was given as a filename only, prepend it with inputFolder path, just in case it is not CWD.
     if (strstr(geometry, "/") == NULL)
@@ -308,31 +310,48 @@ int main(int argc, char **argv)
     {
         for (k; k <= itermaxPGM; k++)
         {
+            // saving the *.pgm
+            logEvent(PRODUCTION, t,
+                     "Writing PGM file k=%d, executionTime=%.3fs, outflowValue=%.3f, maxOutflow=%.3f at iteration %d",
+                     k,
+                     getTimeSpentSeconds(simulationStartTime, getCurrentTimeMillis()),
+                     outflow,
+                     outflowMax,
+                     maxK
+            );
+            decode_flags(imax, jmax, Flags, PGM);
+            write_pgm(imax + 2, jmax + 2, PGM, outputFolderPGM, problem, k);
+            
             mindt = performSimulation(outputFolder, outputFolderPGM, problem, Re, GX, GY, t_end, xlength, ylength, dt,
-                                      dx,
-                                      dy, imax, jmax, alpha, omg, tau, itermax, eps, dt_value, n, k, res, t, it, mindt,
-                                      noFluidCells, beta, Pr, boundaryInfo,
+                                      dx, dy, imax, jmax, alpha, omg, tau, itermax, eps, dt_value, n, k, res, t, it,
+                                      mindt, noFluidCells, beta, Pr, boundaryInfo,
                                       dt_check, Flags, U, V, F, G, RS, P, T, PGM, computeTemperatureSwitch,
-                                      sorIterationsAcceptanceThreshold, &maxU, &maxV);
+                                      sorIterationsAcceptanceThreshold, &maxU, &maxV, (int) round(t_end * 0.0));
         
             //update PGM here - go through all the flags and decide what needs to be changed and what not
-            if (vortexDetectionEnabled && ( (obstacleBudget <= vortexAreaThreshold) || k>26)) //debug additional condition
+            if (vortexDetectionEnabled && (obstacleBudget <= vortexAreaThreshold)) //debug additional condition
             {
                 // Once we reach budget 0, disable vortex detection permanently, as it can introduce instability
                 vortexDetectionEnabled = 0;
                 logMsg(PRODUCTION, "Vortex detection disabled. k=%d", k);
             }
-            if (vortexDetectionEnabled)
+            else if (!vortexDetectionEnabled && (obstacleBudget > vortexAreaThreshold)) //debug additional condition
+            {
+                // Once we reach budget 0, disable vortex detection permanently, as it can introduce instability
+                vortexDetectionEnabled = 1;
+                logMsg(PRODUCTION, "Vortex detection enabled. k=%d", k);
+            }
+            if (vortexDetectionEnabled && k%10==0)
             {
 //            expandVortexSeeds(imax, jmax, &noFluidCells, U, V, P, Flags, PGM, outputFolderPGM, problem, getRelativeVelocityThreshold(maxU, maxV, percent), &obstacleBudget);
                 expandVortexSeeds(imax, jmax, &noFluidCells, U, V, P, Flags, vortexAreaThreshold,
                                   vortexStrengthThreshold, &obstacleBudget);
                 geometryFix(U, V, P, Flags, imax, jmax, &noFluidCells, &obstacleBudget);
             }
-        
+            
             update_pgm(imax, jmax, &noFluidCells, Flags, P, U, V, minVelocity, maxVelocity, percentPressure,
-                       percentVelocity, maxU, maxV, k,
-                       &obstacleBudget, dx, dy, isPressure, isVelocity);
+                       percentVelocity, maxU, maxV, k, &obstacleBudget, dx, dy, isPressure, isVelocity,
+                       isUpstreamCheckEnabled, downstreamVelocityFactor);
             //fix forbidden geometry in case it exists
             geometryFix(U, V, P, Flags, imax, jmax, &noFluidCells, &obstacleBudget);
             //fix velocities on internal geometries, for nice vtks
@@ -345,41 +364,16 @@ int main(int argc, char **argv)
                 outflowMax = outflow;
                 maxK = k;
             }
-        
-            // saving the *.pgm
-            logEvent(PRODUCTION, t,
-                     "Writing PGM file k=%d, executionTime=%.3fs, outflowValue=%.3f, maxOutflow=%.3f at iteration %d",
-                     k,
-                     getTimeSpentSeconds(simulationStartTime, getCurrentTimeMillis()),
-                     outflow,
-                     outflowMax,
-                     maxK
-            );
-            decode_flags(imax, jmax, Flags, PGM);
-            write_pgm(imax + 2, jmax + 2, PGM, outputFolderPGM, problem, k);
-    
-            /*for (int j = jmax + 1; j >= 0; j--)
-            {
-                for (int i = 0; i <= imax + 1; i++)
-                {
-                    printf("%d ",isObstacle(Flags[i][j]));
-                    if (i == imax + 1) printf("\n");
-                }
-            }*/
-        
-            //THROW_ERROR("Test 1 run");
-        
         }
     }
     else
     {
         // In case of no geometry adaptivity, just run the simulation
-        mindt = performSimulation(outputFolder, outputFolderPGM, problem, Re, GX, GY, t_end, xlength, ylength, dt,
-                                  dx,
+        mindt = performSimulation(outputFolder, outputFolderPGM, problem, Re, GX, GY, t_end, xlength, ylength, dt, dx,
                                   dy, imax, jmax, alpha, omg, tau, itermax, eps, dt_value, n, k, res, t, it, mindt,
                                   noFluidCells, beta, Pr, boundaryInfo,
                                   dt_check, Flags, U, V, F, G, RS, P, T, PGM, computeTemperatureSwitch,
-                                  sorIterationsAcceptanceThreshold, &maxU, &maxV);
+                                  sorIterationsAcceptanceThreshold, &maxU, &maxV, 0);
     }
 
     long simulationEndTime = getCurrentTimeMillis();
@@ -410,13 +404,13 @@ double performSimulation(const char *outputFolder, const char *outputFolderPGM, 
                          int k, double res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
                          BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V, double **F,
                          double **G, double **RS, double **P, double **T, int **PGM, bool computeTemperatureSwitch,
-                         int itThreshold, double *maxU, double *maxV)
+                         int itThreshold, double *maxU, double *maxV, int t_threshold)
 {
     double currentOutputTime = 0; // For chosing when to output
     long interVisualizationExecTimeStart = getCurrentTimeMillis();
     it = itThreshold + 1;
     setPressureOuterBoundaryValues(imax, jmax, P, Flags, boundaryInfo);
-    while (it > itThreshold && t < t_end)
+    while ((it > itThreshold || t < t_threshold) && t < t_end)
     {
         
         // adaptive stepsize control based on stability conditions ensures stability of the method!

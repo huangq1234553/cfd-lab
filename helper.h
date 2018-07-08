@@ -66,7 +66,8 @@ void write_pgm(int xsize, int ysize, int **pgm, const char *outputFolder, const 
 
 void update_pgm(int imax, int jmax, int *noFluidCells, int **Flag, double **P, double **U, double **V, double minVelocity,
                 double maxVelocity, double percentPressure, double percentVelocity, double maxU, double maxV, int k,
-                int *obstacleBudget, double dx, double dy, int isPressure, int isVelocity);
+                int *obstacleBudget, double dx, double dy, int isPressure, int isVelocity, int isUpstreamCheckEnabled,
+                double downstreamVelocityFactor);
 
 void flipToFluid(double **U, double **V, int **Flags, int i, int j, int *obstacleBudget);
 void flipToSolid(double **U, double **V, double **P, int **Flag, int i, int j, int *obstacleBudget);

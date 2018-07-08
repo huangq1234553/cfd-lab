@@ -22,8 +22,9 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
                     int *jmax, double *alpha, double *omg, double *tau, int *itermax, int *itermaxPGM,
                     int *sorIterationsThreshold, double *eps, double *dt_value, char *problem, char *geometry,
                     char *geometryMask, BoundaryInfo *boundaryInfo, double *beta, double *TI, double *T_h, double *T_c,
-                    double *Pr, double *x_origin, double *y_origin, double *minVelocity, double *maxVelocity,
-                    double *percentPressure, double *percentVelocity, int *checkPressure, int *checkVelocity,
+                    double *Pr, double *x_origin, double *y_origin, double *minVelocity,
+                    double *downstreamVelocityFactor, double *maxVelocity, double *percentPressure,
+                    double *percentVelocity, int *checkPressure, int *checkVelocity, int *checkUpstream,
                     int *checkVortex, int *vortexSizeThreshold, double *vortexStrengthThreshold,
                     double *obstacleBudgetFraction, char *precice_config, char *participant_name, char *mesh_name,
                     char *read_data_name, char *write_data_name, int *adaptiveGeometryEnabled)    /* path/filename to geometry file */
@@ -102,8 +103,10 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
     READ_INT(szFileName, *checkVortex, ADAPTIVE_GEOMETRY_VARS_REQUIREMENT);
     READ_INT(szFileName, *checkPressure, ADAPTIVE_GEOMETRY_VARS_REQUIREMENT);
     READ_INT(szFileName, *checkVelocity, ADAPTIVE_GEOMETRY_VARS_REQUIREMENT);
+    READ_INT(szFileName, *checkUpstream, ADAPTIVE_GEOMETRY_VARS_REQUIREMENT);
     
     READ_DOUBLE(szFileName, *minVelocity, ADAPTIVE_GEOMETRY_VARS_REQUIREMENT);
+    READ_DOUBLE(szFileName, *downstreamVelocityFactor, ADAPTIVE_GEOMETRY_VARS_REQUIREMENT);
     READ_DOUBLE(szFileName, *maxVelocity, ADAPTIVE_GEOMETRY_VARS_REQUIREMENT);
     READ_DOUBLE(szFileName, *percentPressure, ADAPTIVE_GEOMETRY_VARS_REQUIREMENT);
     READ_DOUBLE(szFileName, *percentVelocity, ADAPTIVE_GEOMETRY_VARS_REQUIREMENT);

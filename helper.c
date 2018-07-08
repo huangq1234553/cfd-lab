@@ -795,6 +795,10 @@ void write_pgm(int xsize, int ysize, int **pgm, const char *outputFolder, const 
 
 void flipToFluid(double **U, double **V, int **Flag, int i, int j, int *obstacleBudget)
 {
+    if (isFluid(Flag[i][j]))
+    {
+        return;
+    }
     Flag[i][j] = 0
                  + (1 << TOP) * isObstacle(Flag[i][j + 1])
                  + (1 << BOT) * isObstacle(Flag[i][j - 1])
@@ -817,6 +821,10 @@ void flipToFluid(double **U, double **V, int **Flag, int i, int j, int *obstacle
 
 void flipToSolid(double **U, double **V, double **P, int **Flag, int i, int j, int *obstacleBudget)
 {
+    if (isObstacle(Flag[i][j]))
+    {
+        return;
+    }
     Flag[i][j] = (1 << CENTER)
                  + (1 << NSBIT)
                  + (1 << TOP) * isObstacle(Flag[i][j + 1])
@@ -1017,9 +1025,52 @@ int isVelocityAboveRelativeThreshold(int isFlip, double percent, double **U, dou
 }
 
 
+bool isCellUpstreamOfObstacle(int i, int j, int **Flags, double **U, double **V)
+{
+    int cell = Flags[i][j];
+    if (!hasAtLeastOneObstacleNeighbour(cell))
+    {
+        return 0;
+    }
+    double u=0, v=0;
+    if (isNeighbourObstacle(cell, RIGHT))
+    {
+        u = U[i-2][j];
+        if (fabs(u) < fabs(V[i-2][j]))
+            u = 0;
+    }
+    else if (isNeighbourObstacle(cell, LEFT))
+    {
+        u = -U[i+1][j]; // sign flip necessary for uniform conditions
+        if (fabs(u) < fabs(V[i+1][j]))
+            u = 0;
+    }
+    if (isNeighbourObstacle(cell, TOP))
+    {
+        v = V[i][j-2];
+        if (fabs(v) < fabs(U[i][j-2]))
+            v = 0;
+    }
+    else if (isNeighbourObstacle(cell, BOT))
+    {
+        v = -V[i][j+1]; // sign flip necessary for uniform conditions
+        if (fabs(v) < fabs(U[i][j+1]))
+            v = 0;
+    }
+    if (fabs(u) > fabs(v))
+    {
+        return u > 0;
+    }
+    else
+    {
+        return v > 0;
+    }
+}
+
 void update_pgm(int imax, int jmax, int *noFluidCells, int **Flag, double **P, double **U, double **V, double minVelocity,
                 double maxVelocity, double percentPressure, double percentVelocity, double maxU, double maxV, int k,
-                int *obstacleBudget, double dx, double dy, int isPressure, int isVelocity)
+                int *obstacleBudget, double dx, double dy, int isPressure, int isVelocity, int isUpstreamCheckEnabled,
+                double downstreamVelocityFactor)
 {
     int addedCellsCounter = 0;
     int removedCellsCounter = 0;
@@ -1076,14 +1127,20 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **Flag, double **P, d
             // This is done below
             else if ( // here we are fluid
                     (*obstacleBudget > 0)
-                    && ((doesNeighbourAllowFlipToSolid(Flag, i, j, RIGHT, imax, jmax) && !justFlipped[i + 1][j])
-                        || (doesNeighbourAllowFlipToSolid(Flag, i, j, LEFT, imax, jmax) && !justFlipped[i - 1][j])
-                        || (doesNeighbourAllowFlipToSolid(Flag, i, j, TOP, imax, jmax) && !justFlipped[i][j + 1])
-                        || (doesNeighbourAllowFlipToSolid(Flag, i, j, BOT, imax, jmax) && !justFlipped[i][j - 1])
+                    && (
+                            (doesNeighbourAllowFlipToSolid(Flag, i, j, RIGHT, imax, jmax) && !justFlipped[i + 1][j])
+                            || (doesNeighbourAllowFlipToSolid(Flag, i, j, LEFT, imax, jmax) && !justFlipped[i - 1][j])
+                            || (doesNeighbourAllowFlipToSolid(Flag, i, j, TOP, imax, jmax) && !justFlipped[i][j + 1])
+                            || (doesNeighbourAllowFlipToSolid(Flag, i, j, BOT, imax, jmax) && !justFlipped[i][j - 1])
                     )
                     )
             {
-                int isFlip = isVelocityMagnitudeBelowThreshold(minVelocity, U[i - 1][j], U[i][j], V[i][j - 1], V[i][j]);
+                double thresholdVelocity = minVelocity;
+                if(isUpstreamCheckEnabled && !isCellUpstreamOfObstacle(i,j,Flag,U,V))
+                {
+                    thresholdVelocity = minVelocity/downstreamVelocityFactor;
+                }
+                int isFlip = isVelocityMagnitudeBelowThreshold(thresholdVelocity, U[i - 1][j], U[i][j], V[i][j - 1], V[i][j]);
 //                double gradThreshold = 6;
 //                isFlip += isGradientAtObstacleAboveThreshold(U, V, dx, dy, cell, i, j, gradThreshold);
                 if (isFlip)
@@ -1217,28 +1274,52 @@ void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double
                         while (i + right_shift < imax-1
                                && (Vortex[i + right_shift][j] != 0)
                                && ( fsign(Vortex[i + right_shift][j]) == fsign(Vortex[i + right_shift + 1][j])))
-                        { right_shift++; }
+                        {
+                            right_shift++;
+                            if (isObstacle(Flag[i + right_shift][j]))
+                            {
+                                break;
+                            }
+                        }
 //                        right_shift--;
     
                         //find leftmost seed
                         while (i - left_shift > 2
                                && (Vortex[i - left_shift][j] != 0)
                                && (fsign(Vortex[i - left_shift][j]) == fsign(Vortex[i - left_shift - 1][j])))
-                        { left_shift++; }
+                        {
+                            left_shift++;
+                            if (isObstacle(Flag[i - left_shift][j]))
+                            {
+                                break;
+                            }
+                        }
 //                        left_shift--;
     
                         //find topmost seed
                         while (j + top_shift < jmax-1
                                && (Vortex[i][j + top_shift] != 0)
                                && (fsign(Vortex[i][j + top_shift]) == fsign(Vortex[i][j + top_shift + 1])))
-                        { top_shift++; }
+                        {
+                            top_shift++;
+                            if (isObstacle(Flag[i][j+top_shift]))
+                            {
+                                break;
+                            }
+                        }
 //                        top_shift--;
     
                         //find bottommost seed
                         while (j - bottom_shift > 2
                                && (Vortex[i][j - bottom_shift] != 0)
                                && (fsign(Vortex[i][j - bottom_shift]) == fsign(Vortex[i][j - bottom_shift - 1])))
-                        { bottom_shift++; }
+                        {
+                            bottom_shift++;
+                            if (isObstacle(Flag[i][j-bottom_shift]))
+                            {
+                                break;
+                            }
+                        }
 //                        bottom_shift--;
     
                             // compute approx vortex spanned area
@@ -1339,6 +1420,7 @@ void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double
                                         if (fsign(curStrength) == fsign(curVortex))
                                         {
                                             VortexAreaTags[x][y] = vortexArea;
+//                                            ++VortexAreaTags[x][y];
                                             if (fabs(curStrength) > fabs(curVortex))
                                             {
                                                 curVortex = curStrength;
@@ -1380,10 +1462,10 @@ void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double
         for (int j = 1; j < jmax; j++)
         {
             int curVortexArea = VortexAreaTags[i][j];
-            if (*obstacleBudget <= 0)
-            {
-                break;
-            }
+//            if (*obstacleBudget <= 0)
+//            {
+//                break;
+//            }
             if (curVortexArea == 0)
             {
                 continue;
