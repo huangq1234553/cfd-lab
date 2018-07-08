@@ -1,0 +1,101 @@
+#--------------------------------------------
+#            size of the domain             
+#--------------------------------------------
+xlength		10
+ylength		5
+
+#--------------------------------------------
+#            number of cells
+#--------------------------------------------
+imax		200
+jmax		100
+
+#--------------------------------------------
+#               time steps
+#--------------------------------------------
+dt		0.05
+t_end		10.0
+tau	 	0.5
+
+#--------------------------------------------
+#               output
+#--------------------------------------------
+dt_value    	0.1
+
+#--------------------------------------------
+#               pressure
+#--------------------------------------------
+itermax		500
+eps		0.1
+omg		1.7
+alpha		0.5
+
+#--------------------------------------------
+#               reynoldsnumber
+#--------------------------------------------
+Re		    100
+
+#--------------------------------------------
+#               temperature
+#--------------------------------------------
+beta		0
+TI 		0
+Pr 		1
+
+#--------------------------------------------
+#               gravitation
+#--------------------------------------------
+GX		    0
+GY		    0
+
+#--------------------------------------------
+#         initialization pressure
+#--------------------------------------------
+PI		    0
+
+#--------------------------------------------
+#       initialization velocity
+#--------------------------------------------
+UI		    0
+VI		    0
+
+#--------------------------------------------
+#       problem description
+#       and path to geometry file
+#--------------------------------------------
+problem     Obstacle_x2
+geometry    Obstacle_x2.pgm
+geometryMask    ObstacleMask_x2.pgm
+adaptiveGeometryEnabled	1
+itermaxPGM  200
+sorIterationsThreshold	5
+checkPressure		1
+checkVelocity		1
+checkVortex			1
+# With percentages, the bigger they are the harder is to remove stuff
+percentPressure		0.1
+percentVelocity		0.3
+# Min velocity below which geometry starts appearing
+minVelocity	0.05
+# Max velocity abve which geometry starts disappearing
+maxVelocity	0.3
+# Fractional of the entire domain area which can be occupied by obstacles (setting=x --> area allowed=domain_size/x)
+obstacleBudgetFraction	5
+vortexSizeThreshold	36
+vortexStrengthThreshold	0.1
+
+
+#--------------------------------------------
+#       boundary description
+#       accepted types are:
+#       NOSLIP, MOVINGWALL, FREESLIP, INFLOW, OUTFLOW
+#       Default is NOSLIP
+#       Default value is 0
+#--------------------------------------------
+#left_boundary_type      INFLOW
+#left_boundary_dirichlet_U        10
+#right_boundary_dirichlet_V         0
+#right_boundary_type     OUTFLOW
+
+left_boundary_P				2
+right_boundary_P 			0

@@ -1,0 +1,95 @@
+#--------------------------------------------
+#            size of the domain             
+#--------------------------------------------
+xlength		10
+ylength		2
+
+#--------------------------------------------
+#            number of cells
+#--------------------------------------------
+#imax		100
+#jmax		20
+imax		400
+jmax		80
+#imax		800
+#jmax		160
+
+#--------------------------------------------
+#               time steps
+#--------------------------------------------
+dt		0.05
+#dt		0.0001
+t_end		50.0
+tau	 	0.5
+
+#--------------------------------------------
+#               output
+#--------------------------------------------
+dt_value    	0.5
+
+#--------------------------------------------
+#               pressure
+#--------------------------------------------
+itermax		500
+eps		0.1
+omg		1.7
+alpha		0.5
+
+#--------------------------------------------
+#               reynoldsnumber
+#--------------------------------------------
+Re		    100
+
+#--------------------------------------------
+#               temperature
+#--------------------------------------------
+beta		0
+TI 		0
+Pr 		1
+
+#--------------------------------------------
+#               gravitation
+#--------------------------------------------
+GX		    0
+GY		    0
+
+#--------------------------------------------
+#         initialization pressure
+#--------------------------------------------
+PI		    0
+
+#--------------------------------------------
+#       initialization velocity
+#--------------------------------------------
+UI		    3
+VI		    0
+
+#--------------------------------------------
+#       problem description
+#       and path to geometry file
+#--------------------------------------------
+problem     ShiftedFlowOverStep
+#geometry    ShiftedFlowOverStep.pgm
+geometry    ShiftedFlowOverStep_x4.pgm
+geometryMask    ShiftedFlowOverStep_x4_mask.pgm
+itermaxPGM  200
+sorIterationsThreshold	100
+percent		0.8
+minVelocity	0.5
+maxVelocity	2.0
+obstacleBudgetFraction	2
+
+#--------------------------------------------
+#       boundary description
+#       accepted types are:
+#       NOSLIP, MOVINGWALL, FREESLIP, INFLOW, OUTFLOW
+#       Default is NOSLIP
+#       Default value is 0
+#--------------------------------------------
+#left_boundary_type      INFLOW
+#left_boundary_dirichlet_U        10
+#right_boundary_dirichlet_V         0
+#right_boundary_type     OUTFLOW
+
+left_boundary_P				1
+right_boundary_P 			0
