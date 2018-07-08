@@ -69,8 +69,8 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **Flag, double **P, d
                 int *obstacleBudget, double dx, double dy, int isPressure, int isVelocity, int isUpstreamCheckEnabled,
                 double downstreamVelocityFactor);
 
-void flipToFluid(double **U, double **V, int **Flags, int i, int j, int *obstacleBudget);
-void flipToSolid(double **U, double **V, double **P, int **Flag, int i, int j, int *obstacleBudget);
+int flipToFluid(double **U, double **V, int **Flags, int i, int j, int *obstacleBudget);
+int flipToSolid(double **U, double **V, double **P, int **Flag, int i, int j, int *obstacleBudget);
 double getRelativeVelocityThreshold(double maxU, double maxV, double percent);
 int isVelocityGreaterThanRelativeThreshold(double velocity, double maxU, double maxV, double percent);
 int isVelocityAboveRelativeThreshold(int isFlip, double percent, double **U, double **V, int Flag, int i, int j,

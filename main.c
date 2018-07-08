@@ -44,13 +44,16 @@
  * - calculate_uv() Calculate the velocity at the next time step.
  */
 
-double performSimulation(const char *outputFolder, const char *outputFolderPGM, const char *problem, double Re, double GX,
-                         double GY, double t_end, double xlength, double ylength, double dt, double dx, double dy, int imax,
-                         int jmax, double alpha, double omg, double tau, int itermax, double eps, double dt_value, int n,
+double performSimulation(const char *outputFolder, const char *outputFolderPGM, const char *problem, double Re,
+                         double GX,
+                         double GY, double t_end, double xlength, double ylength, double dt, double dx, double dy,
+                         int imax,
+                         int jmax, double alpha, double omg, double tau, int itermax, double eps, double dt_value,
+                         int n,
                          int k, double res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
                          BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V, double **F,
                          double **G, double **RS, double **P, double **T, int **PGM, bool computeTemperatureSwitch,
-                         int itThreshold, double *maxU, double *maxV, int t_threshold);
+                         int itThreshold, double *maxU, double *maxV, double t_threshold);
 
 int main(int argc, char **argv)
 {
@@ -291,8 +294,8 @@ int main(int argc, char **argv)
     
     init_flag(problem, geometry, geometryMaskFile, imax, jmax, Flags, &noFluidCells, &noCouplingCells, runningMode);
 //    THROW_ERROR("Forcing exit for DEBUG");
-    int noInitialGeometryCells = imax*jmax - noFluidCells;
-    obstacleBudget = min((int) round((imax * jmax) / obstacleBudgetFraction), imax * jmax) - noInitialGeometryCells;
+    int noGeometryCells = imax*jmax - noFluidCells;
+    obstacleBudget = min((int) round((imax * jmax) / obstacleBudgetFraction), imax * jmax) - noGeometryCells;
 
     // initialise velocities and pressure
     init_uvpt(UI, VI, PI, TI, imax, jmax, U, V, P, T, Flags);
@@ -308,6 +311,7 @@ int main(int argc, char **argv)
     char vortexDetectionEnabled = (char) isVortex;
     if (isGeometryAdaptivityEnabled == 1)
     {
+        int prevNoFluidCells = (int) round(noFluidCells/(1-0.04)); // Let's have some forced time at the beginnging (2s if t_end=50)
         for (k; k <= itermaxPGM; k++)
         {
             // saving the *.pgm
@@ -322,11 +326,15 @@ int main(int argc, char **argv)
             decode_flags(imax, jmax, Flags, PGM);
             write_pgm(imax + 2, jmax + 2, PGM, outputFolderPGM, problem, k);
             
+            double geometryChangeFactor = fabs(noFluidCells - prevNoFluidCells) / prevNoFluidCells;
+            geometryChangeFactor = fmin(geometryChangeFactor, 1);
+            logMsg(PRODUCTION, "Geometry change factor [k=%d]: %f", k, geometryChangeFactor);
+            prevNoFluidCells = noFluidCells;
             mindt = performSimulation(outputFolder, outputFolderPGM, problem, Re, GX, GY, t_end, xlength, ylength, dt,
                                       dx, dy, imax, jmax, alpha, omg, tau, itermax, eps, dt_value, n, k, res, t, it,
                                       mindt, noFluidCells, beta, Pr, boundaryInfo,
                                       dt_check, Flags, U, V, F, G, RS, P, T, PGM, computeTemperatureSwitch,
-                                      sorIterationsAcceptanceThreshold, &maxU, &maxV, (int) round(t_end * 0.0));
+                                      sorIterationsAcceptanceThreshold, &maxU, &maxV, round(t_end * geometryChangeFactor));
         
             //update PGM here - go through all the flags and decide what needs to be changed and what not
             if (vortexDetectionEnabled && (obstacleBudget <= vortexAreaThreshold)) //debug additional condition
@@ -398,13 +406,16 @@ int main(int argc, char **argv)
     return 0;
 }
 
-double performSimulation(const char *outputFolder, const char *outputFolderPGM, const char *problem, double Re, double GX,
-                         double GY, double t_end, double xlength, double ylength, double dt, double dx, double dy, int imax,
-                         int jmax, double alpha, double omg, double tau, int itermax, double eps, double dt_value, int n,
+double performSimulation(const char *outputFolder, const char *outputFolderPGM, const char *problem, double Re,
+                         double GX,
+                         double GY, double t_end, double xlength, double ylength, double dt, double dx, double dy,
+                         int imax,
+                         int jmax, double alpha, double omg, double tau, int itermax, double eps, double dt_value,
+                         int n,
                          int k, double res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
                          BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V, double **F,
                          double **G, double **RS, double **P, double **T, int **PGM, bool computeTemperatureSwitch,
-                         int itThreshold, double *maxU, double *maxV, int t_threshold)
+                         int itThreshold, double *maxU, double *maxV, double t_threshold)
 {
     double currentOutputTime = 0; // For chosing when to output
     long interVisualizationExecTimeStart = getCurrentTimeMillis();

@@ -793,11 +793,11 @@ void write_pgm(int xsize, int ysize, int **pgm, const char *outputFolder, const 
 }
 
 
-void flipToFluid(double **U, double **V, int **Flag, int i, int j, int *obstacleBudget)
+int flipToFluid(double **U, double **V, int **Flag, int i, int j, int *obstacleBudget)
 {
     if (isFluid(Flag[i][j]))
     {
-        return;
+        return 0;
     }
     Flag[i][j] = 0
                  + (1 << TOP) * isObstacle(Flag[i][j + 1])
@@ -817,13 +817,14 @@ void flipToFluid(double **U, double **V, int **Flag, int i, int j, int *obstacle
     V[i][j] = 0;
     // Updating obstacle budget
     ++(*obstacleBudget);
+    return 1;
 }
 
-void flipToSolid(double **U, double **V, double **P, int **Flag, int i, int j, int *obstacleBudget)
+int flipToSolid(double **U, double **V, double **P, int **Flag, int i, int j, int *obstacleBudget)
 {
     if (isObstacle(Flag[i][j]))
     {
-        return;
+        return 0;
     }
     Flag[i][j] = (1 << CENTER)
                  + (1 << NSBIT)
@@ -859,7 +860,7 @@ void flipToSolid(double **U, double **V, double **P, int **Flag, int i, int j, i
     U[i - 1][j] = 0;
     V[i][j] = 0;
     V[i][j - 1] = 0;
-//    P[i][j] = 0;
+    P[i][j] = 0;
     
     // Now we need to make sure we don't leave any spurious tangential velocity on geometries that have become inner ones
     int cell = Flag[i][j];
@@ -881,6 +882,7 @@ void flipToSolid(double **U, double **V, double **P, int **Flag, int i, int j, i
     }
     // Updating obstacle budget
     --(*obstacleBudget);
+    return 1;
 }
 
 /*void flipToSolidVortex(double **U, double **V, double **P, int **Flag, int i, int j)
@@ -1411,6 +1413,7 @@ void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double
                                 }
                                 // Now tag the entire vortex with its area
                                 double curVortex = Vortex[i][j];
+                                int curVortexArea = vortexArea;
                                 int iStart = max(i - avg_h_shift, 1);
                                 int iEnd = min(i + avg_h_shift, imax);
                                 int jStart = max(j - avg_v_shift, 1);
@@ -1420,19 +1423,22 @@ void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double
                                 {
                                     for (int y = jStart; y <= jEnd; ++y)
                                     {
-                                        double curStrength = Vortex[x][y];
-                                        if (fsign(curStrength) == fsign(curVortex))
+                                        double curCellStrength = Vortex[x][y];
+                                        int curCellArea = VortexAreaTags[x][y];
+                                        if (fsign(curCellStrength) == fsign(curVortex))
                                         {
-                                            VortexAreaTags[x][y] = vortexArea;
-//                                            ++VortexAreaTags[x][y];
-                                            if (fabs(curStrength) > fabs(curVortex))
+                                            if (fabs(curCellStrength) > fabs(curVortex))
                                             {
-                                                curVortex = curStrength;
+                                                curVortex = curCellStrength;
+                                            }
+                                            if (curCellArea > curVortexArea)
+                                            {
+                                                curVortexArea = curCellArea;
                                             }
                                         }
                                     }
                                 }
-                                // Copy max vortex strength into all cells
+                                // Copy max vortex strength and area into all cells
                                 for (int x = iStart; x <= iEnd; ++x)
                                 {
                                     for (int y = jStart; y <= jEnd; ++y)
@@ -1440,6 +1446,7 @@ void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double
                                         if (fsign(Vortex[x][y]) == fsign(curVortex))
                                         {
                                             Vortex[x][y] = curVortex;
+                                            VortexAreaTags[x][y] = curVortexArea;
                                         }
                                     }
                                 }
@@ -1498,12 +1505,13 @@ void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double
 //                && hasAtLeastOneObstacleNeighbour(Flag[i][j]) // we want to flip only adjacent to other obstacles
                 )
             {
-                flipToSolid(U, V, P, Flag, i, j, obstacleBudget);
-                flipToSolid(U, V, P, Flag, i + 1, j, obstacleBudget);
-                flipToSolid(U, V, P, Flag, i, j + 1, obstacleBudget);
-                flipToSolid(U, V, P, Flag, i + 1, j + 1, obstacleBudget);
-                (*noFluidCells) -= 4;
-                filledCells += 4;
+                int noFlippedCells = 0;
+                noFlippedCells += flipToSolid(U, V, P, Flag, i, j, obstacleBudget);
+                noFlippedCells += flipToSolid(U, V, P, Flag, i + 1, j, obstacleBudget);
+                noFlippedCells += flipToSolid(U, V, P, Flag, i, j + 1, obstacleBudget);
+                noFlippedCells += flipToSolid(U, V, P, Flag, i + 1, j + 1, obstacleBudget);
+                (*noFluidCells) -= noFlippedCells;
+                filledCells += noFlippedCells;
                 logMsg(DEBUG, "Filled vortex cell: i=%d, j=%d, vortexArea=%d, vortexStrength=%f", i, j, curVortexArea, curVortexStrength);
             }
             else

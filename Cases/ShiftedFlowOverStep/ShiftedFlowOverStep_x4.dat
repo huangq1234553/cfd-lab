@@ -72,12 +72,24 @@ problem     ShiftedFlowOverStep
 #geometry    ShiftedFlowOverStep.pgm
 geometry    ShiftedFlowOverStep_x4.pgm
 geometryMask    ShiftedFlowOverStep_x4_mask.pgm
-itermaxPGM  200
+adaptiveGeometryEnabled	1
+itermaxPGM  300
 sorIterationsThreshold	100
-percent		0.8
-minVelocity	0.5
-maxVelocity	2.0
+checkPressure		1
+checkVelocity		1
+checkUpstream		1
+checkVortex			1
+# With percentages, the bigger they are the harder is to remove stuff
+percentPressure		0.6
+percentVelocity		0.8
+# Min velocity below which geometry starts appearing (in upstream cells)
+minVelocity	0.4
+downstreamVelocityFactor	30
+# Max velocity abve which geometry starts disappearing
+maxVelocity	3.0
 obstacleBudgetFraction	2
+vortexSizeThreshold	20
+vortexStrengthThreshold	0.1
 
 #--------------------------------------------
 #       boundary description

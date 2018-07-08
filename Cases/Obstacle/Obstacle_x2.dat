@@ -33,7 +33,7 @@ alpha		0.5
 #--------------------------------------------
 #               reynoldsnumber
 #--------------------------------------------
-Re		    50
+Re		    100
 
 #--------------------------------------------
 #               temperature
@@ -80,7 +80,7 @@ percentVelocity		0.5
 minVelocity	0.4
 downstreamVelocityFactor	30
 # Max velocity abve which geometry starts disappearing
-maxVelocity	1
+maxVelocity	1.0
 # Fractional of the entire domain area which can be occupied by obstacles (setting=x --> area allowed=domain_size/x)
 obstacleBudgetFraction	8
 vortexSizeThreshold	20

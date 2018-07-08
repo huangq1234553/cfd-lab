@@ -65,15 +65,25 @@ VI		    0
 #--------------------------------------------
 problem     SimpleBend
 geometry    SimpleBend.pgm
+adaptiveGeometryEnabled	1
 itermaxPGM  200
-sorIterationsThreshold	10
-percent		0.8
-minVelocity	0.5
-maxVelocity	2.0
+sorIterationsThreshold	5
+checkPressure		1
+checkVelocity		1
+checkUpstream		0
+checkVortex			1
+# With percentages, the bigger they are the harder is to remove stuff
+percentPressure		0.1
+percentVelocity		0.5
+# Min velocity below which geometry starts appearing (in upstream cells)
+minVelocity	0.4
+downstreamVelocityFactor	30
+# Max velocity abve which geometry starts disappearing
+maxVelocity	0.8
 obstacleBudgetFraction	2
-# Vars to add
-percent		0.8
-minVelocity	0.5
+vortexSizeThreshold	20
+vortexStrengthThreshold	0.1
+
 
 #--------------------------------------------
 #       boundary description
@@ -83,9 +93,9 @@ minVelocity	0.5
 #       Default value is 0
 #--------------------------------------------
 #left_boundary_type      INFLOW
-bottom_boundary_dirichlet_V        2
+#bottom_boundary_dirichlet_V        2
 #right_boundary_dirichlet_V         0
 #right_boundary_type     OUTFLOW
-#bottom_boundary_P	50
+bottom_boundary_P	2
 #right_boundary_P 	0
 
