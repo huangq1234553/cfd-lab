@@ -203,8 +203,10 @@ int main(int argc, char **argv)
     double Pr;                  /* Prandtl number */
     double outflow = 0;
     double outflowMax = 0;
-    double percent = 0.6;
+    double percentPressure = 0.6;
+    double percentVelocity = 0.6;
     double minVelocity = 0.05;
+    int isVortex, isPressure, isVelocity;
     
     int maxK = 0;
     int sorIterationsAcceptanceThreshold;
@@ -219,7 +221,7 @@ int main(int argc, char **argv)
                     &alpha, &omg,
                     &tau, &itermax, &itermaxPGM, &sorIterationsAcceptanceThreshold, &eps, &dt_value, problem, geometry, geometryMaskFile,
                     boundaryInfo, &beta, &TI, &T_h, &T_c, &Pr, &x_origin, &y_origin,
-                    &minVelocity, &percent, precice_config, participant_name, mesh_name, read_data_name,
+                    &minVelocity, &percentPressure, &percentVelocity, &isVortex, &isPressure, &isVelocity, precice_config, participant_name, mesh_name, read_data_name,
                     write_data_name);
     
     // In case geometry was given as a filename only, prepend it with inputFolder path, just in case it is not CWD.
@@ -301,8 +303,8 @@ int main(int argc, char **argv)
         //update PGM here - go through all the flags and decide what needs to be changed and what not
 //        percent = 0.8;
 //        minVelocity = 0.05;
-        update_pgm(imax, jmax, &noFluidCells, PGM, Flags, P, U, V, minVelocity, percent,
-                   PGM, outputFolderPGM, problem, maxU, maxV, k);
+        update_pgm(imax, jmax, &noFluidCells, PGM, Flags, P, U, V, minVelocity, percentPressure, percentVelocity,
+                   PGM, outputFolderPGM, problem, maxU, maxV, k, isVortex, isPressure, isVelocity);
         //expandVortexSeeds(imax, jmax, &noFluidCells, U, V, P, Flags, Vortex, PGM, outputFolderPGM,problem);
         //fix forbidden geometry in case it exists
         geometryFix(U, V, P, Flags, imax, jmax, &noFluidCells);

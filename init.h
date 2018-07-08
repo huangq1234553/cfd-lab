@@ -53,9 +53,9 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
                     int *jmax, double *alpha, double *omg, double *tau, int *itermax, int *itermaxPGM,
                     int *sorIterationsThreshold, double *eps, double *dt_value, char *problem, char *geometry,
                     char *geometryMask, BoundaryInfo boundaryInfo[4], double *beta, double *TI, double *T_h,
-                    double *T_c, double *Pr, double *x_origin, double *y_origin, double *minVelocity, double *percent,
-                    char *precice_config, char *participant_name, char *mesh_name, char *read_data_name,
-                    char *write_data_name);
+                    double *T_c, double *Pr, double *x_origin, double *y_origin, double *minVelocity, double *percentPressure, double *percentVelocity,
+                    int *isVortex, int *isPressure, int *isVelocity, char *precice_config, char *participant_name, char *mesh_name, char *read_data_name,
+                    char *write_data_name) ;
 
 //void read_boundary_parameters_compact_mode(const char *szFileName, BoundaryInfo *boundaryInfo, double dx, double dy);
 void read_boundary_parameters_extended_mode(const char *szFileName, BoundaryInfo *boundaryInfo, double dx, double dy,

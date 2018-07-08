@@ -22,8 +22,8 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
                     int *jmax, double *alpha, double *omg, double *tau, int *itermax, int *itermaxPGM,
                     int *sorIterationsThreshold, double *eps, double *dt_value, char *problem, char *geometry,
                     char *geometryMask, BoundaryInfo boundaryInfo[4], double *beta, double *TI, double *T_h,
-                    double *T_c, double *Pr, double *x_origin, double *y_origin, double *minVelocity, double *percent,
-                    char *precice_config, char *participant_name, char *mesh_name, char *read_data_name,
+                    double *T_c, double *Pr, double *x_origin, double *y_origin, double *minVelocity, double *percentPressure, double *percentVelocity,
+                    int *isVortex, int *isPressure, int *isVelocity, char *precice_config, char *participant_name, char *mesh_name, char *read_data_name,
                     char *write_data_name)    /* path/filename to geometry file */
 {
     READ_DOUBLE(szFileName, *xlength, REQUIRED);
@@ -89,8 +89,13 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
     READ_DOUBLE(szFileName, *x_origin, PRECICE_VARS_REQUIREMENT);
     READ_DOUBLE(szFileName, *y_origin, PRECICE_VARS_REQUIREMENT);
 
-        READ_DOUBLE(szFileName, *minVelocity, OPTIONAL);
-    READ_DOUBLE(szFileName, *percent, OPTIONAL);
+    READ_DOUBLE(szFileName, *minVelocity, OPTIONAL);
+    READ_DOUBLE(szFileName, *percentPressure, OPTIONAL);
+    READ_DOUBLE(szFileName, *percentVelocity, OPTIONAL);
+
+    READ_INT(szFileName, *isVortex, OPTIONAL);
+    READ_INT(szFileName, *isPressure, OPTIONAL);
+    READ_INT(szFileName, *isVelocity, OPTIONAL);
     
     READ_STRING(szFileName, precice_config, PRECICE_VARS_REQUIREMENT);
     READ_STRING(szFileName, participant_name, PRECICE_VARS_REQUIREMENT);
@@ -482,3 +487,4 @@ void init_flag(char *problem, char *geometry, char *mask, int imax, int jmax, in
     geometryCheck(Flag, imax, jmax);
     free_imatrix(pic, 0, imax + 1, 0, jmax + 1);
 }
+

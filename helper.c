@@ -837,10 +837,10 @@ void flipToSolid(double **U, double **V, double** P, int  **Flag, int i, int j)
     P[i+1][j+1] = 0;
 }*/
 
-int checkVelocityMagnitude(double eps, double leftVelocity, double rightVelocity, double bottomVelocity,
+int checkVelocityMagnitude(double minVelocity, double leftVelocity, double rightVelocity, double bottomVelocity,
                            double topVelocity)
 {
-    if(sqrt( pow((leftVelocity+rightVelocity)*0.5,2) + pow((bottomVelocity+topVelocity)*0.5,2) ) < eps)
+    if(sqrt( pow((leftVelocity+rightVelocity)*0.5,2) + pow((bottomVelocity+topVelocity)*0.5,2) ) < minVelocity)
         return 1;
     else
         return 0;
@@ -884,16 +884,14 @@ int checkVelocity(int isFlip, double percent, double ** U, double **V, int Flag,
 	}
 
 	return 0;
-
-		
 }
 
 
 
 
 void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, double **P, double **U, double **V,
-                double eps, double percent, int **PGM, const char *outputFolderPGM, const char *szProblem, double maxU,
-                double maxV, int k)
+                double minVelocity, double percentPressure, double percentVelocity, int **PGM, const char *outputFolderPGM, const char *szProblem, double maxU,
+                double maxV, int k, int isVortex, int isPressure, int isVelocity)
 {
     //int i = 1;
     //int j = 1;
@@ -917,6 +915,10 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, do
     // Now allocate aux matrix to keep trace of just flipped geometries, to prevent cascade flipping!
     int **justFlipped = imatrix(0, imax + 1, 0, jmax + 1);
 
+    if(isVortex){
+    	expandVortexSeeds(imax, jmax, noFluidCells, U, V, P, Flag, PGM, outputFolderPGM, szProblem);
+    }
+
     for (int i = istart; i*iflip < ibound; i += iflip)
     {
         for(int j = jstart; j*jflip < jbound; j += jflip)
@@ -931,8 +933,12 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, do
             {
                 // isFlip = checkVelocityMagnitude(eps,U[i][j],V[i][j]);
                 if(isCorner(cell)){
-                	isFlip = checkPressure(percent, P, cell, i , j);
-                	isFlip += checkVelocity(isFlip, percent, U, V, cell, i , j, maxU, maxV);
+                	if(isPressure){
+                	isFlip = checkPressure(percentPressure, P, cell, i , j);
+                }
+                	if(isVelocity){
+                	isFlip += checkVelocity(isFlip, percentVelocity, U, V, cell, i , j, maxU, maxV);
+                }
 //                    isFlip += !checkVelocityMagnitude(1.1*eps,U[i][j],V[i][j]); // EXPERIMENTAL!
                 }
                 if (isFlip) {
@@ -947,7 +953,7 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, do
                      || (doesNeighbourAllowFlipToSolid(Flag,i,j,BOT) && !justFlipped[i][j-1])
                     )
             {
-                isFlip = checkVelocityMagnitude(eps, U[i - 1][j], U[i][j], V[i][j-1], V[i][j]);
+                isFlip = checkVelocityMagnitude(minVelocity, U[i - 1][j], U[i][j], V[i][j-1], V[i][j]);
                 if (isFlip)
                 {
                     flipToSolid(U,V, P, Flag, i, j);
@@ -1098,6 +1104,10 @@ void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double
 
     // debugging
     /*for (int j = jmax; j >= 1; j--)
+    // decode_flags(imax, jmax, Flag, PGM);
+    // write_pgm(imax+2,jmax+2,PGM,outputFolderPGM, szProblem, counter);
+    /* erase justFlipped to allow for "convergence"
+    for (int j = 0; j <= jmax; j++)
     {
         for (int i = 0; i <= imax + 1; i++)
         {
