@@ -1025,8 +1025,12 @@ int isVelocityAboveRelativeThreshold(int isFlip, double percent, double **U, dou
 }
 
 
-bool isCellUpstreamOfObstacle(int i, int j, int **Flags, double **U, double **V)
+bool isCellUpstreamOfObstacle(int i, int j, int **Flags, double **U, double **V, int imax, int jmax)
 {
+    if (i<2 || i>imax-1 || j<2 || j>jmax-1)
+    {
+        return 1;
+    }
     int cell = Flags[i][j];
     if (!hasAtLeastOneObstacleNeighbour(cell))
     {
@@ -1136,7 +1140,7 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **Flag, double **P, d
                     )
             {
                 double thresholdVelocity = minVelocity;
-                if(isUpstreamCheckEnabled && !isCellUpstreamOfObstacle(i,j,Flag,U,V))
+                if(isUpstreamCheckEnabled && !isCellUpstreamOfObstacle(i, j, Flag, U, V, imax, jmax))
                 {
                     thresholdVelocity = minVelocity/downstreamVelocityFactor;
                 }

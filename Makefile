@@ -7,7 +7,7 @@ LIBS = \
 	-lm
 
 CC = gcc
-CFLAGS = -Wall -pedantic -Werror -Wno-unused-value -Wno-unused-variable
+CFLAGS = -O2 -Wall -pedantic -Werror -Wno-unused-value -Wno-unused-variable -Wno-unused-result -g
 
 .c.o:  ; $(CC) -c $(CFLAGS) $<
 
