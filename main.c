@@ -136,11 +136,14 @@ int main(int argc, char **argv)
     {
         THROW_ERROR("\nNo arguments passed!\nUSAGE:\t./sim configuration.dat");
     }
+    
     // In case no outputFolder is passed, default to inputFolder/Out...
     if (strlen(outputFolder) == 0)
     {
         sprintf(outputFolder, "%s/Out", inputFolder);
-        // ...and create it if not on filesystem
+    }
+    // ...and create it if not on filesystem, in any case
+    {
         struct stat st = {0};
         if (stat(outputFolder, &st) == -1)
         {
@@ -149,11 +152,15 @@ int main(int argc, char **argv)
     }
 
     //always create a subfolder for PGMs outputFolder/PGM
-    if (strlen(outputFolderPGM) == 0) {
+    if (strlen(outputFolderPGM) == 0)
+    {
         sprintf(outputFolderPGM, "%s/PGM", outputFolder);
-        // ...and create it if not on filesystem
+    }
+    // ...and create it if not on filesystem
+    {
         struct stat st = {0};
-        if (stat(outputFolderPGM, &st) == -1) {
+        if (stat(outputFolderPGM, &st) == -1)
+        {
             mkdir(outputFolderPGM, 0700);
         }
     }
@@ -207,6 +214,12 @@ int main(int argc, char **argv)
     double percentVelocity = 0.6;
     double minVelocity = 0.05;
     int isVortex, isPressure, isVelocity;
+    double maxVelocity = 0.5;
+    int obstacleBudget = 0;
+    double obstacleBudgetFraction = 2;
+    int isGeometryAdaptivityEnabled;
+    int vortexAreaThreshold;
+    double vortexStrengthThreshold;
     
     int maxK = 0;
     int sorIterationsAcceptanceThreshold;
@@ -219,10 +232,11 @@ int main(int argc, char **argv)
     
     read_parameters(szFileName, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, &xlength, &ylength, &dt, &dx, &dy, &imax, &jmax,
                     &alpha, &omg,
-                    &tau, &itermax, &itermaxPGM, &sorIterationsAcceptanceThreshold, &eps, &dt_value, problem, geometry, geometryMaskFile,
-                    boundaryInfo, &beta, &TI, &T_h, &T_c, &Pr, &x_origin, &y_origin,
-                    &minVelocity, &percentPressure, &percentVelocity, &isVortex, &isPressure, &isVelocity, precice_config, participant_name, mesh_name, read_data_name,
-                    write_data_name);
+                    &tau, &itermax, &itermaxPGM, &sorIterationsAcceptanceThreshold, &eps, &dt_value, problem, geometry,
+                    geometryMaskFile, boundaryInfo, &beta, &TI, &T_h, &T_c, &Pr, &x_origin, &y_origin,
+                    &minVelocity, &maxVelocity, &percentPressure, &percentVelocity, &isPressure, &isVelocity, &isVortex,
+                    &vortexAreaThreshold, &vortexStrengthThreshold, &obstacleBudgetFraction, precice_config, participant_name, mesh_name, read_data_name,
+                    write_data_name, &isGeometryAdaptivityEnabled);
     
     // In case geometry was given as a filename only, prepend it with inputFolder path, just in case it is not CWD.
     if (strstr(geometry, "/") == NULL)
@@ -245,7 +259,6 @@ int main(int argc, char **argv)
     double dt_check = fmin(dt, dt_value);
     
     int **Flags = imatrix(0, imax + 1, 0, jmax + 1);
-    signed int **Vortex = imatrix(0, imax + 1, 0, jmax + 1);
     double **U = matrix(0, imax + 1, 0, jmax + 1);
     double **V = matrix(0, imax + 1, 0, jmax + 1);
     double **F = matrix(0, imax + 1, 0, jmax + 1);
@@ -276,10 +289,8 @@ int main(int argc, char **argv)
     
     init_flag(problem, geometry, geometryMaskFile, imax, jmax, Flags, &noFluidCells, &noCouplingCells, runningMode);
 //    THROW_ERROR("Forcing exit for DEBUG");
-
-
-
-
+    int noInitialGeometryCells = imax*jmax - noFluidCells;
+    obstacleBudget = min((int) round((imax * jmax) / obstacleBudgetFraction), imax * jmax) - noInitialGeometryCells;
 
     // initialise velocities and pressure
     init_uvpt(UI, VI, PI, TI, imax, jmax, U, V, P, T, Flags);
@@ -291,56 +302,87 @@ int main(int argc, char **argv)
 //    n++;
 //
     // simulation interval 0 to t_end
-        long simulationStartTime = getCurrentTimeMillis();
-
-    for (k; k < itermaxPGM; k++) {
-        mindt = performSimulation(outputFolder, outputFolderPGM, problem, Re, GX, GY, t_end, xlength, ylength, dt, dx,
+    long simulationStartTime = getCurrentTimeMillis();
+    char vortexDetectionEnabled = (char) isVortex;
+    if (isGeometryAdaptivityEnabled == 1)
+    {
+        for (k; k <= itermaxPGM; k++)
+        {
+            mindt = performSimulation(outputFolder, outputFolderPGM, problem, Re, GX, GY, t_end, xlength, ylength, dt,
+                                      dx,
+                                      dy, imax, jmax, alpha, omg, tau, itermax, eps, dt_value, n, k, res, t, it, mindt,
+                                      noFluidCells, beta, Pr, boundaryInfo,
+                                      dt_check, Flags, U, V, F, G, RS, P, T, PGM, computeTemperatureSwitch,
+                                      sorIterationsAcceptanceThreshold, &maxU, &maxV);
+        
+            //update PGM here - go through all the flags and decide what needs to be changed and what not
+            if (vortexDetectionEnabled && ( (obstacleBudget <= vortexAreaThreshold) || k>26)) //debug additional condition
+            {
+                // Once we reach budget 0, disable vortex detection permanently, as it can introduce instability
+                vortexDetectionEnabled = 0;
+                logMsg(PRODUCTION, "Vortex detection disabled. k=%d", k);
+            }
+            if (vortexDetectionEnabled)
+            {
+//            expandVortexSeeds(imax, jmax, &noFluidCells, U, V, P, Flags, PGM, outputFolderPGM, problem, getRelativeVelocityThreshold(maxU, maxV, percent), &obstacleBudget);
+                expandVortexSeeds(imax, jmax, &noFluidCells, U, V, P, Flags, vortexAreaThreshold,
+                                  vortexStrengthThreshold, &obstacleBudget);
+                geometryFix(U, V, P, Flags, imax, jmax, &noFluidCells, &obstacleBudget);
+            }
+        
+            update_pgm(imax, jmax, &noFluidCells, Flags, P, U, V, minVelocity, maxVelocity, percentPressure,
+                       percentVelocity, maxU, maxV, k,
+                       &obstacleBudget, dx, dy, isPressure, isVelocity);
+            //fix forbidden geometry in case it exists
+            geometryFix(U, V, P, Flags, imax, jmax, &noFluidCells, &obstacleBudget);
+            //fix velocities on internal geometries, for nice vtks
+            velocityFix(U, V, Flags, imax, jmax);
+        
+            outputCalculation(U, V, Flags, imax, jmax, &outflow);
+        
+            if (outflow > outflowMax)
+            {
+                outflowMax = outflow;
+                maxK = k;
+            }
+        
+            // saving the *.pgm
+            logEvent(PRODUCTION, t,
+                     "Writing PGM file k=%d, executionTime=%.3fs, outflowValue=%.3f, maxOutflow=%.3f at iteration %d",
+                     k,
+                     getTimeSpentSeconds(simulationStartTime, getCurrentTimeMillis()),
+                     outflow,
+                     outflowMax,
+                     maxK
+            );
+            decode_flags(imax, jmax, Flags, PGM);
+            write_pgm(imax + 2, jmax + 2, PGM, outputFolderPGM, problem, k);
+    
+            /*for (int j = jmax + 1; j >= 0; j--)
+            {
+                for (int i = 0; i <= imax + 1; i++)
+                {
+                    printf("%d ",isObstacle(Flags[i][j]));
+                    if (i == imax + 1) printf("\n");
+                }
+            }*/
+        
+            //THROW_ERROR("Test 1 run");
+        
+        }
+    }
+    else
+    {
+        // In case of no geometry adaptivity, just run the simulation
+        mindt = performSimulation(outputFolder, outputFolderPGM, problem, Re, GX, GY, t_end, xlength, ylength, dt,
+                                  dx,
                                   dy, imax, jmax, alpha, omg, tau, itermax, eps, dt_value, n, k, res, t, it, mindt,
                                   noFluidCells, beta, Pr, boundaryInfo,
                                   dt_check, Flags, U, V, F, G, RS, P, T, PGM, computeTemperatureSwitch,
                                   sorIterationsAcceptanceThreshold, &maxU, &maxV);
-
-        //update PGM here - go through all the flags and decide what needs to be changed and what not
-//        percent = 0.8;
-//        minVelocity = 0.05;
-        update_pgm(imax, jmax, &noFluidCells, PGM, Flags, P, U, V, minVelocity, percentPressure, percentVelocity,
-                   PGM, outputFolderPGM, problem, maxU, maxV, k, isVortex, isPressure, isVelocity);
-        //expandVortexSeeds(imax, jmax, &noFluidCells, U, V, P, Flags, Vortex, PGM, outputFolderPGM,problem);
-        //fix forbidden geometry in case it exists
-        geometryFix(U, V, P, Flags, imax, jmax, &noFluidCells);
-        // saving the *.pgm
-        
-        outputCalculation(U, V, Flags, imax, jmax, &outflow);
-
-        if(outflow > outflowMax){
-            outflowMax = outflow;
-            maxK = k;
-        }
-
-        logEvent(PRODUCTION, t, "Writing PGM file k=%d, executionTime=%.3fs, outflowValue=%.3f, maxOutflow=%.3f at iteration %d",
-                 k,
-                 getTimeSpentSeconds(simulationStartTime, getCurrentTimeMillis()),
-                 outflow,
-                 outflowMax,
-                 maxK
-        );
-        decode_flags(imax, jmax, Flags, PGM);
-        write_pgm(imax+2,jmax+2,PGM,outputFolderPGM, problem, k);
-
-        /*for (int j = jmax + 1; j >= 0; j--)
-        {
-            for (int i = 0; i <= imax + 1; i++)
-            {
-                printf("%d ",isObstacle(Flags[i][j]));
-                if (i == imax + 1) printf("\n");
-            }
-        }*/
-
-        //THROW_ERROR("Test 1 run");
-
     }
 
-        long simulationEndTime = getCurrentTimeMillis();
+    long simulationEndTime = getCurrentTimeMillis();
 
     // Check value of U[imax/2][7*jmax/8] (task6)
     logMsg(PRODUCTION, "Final value for U[imax/2][7*jmax/8] = %16e", U[imax / 2][7 * jmax / 8]);
@@ -348,7 +390,6 @@ int main(int argc, char **argv)
     logMsg(PRODUCTION, "Total time spent in simulation: %.3f s", getTimeSpentSeconds(simulationStartTime, simulationEndTime));
     
     free_imatrix(Flags, 0, imax + 1, 0, jmax + 1);
-    free_imatrix(Vortex, 0, imax + 1, 0, jmax + 1);
     free_matrix(U, 0, imax + 1, 0, jmax + 1);
     free_matrix(V, 0, imax + 1, 0, jmax + 1);
     free_matrix(F, 0, imax + 1, 0, jmax + 1);

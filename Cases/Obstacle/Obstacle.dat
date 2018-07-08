@@ -83,5 +83,5 @@ minVelocity	0.05
 #right_boundary_dirichlet_V         0
 #right_boundary_type     OUTFLOW
 
-left_boundary_P				2
+left_boundary_P				5
 right_boundary_P 			0

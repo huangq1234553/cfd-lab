@@ -28,6 +28,7 @@
 //typedef enum Direction {CENTER=1, TOP=16, BOT=8, LEFT=4, RIGHT=2} Direction;
 typedef enum Direction {CENTER=0, TOP=4, BOT=3, LEFT=2, RIGHT=1} Direction;
 typedef enum FlagTypeBit {NSBIT=5, FSBIT=6, OFBIT=7, IFBIT=8, CBIT=9, TBIT=10, GEOMETRYMASKBIT=11} FlagTypeBit;
+typedef enum FlippedReasonBit {GEOMETRY_FIX=12, VORTEX_FILL=13, } FlippedReasonBit;
 typedef enum Optional {REQUIRED, OPTIONAL} Optional;
 extern clock_t last_timer_reset;   
 
@@ -36,6 +37,14 @@ int min( int a, int b);
 int max( int a, int b);
 double fmin( double a, double b);
 double fmax( double a, double b);
+static inline short sign(int x)
+{
+    return (x > 0) - (x < 0);
+}
+static inline short fsign(double x)
+{
+    return (x > 0) - (x < 0);
+}
 
 int isObstacle(int flag);   // Current cell is an obstacle
 int isFluid(int flag);      // Current cell is fluid
@@ -45,7 +54,8 @@ int isInflow(int flag);      // Current cell is inflow
 int isGeometryConstant(int flag);      // Current cell does not allow to be switched from fluid to solid or viceversa
 int isNeighbourObstacle(int flag, Direction direction); // Current cell's neighbor in the specified direction is obstacle
 int isNeighbourFluid(int flag, Direction direction);    // Current cell's neighbor in the specified direction is fluid
-int doesNeighbourAllowFlipToSolid(int **Flags, int i, int j, Direction direction); // Current cell's neighbor in the specified direction can be flipped to solid
+int doesNeighbourAllowFlipToSolid(int **Flags, int i, int j, Direction direction, int imax, int jmax); // Current cell's neighbor in the specified direction can be flipped to solid
+int hasAtLeastOneObstacleNeighbour(int flag);
 int isCorner(int flag); // Current cell is a corner obstacle
 int skipU(int flag);    // Current cell is surrounded by obstacles to its Top-Right-Bottom
 int skipV(int flag);    // Current cell is surrounded by obstacles to its Left-Top-Right
@@ -54,21 +64,31 @@ void decode_flags(int imax, int jmax, int **Flag, int** pic); // decode flags in
 
 void write_pgm(int xsize, int ysize, int **pgm, const char *outputFolder, const char *szProblem, int iterationNumber); //write *.pgm file
 
-void update_pgm(int imax, int jmax, int *noFluidCells, int **pgm, int **Flag, double **P, double **U, double **V,
-                double eps, double percentPressure, double percentVelocity, int **PGM, const char *outputFolder, const char *szProblem, double maxU, double maxV, int k, int isVortex, int isPressure, int isVelocity);
+void update_pgm(int imax, int jmax, int *noFluidCells, int **Flag, double **P, double **U, double **V, double minVelocity,
+                double maxVelocity, double percentPressure, double percentVelocity, double maxU, double maxV, int k,
+                int *obstacleBudget, double dx, double dy, int isPressure, int isVelocity);
 
-void flipToFluid(double **U, double **V, int  **Flags, int i, int j);
-void flipToSolid(double **U, double **V, double** P, int  **Flag, int i, int j);
-int checkVelocity(int isFlip, double percent, double ** U, double **V, int Flag, int i, int j, double maxU, double maxV);
-int checkVelocityMagnitude(double eps, double leftVelocity, double rightVelocity, double bottomVelocity,
-                           double topVelocity);
+void flipToFluid(double **U, double **V, int **Flags, int i, int j, int *obstacleBudget);
+void flipToSolid(double **U, double **V, double **P, int **Flag, int i, int j, int *obstacleBudget);
+double getRelativeVelocityThreshold(double maxU, double maxV, double percent);
+int isVelocityGreaterThanRelativeThreshold(double velocity, double maxU, double maxV, double percent);
+int isVelocityAboveRelativeThreshold(int isFlip, double percent, double **U, double **V, int Flag, int i, int j,
+                                     double maxU, double maxV);
+int isVelocityMagnitudeBelowThreshold(double eps, double leftVelocity, double rightVelocity, double bottomVelocity,
+                                      double topVelocity);
+
 int checkPressure(double percent, double ** P, int Flag, int i, int j);
-void geometryFix(double **U, double **V, double **P, int **Flag, int imax, int jmax, int *noFluidCells);
+void
+geometryFix(double **U, double **V, double **P, int **Flag, int imax, int jmax, int *noFluidCells, int *obstacleBudget);
+void velocityFix(double **U, double **V, int **Flag, int imax, int jmax);
 
 void outputCalculation(double **U, double **V, int **Flags, int imax, int jmax, double *outflow);
 
-void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double **V, double **P, int **Flag, int **PGM,
-                       const char *outputFolderPGM, const char *szProblem);
+int isGradientAtObstacleAboveThreshold(double **U, double **V, double dx, double dy, int cell, int i, int j,
+                                       double gradThreshold);
+
+void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double **V, double **P, int **Flag,
+                       int vortexAreaThreshold, double swirlThresholdStrength, int *obstacleBudget);
 
 /**
  * Error handling:

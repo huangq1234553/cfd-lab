@@ -21,10 +21,12 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
                     double *t_end, double *xlength, double *ylength, double *dt, double *dx, double *dy, int *imax,
                     int *jmax, double *alpha, double *omg, double *tau, int *itermax, int *itermaxPGM,
                     int *sorIterationsThreshold, double *eps, double *dt_value, char *problem, char *geometry,
-                    char *geometryMask, BoundaryInfo boundaryInfo[4], double *beta, double *TI, double *T_h,
-                    double *T_c, double *Pr, double *x_origin, double *y_origin, double *minVelocity, double *percentPressure, double *percentVelocity,
-                    int *isVortex, int *isPressure, int *isVelocity, char *precice_config, char *participant_name, char *mesh_name, char *read_data_name,
-                    char *write_data_name)    /* path/filename to geometry file */
+                    char *geometryMask, BoundaryInfo *boundaryInfo, double *beta, double *TI, double *T_h, double *T_c,
+                    double *Pr, double *x_origin, double *y_origin, double *minVelocity, double *maxVelocity,
+                    double *percentPressure, double *percentVelocity, int *checkPressure, int *checkVelocity,
+                    int *checkVortex, int *vortexSizeThreshold, double *vortexStrengthThreshold,
+                    double *obstacleBudgetFraction, char *precice_config, char *participant_name, char *mesh_name,
+                    char *read_data_name, char *write_data_name, int *adaptiveGeometryEnabled)    /* path/filename to geometry file */
 {
     READ_DOUBLE(szFileName, *xlength, REQUIRED);
     READ_DOUBLE(szFileName, *ylength, REQUIRED);
@@ -71,11 +73,19 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
     READ_DOUBLE(szFileName, *TI, OPTIONAL);
     READ_DOUBLE(szFileName, *TI, OPTIONAL);
     
+    // Check if geometry adaptivity is switched on and require all the related variables
+    Optional ADAPTIVE_GEOMETRY_VARS_REQUIREMENT = OPTIONAL;
+    READ_INT   (szFileName, *adaptiveGeometryEnabled, REQUIRED);
+    if (*adaptiveGeometryEnabled == 1)
+    {
+        ADAPTIVE_GEOMETRY_VARS_REQUIREMENT = REQUIRED;
+    }
+    
     READ_STRING(szFileName, problem, REQUIRED);
     READ_STRING(szFileName, geometry, REQUIRED);
     READ_STRING(szFileName, geometryMask, OPTIONAL);
-    READ_INT   (szFileName, *itermaxPGM, REQUIRED);
-    READ_INT   (szFileName, *sorIterationsThreshold, OPTIONAL);
+    READ_INT   (szFileName, *itermaxPGM, ADAPTIVE_GEOMETRY_VARS_REQUIREMENT);
+    READ_INT   (szFileName, *sorIterationsThreshold, ADAPTIVE_GEOMETRY_VARS_REQUIREMENT);
     if (*sorIterationsThreshold == 0.0)
     {
         *sorIterationsThreshold = 10;
@@ -88,14 +98,19 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
     Optional PRECICE_VARS_REQUIREMENT = OPTIONAL; // TODO: this should be controlled by a cmdline flag or a config param
     READ_DOUBLE(szFileName, *x_origin, PRECICE_VARS_REQUIREMENT);
     READ_DOUBLE(szFileName, *y_origin, PRECICE_VARS_REQUIREMENT);
-
-    READ_DOUBLE(szFileName, *minVelocity, OPTIONAL);
-    READ_DOUBLE(szFileName, *percentPressure, OPTIONAL);
-    READ_DOUBLE(szFileName, *percentVelocity, OPTIONAL);
-
-    READ_INT(szFileName, *isVortex, OPTIONAL);
-    READ_INT(szFileName, *isPressure, OPTIONAL);
-    READ_INT(szFileName, *isVelocity, OPTIONAL);
+    
+    READ_INT(szFileName, *checkVortex, ADAPTIVE_GEOMETRY_VARS_REQUIREMENT);
+    READ_INT(szFileName, *checkPressure, ADAPTIVE_GEOMETRY_VARS_REQUIREMENT);
+    READ_INT(szFileName, *checkVelocity, ADAPTIVE_GEOMETRY_VARS_REQUIREMENT);
+    
+    READ_DOUBLE(szFileName, *minVelocity, ADAPTIVE_GEOMETRY_VARS_REQUIREMENT);
+    READ_DOUBLE(szFileName, *maxVelocity, ADAPTIVE_GEOMETRY_VARS_REQUIREMENT);
+    READ_DOUBLE(szFileName, *percentPressure, ADAPTIVE_GEOMETRY_VARS_REQUIREMENT);
+    READ_DOUBLE(szFileName, *percentVelocity, ADAPTIVE_GEOMETRY_VARS_REQUIREMENT);
+    
+    READ_INT(szFileName, *vortexSizeThreshold, ADAPTIVE_GEOMETRY_VARS_REQUIREMENT);
+    READ_DOUBLE(szFileName, *vortexStrengthThreshold, ADAPTIVE_GEOMETRY_VARS_REQUIREMENT);
+    READ_DOUBLE(szFileName, *obstacleBudgetFraction, ADAPTIVE_GEOMETRY_VARS_REQUIREMENT);
     
     READ_STRING(szFileName, precice_config, PRECICE_VARS_REQUIREMENT);
     READ_STRING(szFileName, participant_name, PRECICE_VARS_REQUIREMENT);

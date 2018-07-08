@@ -69,6 +69,11 @@ itermaxPGM  200
 sorIterationsThreshold	10
 percent		0.8
 minVelocity	0.5
+maxVelocity	2.0
+obstacleBudgetFraction	2
+# Vars to add
+percent		0.8
+minVelocity	0.5
 
 #--------------------------------------------
 #       boundary description

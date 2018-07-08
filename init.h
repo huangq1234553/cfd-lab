@@ -52,10 +52,12 @@ int read_parameters(const char *szFileName, double *Re, double *UI, double *VI, 
                     double *t_end, double *xlength, double *ylength, double *dt, double *dx, double *dy, int *imax,
                     int *jmax, double *alpha, double *omg, double *tau, int *itermax, int *itermaxPGM,
                     int *sorIterationsThreshold, double *eps, double *dt_value, char *problem, char *geometry,
-                    char *geometryMask, BoundaryInfo boundaryInfo[4], double *beta, double *TI, double *T_h,
-                    double *T_c, double *Pr, double *x_origin, double *y_origin, double *minVelocity, double *percentPressure, double *percentVelocity,
-                    int *isVortex, int *isPressure, int *isVelocity, char *precice_config, char *participant_name, char *mesh_name, char *read_data_name,
-                    char *write_data_name) ;
+                    char *geometryMask, BoundaryInfo *boundaryInfo, double *beta, double *TI, double *T_h, double *T_c,
+                    double *Pr, double *x_origin, double *y_origin, double *minVelocity, double *maxVelocity,
+                    double *percentPressure, double *percentVelocity, int *checkPressure, int *checkVelocity,
+                    int *checkVortex, int *vortexSizeThreshold, double *vortexStrengthThreshold,
+                    double *obstacleBudgetFraction, char *precice_config, char *participant_name, char *mesh_name,
+                    char *read_data_name, char *write_data_name, int *adaptiveGeometryEnabled);
 
 //void read_boundary_parameters_compact_mode(const char *szFileName, BoundaryInfo *boundaryInfo, double dx, double dy);
 void read_boundary_parameters_extended_mode(const char *szFileName, BoundaryInfo *boundaryInfo, double dx, double dy,
