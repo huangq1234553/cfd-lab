@@ -41,49 +41,49 @@ double fmax(double a, double b)
 /* ----------------------------------------------------------------------- */
 
 // Returns 1 (True) if the cell is an obstacle
-int isObstacle(int flag)
+inline int isObstacle(int flag)
 {
     return (flag >> CENTER) & 1;
 }
 
 // Returns 1 (True) if the cell is fluid
-int isFluid(int flag)
+inline int isFluid(int flag)
 {
     return !((flag >> CENTER) & 1);
 }
 
 // Returns 1 (True) if the cell is coupling
-int isCoupling(int flag)
+inline int isCoupling(int flag)
 {
     return ((flag >> CBIT) & 1);
 }
 
 // Returns 1 (True) if the cell is outflow
-int isOutflow(int flag)
+inline int isOutflow(int flag)
 {
     return ((flag >> OFBIT) & 1);
 }
 
 // Returns 1 (True) if the cell is inflow
-int isInflow(int flag)
+inline int isInflow(int flag)
 {
     return ((flag >> IFBIT) & 1);
 }
 
 // Returns 1 (True) if cell cannot be switched between solid & fluid
-int isGeometryConstant(int flag)
+inline int isGeometryConstant(int flag)
 {
     return ((flag >> GEOMETRYMASKBIT) & 1);
 }
 
 // Returns 1 (True) if the neighbouring cell in the indicated direction is an obstacle
-int isNeighbourObstacle(int flag, Direction direction)
+inline int isNeighbourObstacle(int flag, Direction direction)
 {
     return (flag >> direction) & 1;
 }
 
 // Returns 1 (True) if the neighbouring cell in the indicated direction is fluid
-int isNeighbourFluid(int flag, Direction direction)
+inline int isNeighbourFluid(int flag, Direction direction)
 {
     return !((flag >> direction) & 1);
 }
@@ -121,7 +121,7 @@ int doesNeighbourAllowFlipToSolid(int **Flags, int i, int j, Direction direction
     return check && isNeighbourObstacle(cell, direction) && !isOutflow(neighbour) && !isInflow(neighbour);
 }
 
-int hasAtLeastOneObstacleNeighbour(int flag)
+inline int hasAtLeastOneObstacleNeighbour(int flag)
 {
     return isNeighbourObstacle(flag, LEFT)
            || isNeighbourObstacle(flag, RIGHT)
@@ -130,7 +130,7 @@ int hasAtLeastOneObstacleNeighbour(int flag)
 }
 
 // Returns 1 (True) if the cell is present at a corner (bordering only 2 fluid cells)
-int isCorner(int flag)
+inline int isCorner(int flag)
 {
 //    return ((flag&(1<<TOP))>>TOP)^((flag&(1<<BOT))>>BOT) && ((flag&(1<<LEFT))>>LEFT)^((flag&(1<<RIGHT))>>RIGHT);
     return ((flag >> TOP) & 1) ^ ((flag >> BOT) & 1) && ((flag >> LEFT) & 1) ^ ((flag >> RIGHT) & 1) &&
@@ -139,14 +139,14 @@ int isCorner(int flag)
 
 
 // Computes skip condition for u-boundary value determination (if top, right and bottom cells are obstacles)
-int skipU(int flag)
+inline int skipU(int flag)
 {
 //    return (flag&(1<<TOP)) && (flag&(1<<RIGHT)) && (flag&(1<<BOT));
     return ((flag >> TOP) & 1) && ((flag >> RIGHT) & 1) && ((flag >> BOT) & 1);
 }
 
 // Computes skip condition for v-boundary value determination (if left, top and right cells are obstacles)
-int skipV(int flag)
+inline int skipV(int flag)
 {
 //    return (flag&(1<<LEFT)) && (flag&(1<<TOP)) && (flag&(1<<RIGHT));
     return ((flag >> LEFT) & 1) && ((flag >> TOP) & 1) && ((flag >> RIGHT) & 1);

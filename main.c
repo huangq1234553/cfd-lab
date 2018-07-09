@@ -363,7 +363,6 @@ int main(int argc, char **argv)
             }
             if (vortexDetectionEnabled && vortexDetectionEnabledTmp && k%10==0)
             {
-//            expandVortexSeeds(imax, jmax, &noFluidCells, U, V, P, Flags, PGM, outputFolderPGM, problem, getRelativeVelocityThreshold(maxU, maxV, percent), &obstacleBudget);
                 expandVortexSeeds(imax, jmax, &noFluidCells, U, V, P, Flags, vortexAreaThreshold,
                                   vortexStrengthThreshold, &obstacleBudget);
                 geometryFix(U, V, P, Flags, imax, jmax, &noFluidCells, &obstacleBudget);
@@ -452,7 +451,7 @@ double performSimulation(const char *outputFolder, const char *outputFolderPGM, 
         
         // ensure boundary conditions for velocity
         // Special boundary condition are addressed here by using the boundaryInfo data.
-        // These special boundary values are configured at configuration time in read_parameters(). Still TODO !
+        // These special boundary values are configured at configuration time in read_parameters().
         boundaryval(imax, jmax, U, V, T, Flags, boundaryInfo);
         
         // calculate T using energy equation in 2D with boussinesq approximation
@@ -516,14 +515,6 @@ double performSimulation(const char *outputFolder, const char *outputFolderPGM, 
     write_vtkFile(outputFolder, problem, n, k, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
     // Now also add a vtk to a series of "asymptotic" streams (PGM id = 0)
     write_vtkFile(outputFolder, problem, k, 0, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
-
-    /*// saving the *.pgm
-    logEvent(PRODUCTION, t, "Writing PGM file k=%d, n=%d, executionTime=%.3fs",
-             k, n,
-             getTimeSpentSeconds(interVisualizationExecTimeStart, getCurrentTimeMillis())
-    );
-    decode_flags(imax, jmax, Flags, PGM);
-    write_pgm(imax+2,jmax+2,PGM,outputFolderPGM, problem, k);*/
 
     return mindt;
 }
