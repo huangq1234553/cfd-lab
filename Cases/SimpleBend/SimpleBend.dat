@@ -76,13 +76,13 @@ checkVortex			1
 percentPressure		0.1
 percentVelocity		0.5
 # Min velocity below which geometry starts appearing (in upstream cells)
-minVelocity	0.4
-downstreamVelocityFactor	30
+minVelocity	0.1
+downstreamVelocityFactor	20
 # Max velocity abve which geometry starts disappearing
-maxVelocity	0.8
+maxVelocity	0.7
 obstacleBudgetFraction	2
-vortexSizeThreshold	20
-vortexStrengthThreshold	0.1
+vortexSizeThreshold	5
+vortexStrengthThreshold	0.05
 
 
 #--------------------------------------------
@@ -96,6 +96,6 @@ vortexStrengthThreshold	0.1
 #bottom_boundary_dirichlet_V        2
 #right_boundary_dirichlet_V         0
 #right_boundary_type     OUTFLOW
-bottom_boundary_P	2
+bottom_boundary_P	4
 #right_boundary_P 	0
 
