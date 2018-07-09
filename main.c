@@ -80,6 +80,7 @@ int main(int argc, char **argv)
     char outputFolder[512] = ""; // Please don't use superlong paths here, 512 should be more than enough :P
     char outputFolderPGM[512] = "";
     bool fixInitialGeometryAllowed = false;
+    bool pikachuMode = false; //Just for fun
     
     //
     // BEGIN command line flags management
@@ -120,6 +121,13 @@ int main(int argc, char **argv)
         else if (strcmp(argv[i], "--fix-initial-geometry") == 0)
         {
             fixInitialGeometryAllowed = true;
+        }
+        else if (strcmp(argv[i], "--pikachu-mode") == 0)
+        {
+            // Just for fun :)
+            pikachuMode = true;
+            // Initialize random seed for random removal
+            srand((unsigned int) time(NULL));
         }
         // All the below is just error catching... (new options must be set above here!)
         else if (argv[i][0] == '-')
@@ -366,6 +374,45 @@ int main(int argc, char **argv)
                 expandVortexSeeds(imax, jmax, &noFluidCells, U, V, P, Flags, vortexAreaThreshold,
                                   vortexStrengthThreshold, &obstacleBudget);
                 geometryFix(U, V, P, Flags, imax, jmax, &noFluidCells, &obstacleBudget);
+            }
+            if (pikachuMode)
+            {
+                double removalProbability = 0; //default
+                if (k > round(itermaxPGM*0.1)
+                    && k <= round(itermaxPGM*0.25))
+                {
+                    removalProbability = 0.05; //do nothing at the beginning
+                }
+                else if (k >= round(itermaxPGM*0.25)
+                         && k <= round(itermaxPGM*0.5))
+                {
+                    removalProbability = 0.1; //increase
+                    minVelocity /= 2;
+                }
+                else if (k >= round(itermaxPGM*0.5)
+                        && k <= round(itermaxPGM*0.7))
+                {
+                    removalProbability = 0.5; //increase
+                    minVelocity /= 4;
+                }
+                else if (k >= round(itermaxPGM*0.7)
+                         && k <= round(itermaxPGM*0.85))
+                {
+                    removalProbability = 0.80; //increase
+                    minVelocity = 0;
+                }
+                else if (k >= round(itermaxPGM*0.85)
+                         && k <= round(itermaxPGM*0.99))
+                {
+                    removalProbability = 0.95; //clear everything at the end
+                    minVelocity = 0;
+                }
+                else if (k >= round(itermaxPGM*0.99))
+                {
+                    removalProbability = 1; //clear everything at the end
+                    minVelocity = 0;
+                }                logMsg(WARNING,"Pikachu mode enabled, removing some random solid cells! :) - removalProbability=%f, minVelocity=%f", removalProbability, minVelocity);
+                randomGeometryRemoval(imax, jmax, &noFluidCells, &obstacleBudget, Flags, P, U, V, removalProbability);
             }
             
             update_pgm(imax, jmax, &noFluidCells, Flags, P, U, V, minVelocity, maxVelocity, percentPressure,

@@ -1672,3 +1672,27 @@ void outputCalculation(double **U, double **V, int **Flags, int imax, int jmax, 
     }
 }
 
+void randomGeometryRemoval(int imax, int jmax, int *noFluidCells, int *obstacleBudget, int **Flags, double **P, double **U,
+                           double **V, double removalProbability)
+{
+    for (int i=1; i<=imax; ++i)
+    {
+        for (int j=1; j<=jmax; ++j)
+        {
+            int cell = Flags[i][j];
+            if (isObstacle(cell) && !isGeometryConstant(cell))
+            {
+                int r = rand();
+                if (r < (int) round(RAND_MAX * removalProbability))
+                {
+                    int flipped = flipToFluid(U, V, Flags, i, j, obstacleBudget);
+                    if (flipped)
+                    {
+                        (*noFluidCells)--;
+                    }
+                }
+            }
+        }
+    }
+}
+

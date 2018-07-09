@@ -70,6 +70,9 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **Flag, double **P, d
                 int *obstacleBudget, double dx, double dy, int isPressure, int isVelocity, int isUpstreamCheckEnabled,
                 double downstreamVelocityFactor);
 
+void randomGeometryRemoval(int imax, int jmax, int *noFluidCells, int *obstacleBudget, int **Flags, double **P, double **U,
+                           double **V, double removalProbability);
+
 int flipToFluid(double **U, double **V, int **Flags, int i, int j, int *obstacleBudget);
 int flipToSolid(double **U, double **V, double **P, int **Flag, int i, int j, int *obstacleBudget);
 double getRelativeVelocityThreshold(double maxU, double maxV, double percent);
