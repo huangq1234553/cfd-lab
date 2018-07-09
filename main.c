@@ -8,7 +8,8 @@
 #include "uvp.h"
 #include "logger.h"
 #include "timing.h"
-
+#include <time.h>
+#include <stdlib.h>
 
 /**
  * The main operation reads the configuration file, initializes the scenario and
@@ -57,6 +58,17 @@ double performSimulation(const char *outputFolder, const char *outputFolderPGM, 
 
 int main(int argc, char **argv)
 {
+    const char* USAGE = "\nUSAGE:\t./sim configuration.dat [OPTIONS]\n"
+                        "\nOPTIONS:\n"
+                        "\t-o PATH\t\tSet the output folder path (default is INPUT_DIR/Out).\n"
+                        "\t--q\t\tSet the logging level to PRODUCTION (ERROR, WARNING and PRODUCTION traces will be enabled).\n"
+                        "\t--debug\t\tSet the logging level to DEBUG (all traces will be enabled).\n"
+                        "\t--notemp\tDisable temperature computation.\n"
+                        "\t--fix-initial-geometry\n\t\t\tAllows auto-fixing the initial geometry before starting the simulation.\n"
+                        "\n"
+                        "INPUT_DIR is the directory where the configuration.dat file is placed.\n"
+                        "Default logging level is INFO.\n"
+                        "Logging levels ordered by decreasing priority are ERROR, WARNING, PRODUCTION, INFO, DEBUG.";
     // As first thing, initialize logger start time
     setLoggerStartTime();
     
@@ -67,7 +79,7 @@ int main(int argc, char **argv)
     char inputFolder[512] = "";
     char outputFolder[512] = ""; // Please don't use superlong paths here, 512 should be more than enough :P
     char outputFolderPGM[512] = "";
-//    strcpy(outputFolder, "./"); // Default is CWD
+    bool fixInitialGeometryAllowed = false;
     
     //
     // BEGIN command line flags management
@@ -105,17 +117,21 @@ int main(int argc, char **argv)
             // Set debug mode: DebugLevel -> DEBUG
             setLoggerDebugLevel(DEBUG);
         }
-            // All the below is just error catching... (new options must be set above here!)
+        else if (strcmp(argv[i], "--fix-initial-geometry") == 0)
+        {
+            fixInitialGeometryAllowed = true;
+        }
+        // All the below is just error catching... (new options must be set above here!)
         else if (argv[i][0] == '-')
         {
-            char buf[128];
-            sprintf(buf, "Unrecognized option: %s", argv[i]);
+            char buf[1024];
+            sprintf(buf, "Unrecognized option: %s\n%s", argv[i], USAGE);
             THROW_ERROR(buf);
         }
         else if (strlen(szFileName) != 0)
         {
-            char buf[128];
-            sprintf(buf, "Unrecognized argument: %s", argv[i]);
+            char buf[1024];
+            sprintf(buf, "Unrecognized argument: %s\n%s", argv[i], USAGE);
             THROW_ERROR(buf);
         }
         else
@@ -137,7 +153,9 @@ int main(int argc, char **argv)
     //
     if (requiredArgCount == 0)
     {
-        THROW_ERROR("\nNo arguments passed!\nUSAGE:\t./sim configuration.dat");
+        char buf[1024];
+        sprintf(buf, "No arguments passed!\n%s", USAGE);
+        THROW_ERROR(buf);
     }
     
     // In case no outputFolder is passed, default to inputFolder/Out...
@@ -276,8 +294,6 @@ int main(int argc, char **argv)
     // create flag array to determine boundary conditions
     if (runningMode == COMPACT)
     {
-//        logMsg(PRODUCTION, "Running in compact mode");
-//        read_boundary_parameters_compact_mode(szFileName, boundaryInfo, dx, dy);
         THROW_ERROR("NO COMPACT MODE ANYMORE, SORRY! :(");
     }
     else
@@ -292,23 +308,18 @@ int main(int argc, char **argv)
         logMsg(PRODUCTION, "NoTemp mode: Temperature is not computed");
     }
     
-    init_flag(problem, geometry, geometryMaskFile, imax, jmax, Flags, &noFluidCells, &noCouplingCells, runningMode);
-//    THROW_ERROR("Forcing exit for DEBUG");
+    init_flag(problem, geometry, geometryMaskFile, imax, jmax, Flags, &noFluidCells, &noCouplingCells, runningMode, fixInitialGeometryAllowed);
     int noGeometryCells = imax*jmax - noFluidCells;
     obstacleBudget = min((int) round((imax * jmax) / obstacleBudgetFraction), imax * jmax) - noGeometryCells;
 
     // initialise velocities and pressure
     init_uvpt(UI, VI, PI, TI, imax, jmax, U, V, P, T, Flags);
     double maxU, maxV;
-
-//    // Debug
-//    logEvent(PRODUCTION, t, "Writing visualization file n=%d", n);
-//    write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T);
-//    n++;
-//
+    
     // simulation interval 0 to t_end
     long simulationStartTime = getCurrentTimeMillis();
-    char vortexDetectionEnabled = (char) isVortex;
+    bool vortexDetectionEnabled = (isVortex==1);
+    bool vortexDetectionEnabledTmp = vortexDetectionEnabled;
     if (isGeometryAdaptivityEnabled == 1)
     {
         int prevNoFluidCells = (int) round(noFluidCells/(1-0.04)); // Let's have some forced time at the beginnging (2s if t_end=50)
@@ -328,6 +339,7 @@ int main(int argc, char **argv)
             
             double geometryChangeFactor = fabs(noFluidCells - prevNoFluidCells) / prevNoFluidCells;
             geometryChangeFactor = fmin(geometryChangeFactor, 1);
+            geometryChangeFactor = fmax(geometryChangeFactor, 0.01); // minimum requirement to avoid too short runs
             logMsg(PRODUCTION, "Geometry change factor [k=%d]: %f", k, geometryChangeFactor);
             prevNoFluidCells = noFluidCells;
             mindt = performSimulation(outputFolder, outputFolderPGM, problem, Re, GX, GY, t_end, xlength, ylength, dt,
@@ -337,19 +349,19 @@ int main(int argc, char **argv)
                                       sorIterationsAcceptanceThreshold, &maxU, &maxV, round(t_end * geometryChangeFactor));
         
             //update PGM here - go through all the flags and decide what needs to be changed and what not
-            if (vortexDetectionEnabled && (obstacleBudget <= vortexAreaThreshold)) //debug additional condition
+            if (vortexDetectionEnabled && vortexDetectionEnabledTmp && (obstacleBudget <= vortexAreaThreshold)) //debug additional condition
             {
                 // Once we reach budget 0, disable vortex detection permanently, as it can introduce instability
-                vortexDetectionEnabled = 0;
+                vortexDetectionEnabledTmp = 0;
                 logMsg(PRODUCTION, "Vortex detection disabled. k=%d", k);
             }
-            else if (!vortexDetectionEnabled && (obstacleBudget > vortexAreaThreshold)) //debug additional condition
+            else if (vortexDetectionEnabled && !vortexDetectionEnabledTmp && (obstacleBudget > vortexAreaThreshold)) //debug additional condition
             {
                 // Once we reach budget 0, disable vortex detection permanently, as it can introduce instability
-                vortexDetectionEnabled = 1;
+                vortexDetectionEnabledTmp = 1;
                 logMsg(PRODUCTION, "Vortex detection enabled. k=%d", k);
             }
-            if (vortexDetectionEnabled && k%10==0)
+            if (vortexDetectionEnabled && vortexDetectionEnabledTmp && k%10==0)
             {
 //            expandVortexSeeds(imax, jmax, &noFluidCells, U, V, P, Flags, PGM, outputFolderPGM, problem, getRelativeVelocityThreshold(maxU, maxV, percent), &obstacleBudget);
                 expandVortexSeeds(imax, jmax, &noFluidCells, U, V, P, Flags, vortexAreaThreshold,

@@ -9,6 +9,7 @@
 #include <string.h>
 #include <float.h>
 #include <time.h>
+#include <stdbool.h>
 
 
 #ifdef PI
@@ -59,7 +60,7 @@ int hasAtLeastOneObstacleNeighbour(int flag);
 int isCorner(int flag); // Current cell is a corner obstacle
 int skipU(int flag);    // Current cell is surrounded by obstacles to its Top-Right-Bottom
 int skipV(int flag);    // Current cell is surrounded by obstacles to its Left-Top-Right
-void geometryCheck(int** flag, int imax, int jmax);  //Checks if forbidden geometry is in pgm
+void geometryCheck(int **Flags, int imax, int jmax, int *noFluidCells, bool fixInitialGeometry);  //Checks if forbidden geometry is in pgm
 void decode_flags(int imax, int jmax, int **Flag, int** pic); // decode flags into pgm file gray scale
 
 void write_pgm(int xsize, int ysize, int **pgm, const char *outputFolder, const char *szProblem, int iterationNumber); //write *.pgm file

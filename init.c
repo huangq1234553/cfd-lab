@@ -482,7 +482,7 @@ void setFlagsOnDomain(int imax, int jmax, int **Flag, int *fluidCellsCounter, in
 }
 
 void init_flag(char *problem, char *geometry, char *mask, int imax, int jmax, int **Flag, int *fluidCellsCounter,
-               int *couplingCellsCounter, RunningMode runningMode)
+               int *couplingCellsCounter, RunningMode runningMode, bool fixInitialGeometry)
 {
     int **pic = NULL;
     int **msk = NULL; // This reads a pgm containing a 1-0 mask of geometry cells that cannot be changed
@@ -502,7 +502,7 @@ void init_flag(char *problem, char *geometry, char *mask, int imax, int jmax, in
     
     logMsg(PRODUCTION, "Total fluid cells in domain: %d", (*fluidCellsCounter));
     logMsg(PRODUCTION, "Total coupling cells in domain: %d", (*couplingCellsCounter));
-    geometryCheck(Flag, imax, jmax);
+    geometryCheck(Flag, imax, jmax, fluidCellsCounter, fixInitialGeometry);
     free_imatrix(pic, 0, imax + 1, 0, jmax + 1);
 }
 
