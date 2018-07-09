@@ -76,7 +76,7 @@ void init_uvpt(double UI, double VI, double PI, double TI, int imax, int jmax, d
                double **T, int **Flags);
 
 void init_flag(char *problem, char *geometry, char *mask, int imax, int jmax, int **Flag, int *fluidCellsCounter,
-               int *couplingCellsCounter, RunningMode runningMode);
+               int *couplingCellsCounter, RunningMode runningMode, bool fixInitialGeometry);
 
 
 #endif

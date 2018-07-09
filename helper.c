@@ -153,19 +153,19 @@ int skipV(int flag)
 }
 
 // Function that checks geometry for forbidden cases
-void geometryCheck(int **Flag, int imax, int jmax)
+void geometryCheck(int **Flags, int imax, int jmax, int *noFluidCells, bool fixInitialGeometry)
 {
     int isForbidden = 0;
     for (int j = jmax; j > 0; j--)
     {
         for (int i = 1; i < imax + 1; i++)
         {
-            if (isFluid(Flag[i][j]))
+            if (isFluid(Flags[i][j]))
             {
                 continue;
             }
-            else if ((isFluid(Flag[i][j + 1]) && isFluid(Flag[i][j - 1])) ||
-                     (isFluid(Flag[i - 1][j]) && isFluid(Flag[i + 1][j])))
+            else if ((isFluid(Flags[i][j + 1]) && isFluid(Flags[i][j - 1])) ||
+                     (isFluid(Flags[i - 1][j]) && isFluid(Flags[i + 1][j])))
             {
                 logMsg(ERROR, "Forbidden Geometry present at (%d,%d)", i, j);
                 isForbidden++;
@@ -179,7 +179,15 @@ void geometryCheck(int **Flag, int imax, int jmax)
     else
     {
         logMsg(ERROR, "%d forbidden geometries found!", isForbidden);
-        THROW_ERROR("Forbidden geometries!");
+        if (fixInitialGeometry)
+        {
+            geometryFix(NULL, NULL, NULL, Flags, imax, jmax, noFluidCells, NULL);
+            logMsg(PRODUCTION, "Geometry fixed! New total fluid cells in domain: %d", (*noFluidCells));
+        }
+        else
+        {
+            THROW_ERROR("Forbidden geometries!");
+        }
     }
 }
 
@@ -813,10 +821,16 @@ int flipToFluid(double **U, double **V, int **Flag, int i, int j, int *obstacleB
     
     logMsg(DEBUG, "Flipping to fluid: i=%d,j=%d", i, j);
     
-    U[i][j] = 0;
-    V[i][j] = 0;
+    if (U!=NULL && V!=NULL)
+    {
+        U[i][j] = 0;
+        V[i][j] = 0;
+    }
     // Updating obstacle budget
-    ++(*obstacleBudget);
+    if (obstacleBudget!=NULL)
+    {
+        ++(*obstacleBudget);
+    }
     return 1;
 }
 
@@ -856,32 +870,38 @@ int flipToSolid(double **U, double **V, double **P, int **Flag, int i, int j, in
     
     logMsg(DEBUG, "Flipping to solid: i=%d,j=%d", i, j);
     
-    U[i][j] = 0;
-    U[i - 1][j] = 0;
-    V[i][j] = 0;
-    V[i][j - 1] = 0;
-    P[i][j] = 0;
+    if (U!=NULL && V!=NULL && P!=NULL)
+    {
+        U[i][j] = 0;
+        U[i - 1][j] = 0;
+        V[i][j] = 0;
+        V[i][j - 1] = 0;
+        P[i][j] = 0;
     
-    // Now we need to make sure we don't leave any spurious tangential velocity on geometries that have become inner ones
-    int cell = Flag[i][j];
-    if (isNeighbourObstacle(cell, LEFT))
-    {
-        V[i-1][j] = 0;
-    }
-    if (isNeighbourObstacle(cell, RIGHT))
-    {
-        V[i+1][j] = 0;
-    }
-    if (isNeighbourObstacle(cell, BOT))
-    {
-        U[i][j-1] = 0;
-    }
-    if (isNeighbourObstacle(cell, TOP))
-    {
-        U[i][j+1] = 0;
+        // Now we need to make sure we don't leave any spurious tangential velocity on geometries that have become inner ones
+        int cell = Flag[i][j];
+        if (isNeighbourObstacle(cell, LEFT))
+        {
+            V[i - 1][j] = 0;
+        }
+        if (isNeighbourObstacle(cell, RIGHT))
+        {
+            V[i + 1][j] = 0;
+        }
+        if (isNeighbourObstacle(cell, BOT))
+        {
+            U[i][j - 1] = 0;
+        }
+        if (isNeighbourObstacle(cell, TOP))
+        {
+            U[i][j + 1] = 0;
+        }
     }
     // Updating obstacle budget
-    --(*obstacleBudget);
+    if (obstacleBudget!=NULL)
+    {
+        --(*obstacleBudget);
+    }
     return 1;
 }
 
@@ -1530,7 +1550,6 @@ void expandVortexSeeds(int imax, int jmax, int *noFluidCells, double **U, double
     }
 }
 
-
 void geometryFix(double **U, double **V, double **P, int **Flag, int imax, int jmax, int *noFluidCells, int *obstacleBudget)
 {
     int fixedCellsCounter = 0;
@@ -1623,7 +1642,6 @@ void velocityFix(double **U, double **V, int **Flag, int imax, int jmax)
     }
 }
 
-
 void outputCalculation(double **U, double **V, int **Flags, int imax, int jmax, double *outflow)
 {
     
@@ -1650,6 +1668,30 @@ void outputCalculation(double **U, double **V, int **Flags, int imax, int jmax, 
         if (isOutflow(Flags[imax + 1][j]))
         {
             (*outflow) += sqrt(pow(U[imax + 1][j], 2) + pow(V[imax + 1][j], 2));
+        }
+    }
+}
+
+void randomGeometryRemoval(int imax, int jmax, int *noFluidCells, int *obstacleBudget, int **Flags, double **P, double **U,
+                           double **V, double removalProbability)
+{
+    for (int i=1; i<=imax; ++i)
+    {
+        for (int j=1; j<=jmax; ++j)
+        {
+            int cell = Flags[i][j];
+            if (isObstacle(cell) && !isGeometryConstant(cell))
+            {
+                int r = rand();
+                if (r < (int) round(RAND_MAX * removalProbability))
+                {
+                    int flipped = flipToFluid(U, V, Flags, i, j, obstacleBudget);
+                    if (flipped)
+                    {
+                        (*noFluidCells)--;
+                    }
+                }
+            }
         }
     }
 }

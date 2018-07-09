@@ -8,7 +8,8 @@
 #include "uvp.h"
 #include "logger.h"
 #include "timing.h"
-
+#include <time.h>
+#include <stdlib.h>
 
 /**
  * The main operation reads the configuration file, initializes the scenario and
@@ -67,7 +68,8 @@ int main(int argc, char **argv)
     char inputFolder[512] = "";
     char outputFolder[512] = ""; // Please don't use superlong paths here, 512 should be more than enough :P
     char outputFolderPGM[512] = "";
-//    strcpy(outputFolder, "./"); // Default is CWD
+    bool fixInitialGeometryAllowed = false;
+    bool pikachuMode = false; //Just for fun
     
     //
     // BEGIN command line flags management
@@ -105,7 +107,18 @@ int main(int argc, char **argv)
             // Set debug mode: DebugLevel -> DEBUG
             setLoggerDebugLevel(DEBUG);
         }
-            // All the below is just error catching... (new options must be set above here!)
+        else if (strcmp(argv[i], "--fix-initial-geometry") == 0)
+        {
+            fixInitialGeometryAllowed = true;
+        }
+        else if (strcmp(argv[i], "--pikachu-mode") == 0)
+        {
+            // Just for fun :)
+            pikachuMode = true;
+            // Initialize random seed for random removal
+            srand((unsigned int) time(NULL));
+        }
+        // All the below is just error catching... (new options must be set above here!)
         else if (argv[i][0] == '-')
         {
             char buf[128];
@@ -292,7 +305,7 @@ int main(int argc, char **argv)
         logMsg(PRODUCTION, "NoTemp mode: Temperature is not computed");
     }
     
-    init_flag(problem, geometry, geometryMaskFile, imax, jmax, Flags, &noFluidCells, &noCouplingCells, runningMode);
+    init_flag(problem, geometry, geometryMaskFile, imax, jmax, Flags, &noFluidCells, &noCouplingCells, runningMode, fixInitialGeometryAllowed);
 //    THROW_ERROR("Forcing exit for DEBUG");
     int noGeometryCells = imax*jmax - noFluidCells;
     obstacleBudget = min((int) round((imax * jmax) / obstacleBudgetFraction), imax * jmax) - noGeometryCells;
@@ -308,7 +321,8 @@ int main(int argc, char **argv)
 //
     // simulation interval 0 to t_end
     long simulationStartTime = getCurrentTimeMillis();
-    char vortexDetectionEnabled = (char) isVortex;
+    bool vortexDetectionEnabled = (isVortex==1);
+    bool vortexDetectionEnabledTmp = vortexDetectionEnabled;
     if (isGeometryAdaptivityEnabled == 1)
     {
         int prevNoFluidCells = (int) round(noFluidCells/(1-0.04)); // Let's have some forced time at the beginnging (2s if t_end=50)
@@ -328,6 +342,7 @@ int main(int argc, char **argv)
             
             double geometryChangeFactor = fabs(noFluidCells - prevNoFluidCells) / prevNoFluidCells;
             geometryChangeFactor = fmin(geometryChangeFactor, 1);
+            geometryChangeFactor = fmax(geometryChangeFactor, 0.01); // minimum requirement to avoid too short runs
             logMsg(PRODUCTION, "Geometry change factor [k=%d]: %f", k, geometryChangeFactor);
             prevNoFluidCells = noFluidCells;
             mindt = performSimulation(outputFolder, outputFolderPGM, problem, Re, GX, GY, t_end, xlength, ylength, dt,
@@ -337,24 +352,63 @@ int main(int argc, char **argv)
                                       sorIterationsAcceptanceThreshold, &maxU, &maxV, round(t_end * geometryChangeFactor));
         
             //update PGM here - go through all the flags and decide what needs to be changed and what not
-            if (vortexDetectionEnabled && (obstacleBudget <= vortexAreaThreshold)) //debug additional condition
+            if (vortexDetectionEnabled && vortexDetectionEnabledTmp && (obstacleBudget <= vortexAreaThreshold)) //debug additional condition
             {
                 // Once we reach budget 0, disable vortex detection permanently, as it can introduce instability
-                vortexDetectionEnabled = 0;
+                vortexDetectionEnabledTmp = 0;
                 logMsg(PRODUCTION, "Vortex detection disabled. k=%d", k);
             }
-            else if (!vortexDetectionEnabled && (obstacleBudget > vortexAreaThreshold)) //debug additional condition
+            else if (vortexDetectionEnabled && !vortexDetectionEnabledTmp && (obstacleBudget > vortexAreaThreshold)) //debug additional condition
             {
                 // Once we reach budget 0, disable vortex detection permanently, as it can introduce instability
-                vortexDetectionEnabled = 1;
+                vortexDetectionEnabledTmp = 1;
                 logMsg(PRODUCTION, "Vortex detection enabled. k=%d", k);
             }
-            if (vortexDetectionEnabled && k%10==0)
+            if (vortexDetectionEnabled && vortexDetectionEnabledTmp && k%10==0)
             {
 //            expandVortexSeeds(imax, jmax, &noFluidCells, U, V, P, Flags, PGM, outputFolderPGM, problem, getRelativeVelocityThreshold(maxU, maxV, percent), &obstacleBudget);
                 expandVortexSeeds(imax, jmax, &noFluidCells, U, V, P, Flags, vortexAreaThreshold,
                                   vortexStrengthThreshold, &obstacleBudget);
                 geometryFix(U, V, P, Flags, imax, jmax, &noFluidCells, &obstacleBudget);
+            }
+            if (pikachuMode)
+            {
+                double removalProbability = 0; //default
+                if (k > round(itermaxPGM*0.1)
+                    && k <= round(itermaxPGM*0.25))
+                {
+                    removalProbability = 0.05; //do nothing at the beginning
+                }
+                else if (k >= round(itermaxPGM*0.25)
+                         && k <= round(itermaxPGM*0.5))
+                {
+                    removalProbability = 0.1; //increase
+                    minVelocity /= 2;
+                }
+                else if (k >= round(itermaxPGM*0.5)
+                        && k <= round(itermaxPGM*0.7))
+                {
+                    removalProbability = 0.5; //increase
+                    minVelocity /= 4;
+                }
+                else if (k >= round(itermaxPGM*0.7)
+                         && k <= round(itermaxPGM*0.85))
+                {
+                    removalProbability = 0.80; //increase
+                    minVelocity = 0;
+                }
+                else if (k >= round(itermaxPGM*0.85)
+                         && k <= round(itermaxPGM*0.99))
+                {
+                    removalProbability = 0.95; //clear everything at the end
+                    minVelocity = 0;
+                }
+                else if (k >= round(itermaxPGM*0.99))
+                {
+                    removalProbability = 1; //clear everything at the end
+                    minVelocity = 0;
+                }                logMsg(WARNING,"Pikachu mode enabled, removing some random solid cells! :) - removalProbability=%f, minVelocity=%f", removalProbability, minVelocity);
+                randomGeometryRemoval(imax, jmax, &noFluidCells, &obstacleBudget, Flags, P, U, V, removalProbability);
             }
             
             update_pgm(imax, jmax, &noFluidCells, Flags, P, U, V, minVelocity, maxVelocity, percentPressure,
