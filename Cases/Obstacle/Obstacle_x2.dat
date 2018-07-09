@@ -67,23 +67,23 @@ problem     Obstacle_x2
 geometry    Obstacle_x2.pgm
 geometryMask    ObstacleMask_x2.pgm
 adaptiveGeometryEnabled	1
-itermaxPGM  200
+itermaxPGM  80
 sorIterationsThreshold	5
 checkPressure		1
 checkVelocity		1
 checkUpstream		1
 checkVortex			1
 # With percentages, the bigger they are the harder is to remove stuff
-percentPressure		0.1
-percentVelocity		0.5
+percentPressure		0.2
+percentVelocity		0.3
 # Min velocity below which geometry starts appearing (in upstream cells)
 minVelocity	0.4
-downstreamVelocityFactor	30
+downstreamVelocityFactor	60
 # Max velocity abve which geometry starts disappearing
-maxVelocity	1.0
+maxVelocity	0.9
 # Fractional of the entire domain area which can be occupied by obstacles (setting=x --> area allowed=domain_size/x)
-obstacleBudgetFraction	8
-vortexSizeThreshold	20
+obstacleBudgetFraction	10
+vortexSizeThreshold	25
 vortexStrengthThreshold	0.1
 
 
@@ -99,5 +99,5 @@ vortexStrengthThreshold	0.1
 #right_boundary_dirichlet_V         0
 #right_boundary_type     OUTFLOW
 
-left_boundary_P				2
+left_boundary_P				1
 right_boundary_P 			0

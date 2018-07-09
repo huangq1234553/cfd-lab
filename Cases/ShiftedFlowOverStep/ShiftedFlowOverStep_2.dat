@@ -9,26 +9,28 @@ ylength		2
 #--------------------------------------------
 imax		100
 jmax		20
+#imax		800
+#jmax		160
 
 #--------------------------------------------
 #               time steps
 #--------------------------------------------
 dt		0.05
-t_end		500.0
+t_end		50.0
 tau	 	0.5
 
 #--------------------------------------------
 #               output
 #--------------------------------------------
-dt_value    	10
+dt_value    	0.5
 
 #--------------------------------------------
 #               pressure
 #--------------------------------------------
 itermax		500
-eps		0.001
+eps		0.1
 omg		1.7
-alpha		0.9
+alpha		0.5
 
 #--------------------------------------------
 #               reynoldsnumber
@@ -56,15 +58,21 @@ PI		    0
 #--------------------------------------------
 #       initialization velocity
 #--------------------------------------------
-UI		    0
+UI		    3
 VI		    0
 
 #--------------------------------------------
 #       problem description
 #       and path to geometry file
 #--------------------------------------------
-problem     FlowOverStep
-geometry    FlowOverStep.pgm
+problem     ShiftedFlowOverStep
+geometry    ShiftedFlowOverStep.pgm
+#geometry    ShiftedFlowOverStep_x8.pgm
+#geometryMask    ShiftedFlowOverStep_x8_mask.pgm
+itermaxPGM  200
+sorIterationsThreshold	100
+percent		0.9
+minVelocity	0.01
 
 #--------------------------------------------
 #       boundary description
@@ -73,8 +81,10 @@ geometry    FlowOverStep.pgm
 #       Default is NOSLIP
 #       Default value is 0
 #--------------------------------------------
-left_boundary_type      INFLOW
-left_boundary_U         1
-left_boundary_V         0
-right_boundary_type     OUTFLOW
+#left_boundary_type      INFLOW
+#left_boundary_dirichlet_U        10
+#right_boundary_dirichlet_V         0
+#right_boundary_type     OUTFLOW
 
+left_boundary_P				10
+right_boundary_P 			0
