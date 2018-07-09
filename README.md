@@ -8,22 +8,6 @@ Enjoy! :)
 1) Easy way to get started: execute the pre-defined test cases!
 
     `$ make`  
-    `$ make tests`
-
-2) Configuring and executing your own scenario:
-
-    `$ mkdir Scenario`  
-    `$ touch Scenario/scenario.dat`
-
-    Now edit the scenario.dat file to contain all the configuration for the scenario (more details below).  
-    Then create a geometry .pgm file (below instruction for the ./create-geometry.sh script) and refer to it in the scenario.dat.
-
-    (Don't forget to build:
-        `$ make`
-    )
-
-    Then the scenario can be executed with:  
-    `$ ./sim Scenario/scenario.dat [OPTIONS]`
 
 ## Supported command line arguments (OPTIONS)
 List of supported arguments:
@@ -48,27 +32,22 @@ The same output which is written to stdout is also written into a log file (sim.
 the output visualization files.
 This is useful to keep trace of what parameters where used to generate the output and to investigate potential issues.
 
-## Supported PGM "formats"
-Our code supports 2 types of PGM formats:
-1) Our own "compact" one, where:
-  - the PGM only represents the inner domain (so outer boundary halo is left out)
-  - in the PGM a value of 1 is an obstacle cell and 0 is a fluid cell
+## Supported PGM details
+Our code supports PGM files in the following format:
 
-2) The "extended" format as per example published on Moodle, where:
+1) The format as per example published on Moodle, where:
   - the domain outer halo is included in the PGM file
-  - 0=NOSLIP, 1=FREESLIP, 2=OUTFLOW, 3=INFLOW, 4=FLUID
+  - 0=NOSLIP, 1=FREESLIP, 2=OUTFLOW, 3=INFLOW, 4=COUPLING, 6=FLUID 
 
-## Configuring boundary parameters (for velocity and temperature) in the .dat configuration file
-Setting velocity boundary parameters (when running in "compact" mode) and temperature boundary parameters (always)
-requires setting extra variables in configuration file.
+## Configuring parameters in the .dat configuration file
 If a variable is omitted in the configuration file, it will take its default value.
 
   - left_boundary_type, right_boundary_type, top_boundary_type, bottom_boundary_type
     Accepted values: NOSLIP, FREESLIP, MOVINGWALL, INFLOW, OUTFLOW  
     Default value: NOSLIP
 
-  - left_boundary_U, right_boundary_U, top_boundary_U, bottom_boundary_U  
-    left_boundary_V, right_boundary_V, top_boundary_V, bottom_boundary_V  
+  - left_boundary_Dirichlet_U, right_boundary_Dirichlet_U, top_boundary_Dirichlet_U, bottom_boundary_Dirichlet_U  
+    left_boundary_Dirichlet_V, right_boundary_Dirichlet_V, top_boundary_Dirichlet_V, bottom_boundary_Dirichlet_V  
     Accepted values: any double  
     Default value: 0.0
 
@@ -85,6 +64,76 @@ If a variable is omitted in the configuration file, it will take its default val
     Accepted values: any double  
     Default value: 1.0
 
+For geometry optimization, please use pressure boundary conditions for inflow and outflow regions. To enforce a pressure boundary condition, fill the inflow region with FLUID cells and enforce the following boundary conditions:
+
+   - left_boundary_P, right_boundary_P, top_boundary_P, bottom_boundary_P
+     Accepted values: any double
+     Default value: 0.0
+
+Other geometry optimization variables are listed below.
+
+Limits number of geometry updates:
+   - ItermaxPGM
+     Default value: 0.0
+
+Breaks simulation loop when SOR iterations fall below listed threshold:
+   - sorIterationsThreshold
+     Default value: 0.0
+
+The following flags indicate the type of material modification allowed:
+   - checkPressure
+     Default value: 0.0
+
+   - checkVelocity
+     Default value: 0.0
+
+   - checkVortex
+     Default value: 0.0
+
+The following flag determines if downstream surfaces are identified and penalized for material addition:
+
+   - checkUpstream
+     Default value: 0.0
+
+Determines the factor by which downstream material addition is penalized:
+
+   - downstreamVelocityFactor
+     Default value: 0.0 # Warning please set this value if checkUpstream is set to 1
+
+Pressure and velocity differences calculated across corner cells. Percentage threshold used to determine material removal:
+
+   - percentPressure
+     Default value: 0.0 # Warning please set this value if checkPressure is set to 1
+
+   - percentVelocity
+     Default value: 0.0 # Warning please set this value if checkVelocity is set to 1
+
+Threshold values for addition and removal of cells based on velocity:
+
+   - minVelocity
+     Default value: 0.0 # Set to 0 if undesired
+
+   - maxVelocity
+     Default value: 0.0 # Set to large number if undesired
+
+Fractional of the entire domain area which can be occupied by obstacles (setting=x --> area allowed=domain_size/x)
+
+   - obstacleBudgetFraction 
+     Default value: 0.0 # Warning please set this to an integer. Leaving this as 0 will break simulation
+
+Minimum size of filled vortexes, vortexes smaller than given size (in grid cells), will be ignored
+
+   - vortexSizeThreshold
+     Default value: 0.0 # Highly recommended to set this if isVortex is 1. Detection of small/slow vortexes 
+                            typically leads to instability.
+
+Average velocity of filled vortex, vortexes with averaged velocities smaller than this value will be ignore.
+
+   - vortexStrengthThreshold
+     Default value: 0.0 # Highly recommended to set this if isVortex is 1. Detection of small/slow vortexes 
+                            typically leads to instability.
+
+                            
 ## How to use ./create-geometry.sh
 This script converts JPEG files to the "compact" PGM format.  
 As it is basically a wrapper around the "convert" command of the imagemagick suite, this will need to be installed
