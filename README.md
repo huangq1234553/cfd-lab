@@ -24,11 +24,13 @@ https://github.com/huangq1234553/cfd-lab/tree/project
     Flow over step with shifted obstacle. Additional higher resolution image created.
 
     `$ ./sim ./Cases/Obstacle/ShiftedFlowOverStep.dat -q`
+    
     `$ ./sim ./Cases/Obstacle/ShiftedFlowOverStep_x4.dat -q`
 
 	Obstacle fully immersed in fluid. Additional higher resolution image created.
 
     `$ ./sim ./Cases/Obstacle/Obstacle.dat -q`
+    
     `$ ./sim ./Cases/Obstacle/Obstacle_x2.dat -q`
 
     Simple bend.
