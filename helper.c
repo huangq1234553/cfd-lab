@@ -1126,7 +1126,7 @@ void update_pgm(int imax, int jmax, int *noFluidCells, int **Flag, double **P, d
         for (int j = jstart; j * jflip < jbound; j += jflip)
         {
             cell = Flag[i][j];
-            if (isGeometryConstant(cell)) // If current cell cannot be changed, skip to next one
+            if ( isGeometryConstant(cell)) // If current cell cannot be changed, skip to next one
             {
                 continue;
             }
@@ -1688,8 +1688,20 @@ void randomGeometryRemoval(int imax, int jmax, int *noFluidCells, int *obstacleB
                     int flipped = flipToFluid(U, V, Flags, i, j, obstacleBudget);
                     if (flipped)
                     {
+                        (*noFluidCells)++;
+                    }
+                }
+            }
+            else if (isGeometryConstant(cell) && !isObstacle(cell))
+            {
+                if (removalProbability >= 0.9)
+                {
+                    int flipped = flipToSolid(U, V, P, Flags, i, j, obstacleBudget);
+                    if (flipped)
+                    {
                         (*noFluidCells)--;
                     }
+                    Flags[i][j] += (1 << GEOMETRYMASKBIT); // Restore the const-ness of the cell
                 }
             }
         }

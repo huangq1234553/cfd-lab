@@ -67,7 +67,7 @@ VI		    0
 #--------------------------------------------
 problem     criticalCase_small
 geometry    criticalCase_small.pgm
-geometryMask    criticalCase_smallMask.pgm
+geometryMask    criticalCase_smallMottoMask.pgm
 adaptiveGeometryEnabled	1
 itermaxPGM  100
 sorIterationsThreshold	25
