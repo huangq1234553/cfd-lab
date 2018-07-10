@@ -66,7 +66,7 @@ VI		    0
 problem     ComplexFlowOverStep
 geometry    ComplexFlowOverStep.pgm
 geometryMask 	ComplexFlowOverStep_mask.pgm
-itermaxPGM  120
+itermaxPGM  150
 adaptiveGeometryEnabled	1
 sorIterationsThreshold	20
 checkPressure		1
