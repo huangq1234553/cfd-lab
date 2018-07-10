@@ -3,11 +3,32 @@
 Repository for the code of GroupA, CFD Lab course SoSe2018 at TUM.
 Enjoy! :)
 
+Please download the attached videos for the various cases from our github if you don't want to run for hours:
+https://github.com/huangq1234553/cfd-lab/tree/project
+
 ## README - How to execute the code and the test cases
 
 1) Easy way to get started: execute the pre-defined test cases!
 
     `$ make`  
+2) Run the code for the various cases:
+
+  Basic flow over step. Modified to run with extreme element removal
+    `./sim ./Cases/FlowOverStep/FlowOverStep.dat -q`
+  
+  Flow over step with shifted outflow region. Modified to run with low velocities
+    `./sim ./Cases/ComplexFlowOverStep/ComplexFlowOverStep.dat -q`
+
+    Flow over step with shifted obstacle. Additional higher resolution image created.
+    `./sim ./Cases/Obstacle/ShiftedFlowOverStep.dat -q`
+    `./sim ./Cases/Obstacle/ShiftedFlowOverStep_x4.dat -q`
+
+  Obstacle fully immersed in fluid. Additional higher resolution image created.
+    `./sim ./Cases/Obstacle/Obstacle.dat -q`
+    `./sim ./Cases/Obstacle/Obstacle_x2.dat -q`
+
+    Simple bend.
+    `./sim ./Cases/SimpleBend/SimpleBend.dat -q`
 
 ## Supported command line arguments (OPTIONS)
 List of supported arguments:
