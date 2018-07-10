@@ -30,23 +30,24 @@ https://github.com/huangq1234553/cfd-lab/tree/project
     Simple bend.
     `$ ./sim ./Cases/SimpleBend/SimpleBend.dat -q`
 
-## Supported command line arguments (OPTIONS)
-List of supported arguments:
+## Supported command line arguments (Usage & options)
+USAGE:  ./sim configuration.dat [OPTIONS]
 
-    --compact
-        This is required in order to use "compact" PGM geometry files (more info on this below).
-        If not set, the program will assume an "extended" PGM file.
+OPTIONS:
+  -o PATH   Set the output folder path (default is INPUT_DIR/Out).
 
-    --notemp
-        This disables the temperature computations, in case they are not required.
+  --q       Set the logging level to PRODUCTION (ERROR, WARNING and PRODUCTION traces will be enabled).
 
-    -q
-        "Quiet" mode: reduces the verbosity of output/log by disabling INFO level traces 
-        (it still retains PRODUCTION, WARNING, ERROR level traces).
+  --debug   Set the logging level to DEBUG (all traces will be enabled).
+  
+  --notemp  Disable temperature computation.
+  
+  --fix-initial-geometry
+            Allows auto-fixing the initial geometry before starting the simulation.
 
-    -o path/to/out/folder/
-        Output directory path. In case this is not set, an "Out" subfolder will be created inside the folder containing
-        the configuration .dat file.
+INPUT_DIR is the directory where the configuration.dat file is placed.
+Default logging level is INFO.
+Logging levels ordered by decreasing priority are ERROR, WARNING, PRODUCTION, INFO, DEBUG.
 
 ## Logging
 The same output which is written to stdout is also written into a log file (sim.log) in the output folder, along with
@@ -54,18 +55,12 @@ the output visualization files.
 This is useful to keep trace of what parameters where used to generate the output and to investigate potential issues.
 
 ## Supported PGM details
-Our code supports PGM files in the following format:
-
-1) The format as per example published on Moodle, where:
+Our code supports PGM files in the format as per example published on Moodle, where:
   - the domain outer halo is included in the PGM file
   - 0=NOSLIP, 1=FREESLIP, 2=OUTFLOW, 3=INFLOW, 4=COUPLING, 6=FLUID 
 
 ## Configuring parameters in the .dat configuration file
 If a variable is omitted in the configuration file, it will take its default value.
-
-  - left_boundary_type, right_boundary_type, top_boundary_type, bottom_boundary_type
-    Accepted values: NOSLIP, FREESLIP, MOVINGWALL, INFLOW, OUTFLOW  
-    Default value: NOSLIP
 
   - left_boundary_Dirichlet_U, right_boundary_Dirichlet_U, top_boundary_Dirichlet_U, bottom_boundary_Dirichlet_U  
     left_boundary_Dirichlet_V, right_boundary_Dirichlet_V, top_boundary_Dirichlet_V, bottom_boundary_Dirichlet_V  
