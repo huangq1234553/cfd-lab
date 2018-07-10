@@ -23,15 +23,13 @@ https://github.com/huangq1234553/cfd-lab/tree/project
 
     Flow over step with shifted obstacle. Additional higher resolution image created.
 
-    `$ ./sim ./Cases/Obstacle/ShiftedFlowOverStep.dat -q`
-    
-    `$ ./sim ./Cases/Obstacle/ShiftedFlowOverStep_x4.dat -q`
+    `$ ./sim ./Cases/Obstacle/ShiftedFlowOverStep.dat -q`  
+    `$ ./sim ./Cases/Obstacle/ShiftedFlowOverStep_x4.dat -q`  
 
 	Obstacle fully immersed in fluid. Additional higher resolution image created.
 
-    `$ ./sim ./Cases/Obstacle/Obstacle.dat -q`
-    
-    `$ ./sim ./Cases/Obstacle/Obstacle_x2.dat -q`
+    `$ ./sim ./Cases/Obstacle/Obstacle.dat -q`  
+    `$ ./sim ./Cases/Obstacle/Obstacle_x2.dat -q`  
 
     Simple bend.
 
@@ -166,7 +164,7 @@ Average velocity of filled vortex, vortexes with averaged velocities smaller tha
                             typically leads to instability.
 
                             
-## How to use ./create-geometry.sh
+## How to use ./create-geometry.sh (& ./rescale-geometry.py)
 This script converts JPEG files to the "compact" PGM format.  
 As it is basically a wrapper around the "convert" command of the imagemagick suite, this will need to be installed
 ("imagemagick" package on Ubuntu).
@@ -191,4 +189,12 @@ configurations! The following command will rescale to a 200x100 domain:
 
 The tool can also be used to convert a PGM back to the JPEG format, just by feeding the PGM file:  
     `$ ./create-geometry.sh Scenario/geometry.pgm`
+
+### ./rescale-geometry.py
+This allows upscaling of geometries (by integer factors). Check it out!
+
+    ./rescale-geometry.py  
+    Usage:  
+      ./rescale-geometry.py SCALE_FACTOR INPUT_FILE OUTPUT_FILE [OUTPUT_MASK_FILE]  
+      All files must be .pgm!  
 
