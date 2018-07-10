@@ -33,19 +33,6 @@ all:  $(OBJ)
 clean:
 	rm $(OBJ)
 
-tests:
-	./sim Tests/EmptyCavity/EmptyCavity.dat --compact -q --notemp
-	./sim Tests/DrivenCavity/DrivenCavity.dat --compact -q --notemp
-	./sim Tests/FlowOverStep/FlowOverStep.dat --compact -q --notemp
-	./sim Tests/FluidTrap1/FluidTrap1.dat --compact -q
-	./sim Tests/FluidTrap2/FluidTrap2.dat --compact -q
-	./sim Tests/KarmanVortex/KarmanVortex.dat --compact -q --notemp
-	./sim Tests/NaturalConvection/NaturalConvection.dat --compact -q
-	./sim Tests/RayleighBernardConvection/RayleighBenardConvection1.dat --compact -q
-
-debugtest:
-	./sim DebugTest/F1HeatExchangerPressureBoundaries/heat_exchanger_Pboundaries.dat --debug
-
 helper.o            : helper.h logger.h
 init.o              : helper.h init.h boundary_configurator.h logger.h
 boundary_val.o      : helper.h boundary_val.h logger.h

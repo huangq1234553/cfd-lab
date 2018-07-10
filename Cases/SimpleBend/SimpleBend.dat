@@ -74,16 +74,15 @@ checkUpstream		0
 checkVortex			1
 # With percentages, the bigger they are the harder is to remove stuff
 percentPressure		0.1
-percentVelocity		0.5
+percentVelocity		0.1
 # Min velocity below which geometry starts appearing (in upstream cells)
-minVelocity	0.4
+minVelocity	0.14
 downstreamVelocityFactor	30
 # Max velocity abve which geometry starts disappearing
-maxVelocity	0.8
-obstacleBudgetFraction	2
+maxVelocity	0.2
+obstacleBudgetFraction	1
 vortexSizeThreshold	20
 vortexStrengthThreshold	0.1
-
 
 #--------------------------------------------
 #       boundary description
@@ -96,6 +95,6 @@ vortexStrengthThreshold	0.1
 #bottom_boundary_dirichlet_V        2
 #right_boundary_dirichlet_V         0
 #right_boundary_type     OUTFLOW
-bottom_boundary_P	2
+bottom_boundary_P	5
 #right_boundary_P 	0
 

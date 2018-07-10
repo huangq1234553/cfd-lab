@@ -1,0 +1,223 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% 	Template for seminar reports
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 	Include layout and macros
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\input{Style/paper-layout}
+\input{Style/packages}
+
+% Simple helpful macro to deal with TODO parts in text
+\newcommand{\TODO}{TODO\todo{\#}: }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 	Page numbering (not on first page)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pagestyle{empty}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 	Correct bad hyphenation here
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\hyphenation{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 	Begin of the document
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 	Paper title
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{Geometry evolution in CFD simulations}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 	Author names and affiliations 
+%		-	multiple columns for up to three different affilitations are separated 
+%			by \and
+%		- for over three affiliations, refer to ieeetran howto
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\author{
+\authorblockN{Group A\\Olga Glogowska, Qunsheng Huang, Tommaso Bianucci}
+\authorblockA{Fakultät für Informatik\\Technische Universität München} 
+%\and
+%\authorblockN{}
+%\authorblockA{}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 	Special paper note (appears between title and authors) 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\specialpapernotice{Project report\\Master Practical Course ``CFD Lab''}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 	Make title area 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\maketitle
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 	For page number on first page
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\thispagestyle{plain}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 	Abstract 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \input{Sections/0_abstract}
+% ~\\~
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 	Keywords 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \begin{keywords}
+% Resource awareness, HPX, task-based parallelism, HPC
+% \end{keywords}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 	Sections, Subsections,...
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Idea}
+This Computational Fluid Dynamics (CFD) project attempts to optimize geometry via CFD output data.
+
+This idea is based off adjoint equation geometry optimization, in which the sensitivities of drag to changes in geometry are used to optimize geometry\cite{othmer2014adjoint,othmer2006cfd}. This idea was simplified and used to extend the 2D solver implemented in the CFD lab.
+
+\section{Goal}
+The goal is to extend the current solver implementation, allowing it to:
+\begin{itemize}
+	\item Detect regions in the steady-state output that are undesirable.
+	\item Update geometry and remove forbidden geometry.
+	\item Repeat until convergence or until a given step.
+\end{itemize}
+
+\section{Implementation}
+\subsection{High-Level Implementation}
+Several steps were required to implement the geometry solver~---~a skeleton of the final code can be seen in Listing~\ref{lst:skeleton}.
+
+\begin{lstlisting}[language=C,float=b,caption={High-level skeleton of the final code.},captionpos=b,label=lst:skeleton]
+initializeMatrices(...);
+for (PGMConvergenceCriteria)
+{
+	performSimulation(...);
+	fillVortices(..., Flags);
+	updatePGM(..., imax, jmax, U, V, P, Flags);
+	fixGeometry(..., imax, jmax, Flags);
+	decodeAndWrite_pgm(..., PGM, Flags);
+}
+freeMatrices(...);
+cleanup(...);
+\end{lstlisting}
+
+The general optimization workflow can be seen in the for loop added to the main program that would run to an arbitrary convergence criteria.
+
+During each step of the loop, the solver, \verb|performSimulation()|, runs until completion. The results are passed to the two functions \verb|fillVortices()| and \verb|updatePGM()|, which update the geometry. Finally, the function \verb|fixGeometry()| is called to fix forbidden geometries.
+
+Of all the changes to the code, the crux of the optimization is the material modification methodologies. Three are implemented in the code, namely: vortex identification, material removal and material addition.
+
+\subsection{Vortex Identification}
+In order to optimize the flow, vortexes are undesirable. The \verb|fillVortex()| function is implemented to iteratively identify regions of re-circulation and flip the from fluid cells to obstacle cells. The concept is based on a Masters Thesis by V.~Holmen~\cite{holmen2012methods}. A first sweep of the entire geometry is performed to identify vortex centers. The signum of velocities at localized regions in the grid are identified and if the calculated values indicate a swirl, as seen in Figure~\ref{fig:vortex1}, a vortex center is present.
+
+\begin{figure}[h]
+    \begin{center}
+        \includegraphics[scale=0.8]{Figures/vortexDetection1.png}
+        \caption{How to evaluate if a cell is a vortex center.}
+        \label{fig:vortex1}
+    \end{center}
+\end{figure}
+
+Once vortex centers are identified, multiple sweeps of the geometry are performed to mark vortex-filled regions by calculating the signum of velocities of cells adjacent to vortex cells. The locations where vortexes are identified are flipped to obstacle cells.
+
+\begin{figure}[h]
+    \begin{center}
+        \includegraphics[scale=0.75]{Figures/vortexDetection2.png}
+        \caption{How vortices can be extended.}
+        \label{fig:vortex2}
+    \end{center}
+\end{figure}
+
+The initial implementation of this function was overly aggressive and targeted small vortexes throughout the flow. This often resulted in the entire flow simulation being flipped to solid. In order to prevent this, vortex identification is only applied every few geometry update iterations (defaulting to ten in our final version). Similarly, the vortex identification would ignore vortexes smaller than a set size.
+
+\subsection{Material Addition}
+Another idea to remove unwanted fluid cells is to fill in regions with very low flow magnitudes or ``dead zones'' in the fluid flow. This was easily executed but constant threshold values were very sensitive to initial conditions. In order to prevent uncontrolled material addition, the final implementation uses a percentage of maximum velocity as a threshold value. Material addition was also limited to cells adjacent to existing obstacle cells.
+
+Another problem faced was the tendency for material on the downstream-facing side of the geometry to aggregate material. This was unsurprising as it mimics sedimentation aggregation on riverbeds but it was also undesirable. A check was implemented to determine if obstacle cells faced the outflow or inflow direction and  an additional flag was added to the configuration file to allow penalizing material addition to downstream-facing regions, which improved performance significantly.
+
+\subsection{Material Removal}
+The final modification method is the removal of unwanted obstacle cells. Two ideas were implemented: removal of cells at corners and removal of cells at regions of high flow. Cells were flipped from obstacle cells to fluid cells if the pressure difference across the fluid-adjacent faces was greater than set percentage. Similarly, cells would be flipped from solid to fluid if the adjacent fluid cells had velocity magnitudes greater than a preset value.
+
+Masking of certain geometries is also implemented --- allowing for a separate PGM to indicate regions that should not be changed when updating geometries. Masks are typically applied to inflow and outflow regions. Can also be used to prevent geometries from ``floating'' downstream due to repeated material additions and removals.
+
+\section{Analysis and Results}
+Once these methods were implemented and the input parameters were tuned, we were surprised to see relatively positive results. While it is clear by visualizing the results that the final geometries are not optimal, the results seem to converge to a maximum value. The outflow (calculated by integrating out-facing velocities at outflow cells) was seen to improve with the implemented geometry optimization. Please view the attached videos for the various geometry test cases implemented: flow over step, shifted flow over step, obstacle, simple bend and simple channel.
+
+\section{Further Improvements}
+Based on the limited amount of allotted time, the final product achieves most, if not all, of the set objectives. However, while the specific test cases provided in our code work relatively well, the code can still be significantly improved. There are three main regions which can be targeted for improvement: convergence criterion, automation of parameter tuning and parallelization.
+
+\subsection{Convergence Criterion}
+In order to avoid excessive wait times, a break criterion was implemented such that the CFD solver would exit when SOR iterations fell below a set limit. This method is not extremely robust and can result in undesirable material addition. Additionally, we were unable to design a robust method to stop geometry modification. In the final product, we end the simulation after a preset number of PGM update iterations. Finding an algorithm to perform this robustly would greatly improve the implementation.
+
+\subsection{Automation of Parameter Tuning}
+There are many, many variables added to the configuration file, each of which significant effects on the geometry updates. Ideally, we could automatically tune these variables for each test case. However, this  is beyond the scope with the given time.
+
+\subsection{Parallelization}
+Most regions, if not all, of the code are fully parallelizable (Jacobian iterations through the various matrices). It would not be a difficult task to implement MPI routines for greater speedups. This is especially the case for higher resolution figures, which significantly increase wait times for results.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 	Acknowledgements
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\section*{Acknowledgment}
+%\addcontentsline{toc}{section}{Acknowledgment}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 	References
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% trigger a \newpage just before the given reference
+% number - used to balance the columns on the last page
+% adjust value as needed - may need to be readjusted if
+% the document is modified later
+%\IEEEtriggeratref{8}
+% The "triggered" command can be changed if desired:
+%\IEEEtriggercmd{\enlargethispage{-5in}}
+
+% references section
+% NOTE: BibTeX documentation can be easily obtained at:
+% http://www.ctan.org/tex-archive/biblio/bibtex/contrib/doc/
+
+% can use a bibliography generated by BibTeX as a .bbl file
+% standard IEEE bibliography style from:
+% http://www.ctan.org/tex-archive/macros/latex/contrib/supported/IEEEtran/bibtex
+\bibliographystyle{Bib/IEEEtran}
+% argument is your BibTeX string definitions and bibliography database(s)
+\bibliography{Bib/IEEEabrv,Bib/references}
+%
+% <OR> manually copy in the resultant .bbl file
+% set second argument of \begin to the number of references
+% (used to reserve space for the reference number labels box)
+%\begin{thebibliography}{1}
+%
+%\bibitem{ref:kopka}
+%H.~Kopka and P.~W. Daly, \emph{A Guide to {\LaTeX}}, 3rd~ed.\hskip 1em plus
+%  0.5em minus 0.4em\relax Harlow, England: Addison-Wesley, 1999.
+%
+%\end{thebibliography}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 	End of the document
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{document}
+
+

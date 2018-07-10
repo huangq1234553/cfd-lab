@@ -58,6 +58,17 @@ double performSimulation(const char *outputFolder, const char *outputFolderPGM, 
 
 int main(int argc, char **argv)
 {
+    const char* USAGE = "\nUSAGE:\t./sim configuration.dat [OPTIONS]\n"
+                        "\nOPTIONS:\n"
+                        "\t-o PATH\t\tSet the output folder path (default is INPUT_DIR/Out).\n"
+                        "\t--q\t\tSet the logging level to PRODUCTION (ERROR, WARNING and PRODUCTION traces will be enabled).\n"
+                        "\t--debug\t\tSet the logging level to DEBUG (all traces will be enabled).\n"
+                        "\t--notemp\tDisable temperature computation.\n"
+                        "\t--fix-initial-geometry\n\t\t\tAllows auto-fixing the initial geometry before starting the simulation.\n"
+                        "\n"
+                        "INPUT_DIR is the directory where the configuration.dat file is placed.\n"
+                        "Default logging level is INFO.\n"
+                        "Logging levels ordered by decreasing priority are ERROR, WARNING, PRODUCTION, INFO, DEBUG.";
     // As first thing, initialize logger start time
     setLoggerStartTime();
     
@@ -121,14 +132,14 @@ int main(int argc, char **argv)
         // All the below is just error catching... (new options must be set above here!)
         else if (argv[i][0] == '-')
         {
-            char buf[128];
-            sprintf(buf, "Unrecognized option: %s", argv[i]);
+            char buf[1024];
+            sprintf(buf, "Unrecognized option: %s\n%s", argv[i], USAGE);
             THROW_ERROR(buf);
         }
         else if (strlen(szFileName) != 0)
         {
-            char buf[128];
-            sprintf(buf, "Unrecognized argument: %s", argv[i]);
+            char buf[1024];
+            sprintf(buf, "Unrecognized argument: %s\n%s", argv[i], USAGE);
             THROW_ERROR(buf);
         }
         else
@@ -150,7 +161,9 @@ int main(int argc, char **argv)
     //
     if (requiredArgCount == 0)
     {
-        THROW_ERROR("\nNo arguments passed!\nUSAGE:\t./sim configuration.dat");
+        char buf[1024];
+        sprintf(buf, "No arguments passed!\n%s", USAGE);
+        THROW_ERROR(buf);
     }
     
     // In case no outputFolder is passed, default to inputFolder/Out...
@@ -289,8 +302,6 @@ int main(int argc, char **argv)
     // create flag array to determine boundary conditions
     if (runningMode == COMPACT)
     {
-//        logMsg(PRODUCTION, "Running in compact mode");
-//        read_boundary_parameters_compact_mode(szFileName, boundaryInfo, dx, dy);
         THROW_ERROR("NO COMPACT MODE ANYMORE, SORRY! :(");
     }
     else
@@ -306,19 +317,13 @@ int main(int argc, char **argv)
     }
     
     init_flag(problem, geometry, geometryMaskFile, imax, jmax, Flags, &noFluidCells, &noCouplingCells, runningMode, fixInitialGeometryAllowed);
-//    THROW_ERROR("Forcing exit for DEBUG");
     int noGeometryCells = imax*jmax - noFluidCells;
     obstacleBudget = min((int) round((imax * jmax) / obstacleBudgetFraction), imax * jmax) - noGeometryCells;
 
     // initialise velocities and pressure
     init_uvpt(UI, VI, PI, TI, imax, jmax, U, V, P, T, Flags);
     double maxU, maxV;
-
-//    // Debug
-//    logEvent(PRODUCTION, t, "Writing visualization file n=%d", n);
-//    write_vtkFile(outputFolder, problem, n, xlength, ylength, imax, jmax, dx, dy, U, V, P, T);
-//    n++;
-//
+    
     // simulation interval 0 to t_end
     long simulationStartTime = getCurrentTimeMillis();
     bool vortexDetectionEnabled = (isVortex==1);
@@ -366,7 +371,6 @@ int main(int argc, char **argv)
             }
             if (vortexDetectionEnabled && vortexDetectionEnabledTmp && k%10==0)
             {
-//            expandVortexSeeds(imax, jmax, &noFluidCells, U, V, P, Flags, PGM, outputFolderPGM, problem, getRelativeVelocityThreshold(maxU, maxV, percent), &obstacleBudget);
                 expandVortexSeeds(imax, jmax, &noFluidCells, U, V, P, Flags, vortexAreaThreshold,
                                   vortexStrengthThreshold, &obstacleBudget);
                 geometryFix(U, V, P, Flags, imax, jmax, &noFluidCells, &obstacleBudget);
@@ -494,7 +498,7 @@ double performSimulation(const char *outputFolder, const char *outputFolderPGM, 
         
         // ensure boundary conditions for velocity
         // Special boundary condition are addressed here by using the boundaryInfo data.
-        // These special boundary values are configured at configuration time in read_parameters(). Still TODO !
+        // These special boundary values are configured at configuration time in read_parameters().
         boundaryval(imax, jmax, U, V, T, Flags, boundaryInfo);
         
         // calculate T using energy equation in 2D with boussinesq approximation
@@ -558,14 +562,6 @@ double performSimulation(const char *outputFolder, const char *outputFolderPGM, 
     write_vtkFile(outputFolder, problem, n, k, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
     // Now also add a vtk to a series of "asymptotic" streams (PGM id = 0)
     write_vtkFile(outputFolder, problem, k, 0, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
-
-    /*// saving the *.pgm
-    logEvent(PRODUCTION, t, "Writing PGM file k=%d, n=%d, executionTime=%.3fs",
-             k, n,
-             getTimeSpentSeconds(interVisualizationExecTimeStart, getCurrentTimeMillis())
-    );
-    decode_flags(imax, jmax, Flags, PGM);
-    write_pgm(imax+2,jmax+2,PGM,outputFolderPGM, problem, k);*/
 
     return mindt;
 }
