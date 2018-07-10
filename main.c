@@ -51,7 +51,8 @@ double performSimulation(const char *outputFolder, const char *outputFolderPGM, 
                          int k, double res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
                          BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V, double **F,
                          double **G, double **RS, double **P, double **T, int **PGM, bool computeTemperatureSwitch,
-                         int itThreshold, double *maxU, double *maxV, double t_threshold, int *globalVtkCounter);
+                         int itThreshold, double *maxU, double *maxV, double t_threshold, int *globalVtkCounter,
+                         int itermaxPGM);
 
 int main(int argc, char **argv)
 {
@@ -343,18 +344,23 @@ int main(int argc, char **argv)
             );
             decode_flags(imax, jmax, Flags, PGM);
             write_pgm(imax + 2, jmax + 2, PGM, outputFolderPGM, problem, k);
-            
+    
+            //hack
+            if (k==itermaxPGM)
+                prevNoFluidCells = (int) round(noFluidCells/(1-0.3)); // Let's have some forced time at the beginnging (15s if t_end=50)
+            //
             double geometryChangeFactor = fabs(noFluidCells - prevNoFluidCells) / prevNoFluidCells;
             geometryChangeFactor = fmin(geometryChangeFactor, 1);
             geometryChangeFactor = fmax(geometryChangeFactor, 0.01); // minimum requirement to avoid too short runs
             logMsg(PRODUCTION, "Geometry change factor [k=%d]: %f", k, geometryChangeFactor);
+            
             prevNoFluidCells = noFluidCells;
             mindt = performSimulation(outputFolder, outputFolderPGM, problem, Re, GX, GY, t_end, xlength, ylength, dt,
                                       dx, dy, imax, jmax, alpha, omg, tau, itermax, eps, dt_value, n, k, res, t, it,
                                       mindt, noFluidCells, beta, Pr, boundaryInfo,
                                       dt_check, Flags, U, V, F, G, RS, P, T, PGM, computeTemperatureSwitch,
                                       sorIterationsAcceptanceThreshold, &maxU, &maxV,
-                                      round(t_end * geometryChangeFactor), &globalVtkCounter);
+                                      round(t_end * geometryChangeFactor), &globalVtkCounter, itermaxPGM);
         
             //update PGM here - go through all the flags and decide what needs to be changed and what not
             if (vortexDetectionEnabled && vortexDetectionEnabledTmp && (obstacleBudget <= vortexAreaThreshold)) //debug additional condition
@@ -439,7 +445,7 @@ int main(int argc, char **argv)
                                   dy, imax, jmax, alpha, omg, tau, itermax, eps, dt_value, n, k, res, t, it, mindt,
                                   noFluidCells, beta, Pr, boundaryInfo,
                                   dt_check, Flags, U, V, F, G, RS, P, T, PGM, computeTemperatureSwitch,
-                                  sorIterationsAcceptanceThreshold, &maxU, &maxV, 0, &globalVtkCounter);
+                                  sorIterationsAcceptanceThreshold, &maxU, &maxV, 0, &globalVtkCounter, 0);
     }
 
     long simulationEndTime = getCurrentTimeMillis();
@@ -470,7 +476,8 @@ double performSimulation(const char *outputFolder, const char *outputFolderPGM, 
                          int k, double res, double t, int it, double mindt, int noFluidCells, double beta, double Pr,
                          BoundaryInfo *boundaryInfo, double dt_check, int **Flags, double **U, double **V, double **F,
                          double **G, double **RS, double **P, double **T, int **PGM, bool computeTemperatureSwitch,
-                         int itThreshold, double *maxU, double *maxV, double t_threshold, int *globalVtkCounter)
+                         int itThreshold, double *maxU, double *maxV, double t_threshold, int *globalVtkCounter,
+                         int itermaxPGM)
 {
     double currentOutputTime = 0; // For chosing when to output
     long interVisualizationExecTimeStart = getCurrentTimeMillis();
@@ -530,7 +537,7 @@ double performSimulation(const char *outputFolder, const char *outputFolderPGM, 
                      getTimeSpentSeconds(interVisualizationExecTimeStart, getCurrentTimeMillis())
             );
             write_vtkFile(outputFolder, problem, n, k, xlength, ylength, imax, jmax, dx, dy, U, V, P, T, Flags);
-            if (k==1)
+            if (k==1 || k==itermaxPGM) // Write all files in case we are at the beginning or at the end of the simulation
             {
                 // Now also add a vtk to a series of global streams (PGM id = -1)
                 write_vtkFile(outputFolder, problem, (*globalVtkCounter)++, -1, xlength, ylength, imax, jmax, dx, dy, U,
